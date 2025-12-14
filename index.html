@@ -1,0 +1,2384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Arcy Rent Car - Sistema Web</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --rojo: #e10600;
+      --gris-oscuro: #1f1f1f;
+      --gris: #2b2b2b;
+      --texto: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top left, #3b3b3b 0, #000 55%);
+      color: var(--texto);
+    }
+
+    .banner {
+      background: var(--gris) url("logo VEHICULO PAPI2.jpg") center/cover no-repeat;
+      border-bottom: 4px solid var(--rojo);
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start; /* mover contenido a la izquierda */
+        text-align: left; /* texto alineado a la izquierda */
+        padding-left: 40px; /* SE VE BONITO pegado al área gris */
+      position: relative;
+      overflow: hidden;
+    }
+
+    .banner::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(0,0,0,0.7), rgba(0,0,0,0.2));
+    }
+
+    .banner-content {
+      text-align: left;
+      position: relative;
+      z-index: 1;
+    }
+
+    .banner h1 {
+      margin: 0;
+      font-size: 2.4rem;
+      color: var(--rojo);
+      letter-spacing: 2px;
+    }
+
+    .banner p {
+      margin: 4px 0 0;
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
+
+    .wrapper {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 16px 40px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      border: none;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: var(--gris);
+      color: var(--texto);
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .tab-btn.active {
+      background: var(--rojo);
+      transform: translateY(-1px);
+    }
+
+    .tab-btn:hover {
+      background: #444;
+    }
+
+    .card {
+      background: rgba(20, 20, 20, 0.96);
+      border-radius: 16px;
+      padding: 18px 18px 22px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+      border: 1px solid #333;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pill {
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: #2b2b2b;
+      font-size: 0.75rem;
+      opacity: 0.9;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px 16px;
+      margin-bottom: 10px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #101010;
+      color: var(--texto);
+      font-size: 0.85rem;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      opacity: 1;
+    }
+
+
+    input:focus, select:focus {
+      outline: 1px solid var(--rojo);
+      border-color: var(--rojo);
+    }
+
+    .btn {
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      background: var(--rojo);
+      color: var(--texto);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 4px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn.secondary {
+      background: #2b2b2b;
+    }
+
+    .btn:hover {
+      background: #ff3b30;
+      transform: translateY(-1px);
+    }
+
+    .btn.secondary:hover {
+      background: #3d3d3d;
+    }
+
+    
+    .btn-table {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: none;
+      background: #2b2b2b;
+      color: #ffffff;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    .btn-table:hover {
+      background: #444444;
+    }
+
+table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 0.78rem;
+    }
+
+    th, td {
+      border-bottom: 1px solid #333;
+      padding: 6px 8px;
+      text-align: left;
+    }
+
+    th {
+      background: #181818;
+      font-weight: 600;
+    }
+
+    /* Zebra ONLY for data tables — NOT for the calendar */
+    #tablaMeses tbody tr:nth-child(even) td,
+    #tablaVehiculosDashboard tbody tr:nth-child(even) td,
+    #tablaFacturas tbody tr:nth-child(even) td,
+    #tablaClientes tbody tr:nth-child(even) td {
+  background: #111;
+}
+
+
+    .muted {
+      font-size: 0.78rem;
+      opacity: 0.8;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .kpi {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2b2b2b, #111);
+      border: 1px solid #333;
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      opacity: 0.8;
+    }
+
+    .kpi-value {
+      margin-top: 4px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .kpi-sub {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    .card-calendario {
+      flex: 1 1 260px;
+      min-width: 260px;
+      max-width: 320px;
+      border-radius: 14px;
+      border: 1px solid #333;
+      background: #101010;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card-calendario-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:0.85rem;
+      margin-bottom:4px;
+    }
+    .card-calendario-titulo {
+      font-weight:600;
+    }
+    .card-calendario-nav button {
+      background:transparent;
+      border:none;
+      color:#ccc;
+      cursor:pointer;
+      font-size:0.8rem;
+      padding:2px 6px;
+    }
+    .card-calendario-nav span {
+      font-size:0.8rem;
+    }
+    .mini-calendario {
+      width:100%;
+      font-size:0.7rem;
+      border-collapse:collapse;
+      margin-top:4px;
+    }
+    .mini-calendario th {
+      text-align:center;
+      padding:2px;
+      opacity:0.7;
+    }
+    .mini-calendario td {
+      width:14%;
+      text-align:center;
+      padding:3px 0;
+      border-radius:6px;
+    }
+    .dia-disponible {
+      background:#0a2b12;
+      color:#9cff9c;
+    }
+    .dia-rentado {
+      background:#3b0000;
+      color:#ffb3b3;
+    }
+    .dia-vacio {
+      opacity:0.25;
+    }
+    .lista-rentas {
+      margin-top:6px;
+      font-size:0.7rem;
+      max-height:80px;
+      overflow-y:auto;
+    }
+    .lista-rentas-item {
+      margin-bottom:3px;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    /* === CARDS DE VEHÍCULOS === */
+    .veh-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 18px;
+    }
+
+    .veh-card {
+      background: #f7f7f7;
+      border-radius: 18px;
+      box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #e5e5e5;
+    }
+
+    .veh-card-img-wrap {
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .veh-card-img-wrap img {
+      max-width: 100%;
+      height: 140px;
+      object-fit: contain;
+    }
+
+    .veh-card-img-placeholder {
+      background: linear-gradient(135deg, #2b2b2b, #111);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 140px;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+
+    .veh-card-body {
+      padding: 14px 16px 16px;
+      text-align: center;
+    }
+
+    .veh-card-body h3 {
+      margin: 6px 0 2px;
+      font-size: 1rem;
+      color: #064420;
+    }
+
+    .veh-card-sub {
+      margin: 2px 0;
+      font-size: 0.8rem;
+      color: #444;
+    }
+
+    .veh-card-tag {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: #ddd;
+      color: #333;
+    }
+
+    .veh-card-tag.ok {
+      background: #d3f3dc;
+      color: #155724;
+    }
+
+    .veh-card-tag.warn {
+      background: #ffe8cc;
+      color: #8a4b00;
+    }
+
+    .veh-card-btn {
+      margin-top: 10px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: var(--rojo);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .veh-card-btn:hover {
+      background: #ff3b30;
+      transform: translateY(-1px);
+    }
+
+    /* === MODAL DETALLES VEHÍCULO === */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+    }
+
+    .modal {
+      background: #111;
+      border-radius: 16px;
+      padding: 18px 20px 22px;
+      max-width: 460px;
+      width: 90%;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.8);
+      border: 1px solid #333;
+      color: #fff;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      border: none;
+      background: transparent;
+      color: #aaa;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+
+    .modal-img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      background: #000;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
+    .modal-row {
+      font-size: 0.8rem;
+      margin: 4px 0;
+      opacity: 0.95;
+    }
+
+    .modal-row label {
+      display:block;
+      margin-bottom:2px;
+      font-size:0.75rem;
+      opacity:0.85;
+    }
+
+    .modal-input {
+      width:100%;
+      padding:6px 8px;
+      border-radius:8px;
+      border:1px solid #444;
+      background:#050505;
+      color:#fff;
+      font-size:0.8rem;
+    }
+
+    .modal-input:disabled {
+      opacity:0.75;
+      background:#050505;
+    }
+
+    .modal-actions {
+      margin-top:12px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .modal-btn {
+      border:none;
+      border-radius:999px;
+      padding:7px 12px;
+      font-size:0.8rem;
+      cursor:pointer;
+      font-weight:600;
+    }
+
+    .modal-btn.primary {
+      background:var(--rojo);
+      color:#fff;
+    }
+
+    .modal-btn.secondary {
+      background:#333;
+      color:#fff;
+    }
+
+    .modal-btn.danger {
+      background:#b00020;
+      color:#fff;
+    }
+
+    .modal-btn:hover {
+      filter:brightness(1.1);
+    }
+
+    @media (max-width: 768px) {
+      .banner {
+        height: 150px;
+      }
+      .banner h1 {
+        font-size: 1.7rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" style="position:fixed; inset:0; background:#000; display:flex; align-items:center; justify-content:center; z-index:9999;">
+    <div style="background:#1f1f1f; padding:30px; border-radius:12px; width:320px; text-align:center; border:1px solid #333; box-shadow:0 0 25px rgba(0,0,0,0.6);">
+      <h2 style="color:#e10600; margin-bottom:10px;">Arcy Rent Car</h2>
+      <p style="color:#bbb; margin-bottom:20px; font-size:0.9rem;">Iniciar sesión</p>
+      <input id="loginUser" placeholder="Usuario" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #444; background:#101010; color:white;">
+      <input id="loginPass" type="password" placeholder="Contraseña" style="width:100%; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #444; background:#101010; color:white;">
+      <button onclick="login()" style="width:100%; padding:10px; background:#e10600; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600;">Entrar</button>
+      <p id="loginError" style="color:#ff4d4d; margin-top:10px; display:none;">Usuario o contraseña incorrectos</p>
+    </div>
+  </div>
+
+  <header class="banner">
+    <div class="banner-content">
+      <h1>Arcy Rent Car</h1>
+      <p>Sistema web de facturación y control de rentas</p>
+    </div>
+  </header>
+
+  <main class="wrapper">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="factura">Factura</button>
+      <button class="tab-btn" data-tab="clientes">Clientes</button>
+      <button class="tab-btn" data-tab="vehiculos">Vehículos</button>
+      <button class="tab-btn" data-tab="disponibilidad">Disponibilidad</button>
+      <button class="tab-btn" data-tab="datos">Exportar / Importar</button>
+      <button class="tab-btn" data-tab="seguridad">Usuarios / Acceso</button>
+      <button class="btn secondary" id="btnLogout" style="margin-left:auto;">Cerrar sesión</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="section active">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Resumen general</div>
+          <div class="pill">Vista rápida</div>
+        </div>
+        <div class="grid-2">
+          <div class="kpi">
+            <div class="kpi-label">Total facturado (RD$)</div>
+            <div id="kpiTotalFacturado" class="kpi-value">0.00</div>
+            <div class="kpi-sub">Suma de todas las facturas</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Cantidad de facturas</div>
+            <div id="kpiCantidadFacturas" class="kpi-value">0</div>
+            <div class="kpi-sub">Registradas en el sistema</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Cantidad de rentas</div>
+            <div id="kpiCantidadRentas" class="kpi-value">0</div>
+            <div class="kpi-sub">Incluye cada contrato de renta</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Vehículo más rentable</div>
+            <div id="kpiTopVehiculo" class="kpi-value">N/A</div>
+            <div class="kpi-sub" id="kpiTopVehiculoMonto"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Ingresos por mes</div>
+          </div>
+          <table id="tablaMeses">
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th>Total RD$</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Ingresos por vehículo</div>
+          </div>
+          <table id="tablaVehiculosDashboard">
+            <thead>
+              <tr>
+                <th>ID Vehículo</th>
+                <th>Descripción</th>
+                <th>Total RD$</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- NUEVA VISTA PREVIA DE VEHÍCULOS -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Vehículos agregados recientemente</div>
+          <div class="pill">Vista previa</div>
+        </div>
+        <div id="vehiculosPreview" class="veh-grid"></div>
+      </div>
+    </section>
+
+    <!-- FACTURA -->
+    <section id="factura" class="section">
+      <div class="card">
+        <div class="card-header">
+  <div class="card-title">Nueva factura de renta</div>
+</div>
+      <form id="formFactura">
+          <div>
+            <label>No. Factura</label>
+            <input type="text" id="facturaId" placeholder="Se genera automático si lo dejas vacío" />
+          </div>
+          <div>
+            <label>Fecha</label>
+            <input type="date" id="fechaFactura" required />
+          </div>
+
+          <div>
+            <label>Cliente</label>
+            <select id="selectCliente" required></select>
+          </div>
+          <div>
+            <label>Vehículo</label>
+            <select id="selectVehiculo" required></select>
+          </div>
+
+          <div>
+            <label>Fecha inicio</label>
+            <input type="date" id="fechaInicio" required />
+          </div>
+          <div>
+            <label>Fecha final</label>
+            <input type="date" id="fechaFinal" required />
+          </div>
+
+          <div>
+            <label>Días</label>
+            <input type="number" id="dias" readonly />
+          </div>
+          <div>
+            <label>Precio por día (RD$)</label>
+            <input type="number" id="precioDia" />
+          </div>
+          <div>
+            <label>Total (RD$)</label>
+            <input type="number" id="total" readonly />
+          </div>
+        </form>
+        <button class="btn" id="btnCalcular">Calcular</button>
+        <button class="btn" id="btnGuardarFactura">Guardar factura y renta</button>
+        <p class="muted">Las facturas y rentas se guardan en tu navegador (localStorage). Puedes exportar los datos a Excel en la pestaña "Exportar / Importar".</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Listado de facturas</div>
+        </div>
+        <table id="tablaFacturas">
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Vehículo</th>
+              <th>Días</th>
+              <th>Total RD$</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CLIENTES -->
+    <section id="clientes" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Clientes</div>
+        </div>
+        <form id="formCliente">
+          <div>
+            <label>Nombre</label>
+            <input type="text" id="clienteNombre" required />
+          </div>
+          <div>
+            <label>Teléfono</label>
+            <input type="text" id="clienteTelefono" />
+          </div>
+          <div>
+            <label>Cédula / ID</label>
+            <input type="text" id="clienteCedula" />
+          </div>
+          <div>
+            <label>Nota del cliente</label>
+            <input type="text" id="clienteNota" />
+          </div>
+          <div>
+            <label>Valoración (1-5 estrellas)</label>
+            <select id="clienteValoracion">
+              <option value="5">★★★★★ (5)</option>
+              <option value="4">★★★★☆ (4)</option>
+              <option value="3">★★★☆☆ (3)</option>
+              <option value="2">★★☆☆☆ (2)</option>
+              <option value="1">★☆☆☆☆ (1)</option>
+            </select>
+          </div>
+        </form>
+        <button class="btn" id="btnGuardarCliente">Guardar cliente</button>
+        <p class="muted">El ID del cliente se genera automáticamente.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Listado de clientes</div>
+        </div>
+        <div style="margin-bottom:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
+          <input type="text" id="clienteBuscar" placeholder="Buscar por ID, nombre, teléfono o cédula" style="flex:1; min-width:220px; max-width:320px; padding:7px 9px; border-radius:8px; border:1px solid #444; background:#101010; color:#ffffff; font-size:0.8rem;">
+          <span class="muted">Escribe para filtrar los clientes</span>
+        </div>
+        <table id="tablaClientes">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Teléfono</th>
+              <th>Cédula</th>
+              <th>Nota del cliente</th>
+              <th>Valoración</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- VEHICULOS -->
+    <section id="vehiculos" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Vehículos</div>
+        </div>
+        <form id="formVehiculo">
+          <div>
+            <label>Marca</label>
+            <input type="text" id="vehMarca" required />
+          </div>
+          <div>
+            <label>Modelo</label>
+            <input type="text" id="vehModelo" required />
+          </div>
+          <div>
+            <label>Año</label>
+            <input type="number" id="vehAno" />
+          </div>
+          <div>
+            <label>Placa</label>
+            <input type="text" id="vehPlaca" />
+          </div>
+          <div>
+            <label>Estado</label>
+            <select id="vehEstado">
+              <option value="Disponible">Disponible</option>
+              <option value="Rentado">Rentado</option>
+              <option value="Mantenimiento">Mantenimiento</option>
+            </select>
+          </div>
+          <div>
+            <label>Precio por día (RD$)</label>
+            <input type="number" id="vehPrecioDia" required />
+          </div>
+          <div>
+            <label>URL de imagen (opcional)</label>
+            <input type="text" id="vehImagen" placeholder="https://... o ruta local" />
+          </div>
+        </form>
+        <button class="btn" id="btnGuardarVehiculo">Guardar vehículo</button>
+        <p class="muted">El ID del vehículo se genera automáticamente.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Listado de vehículos (vista de cards)</div>
+        </div>
+        <div id="cardsVehiculos" class="veh-grid"></div>
+      </div>
+    </section>
+
+
+    <!-- DISPONIBILIDAD -->
+    <section id="disponibilidad" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Disponibilidad de vehículos</div>
+        </div>
+        <p class="muted">
+          Visualiza el calendario de rentas por vehículo. Los días marcados en rojo indican que el vehículo está rentado.
+        </p>
+        <div style="display:flex; gap:16px; flex-wrap:wrap;" id="contenedorDisponibilidad"></div>
+      </div>
+    </section>
+
+    <!-- EXPORTAR / IMPORTAR -->
+    <section id="datos" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Exportar / Importar datos</div>
+        </div>
+        <p class="muted">Los datos se guardan en el navegador (localStorage). Puedes exportarlos como JSON para respaldo o para llevarlos a Excel.</p>
+        <button class="btn" id="btnExportar">Exportar todo a archivo .json</button>
+        <input type="file" id="inputImportar" accept="application/json" style="display:none" />
+        <button class="btn secondary" id="btnImportar">Importar desde .json</button>
+        <button class="btn secondary" id="btnBorrarTodo">Borrar todo (cuidado)</button>
+        <pre id="previewExport" class="muted" style="margin-top:10px; max-height:200px; overflow:auto; background:#050505; padding:8px; border-radius:8px;"></pre>
+      </div>
+    </section>
+
+    <!-- SEGURIDAD / USUARIOS -->
+    <section id="seguridad" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Usuarios y acceso al sistema</div>
+        </div>
+        <p class="muted">
+          Configura el usuario y la contraseña que se usarán para entrar al sistema.
+          Si no configuras nada, el acceso por defecto será: <strong>admin / 1234</strong>.
+        </p>
+        <form id="formSeguridad">
+          <div>
+            <label>Usuario de acceso</label>
+            <input type="text" id="segUsuario" placeholder="Ej: arcy_admin" />
+          </div>
+          <div>
+            <label>Contraseña de acceso</label>
+            <input type="password" id="segContrasena" placeholder="Escribe una contraseña segura" />
+          </div>
+        </form>
+        <button class="btn" id="btnGuardarSeguridad">Guardar usuario y contraseña</button>
+        <p class="muted">Estos datos se guardan solo en este navegador mediante localStorage.</p>
+      </div>
+    </section>
+    </section>
+  </main>
+
+  
+  <!-- MODAL DETALLES CLIENTE -->
+  <div id="clienteModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalCliTitulo">Cliente</div>
+        <button class="modal-close" type="button" onclick="cerrarClienteModal()">&times;</button>
+      </div>
+      <div id="modalCliContenido"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn secondary" onclick="habilitarEdicionCliente()">Editar</button>
+        <button type="button" class="modal-btn primary" id="btnGuardarCambiosCliente" style="display:none;" onclick="guardarCambiosCliente()">Guardar cambios</button>
+        <button type="button" class="modal-btn danger" onclick="eliminarCliente()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+<!-- MODAL DETALLES VEHÍCULO -->
+  <div id="vehiculoModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalVehTitulo">Vehículo</div>
+        <button class="modal-close" type="button" onclick="cerrarVehiculoModal()">&times;</button>
+      </div>
+      <img id="modalVehImg" class="modal-img" src="" alt="" style="display:none;">
+      <div id="modalVehContenido"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn secondary" onclick="habilitarEdicionVehiculo()">Editar</button>
+        <button type="button" class="modal-btn primary" id="btnGuardarCambiosVehiculo" style="display:none;" onclick="guardarCambiosVehiculo()">Guardar cambios</button>
+        <button type="button" class="modal-btn danger" onclick="eliminarVehiculo()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ----- UTILIDADES DE STORAGE -----
+    let facturaEditando = null;
+    const STORAGE_KEYS = {
+      clientes: "arcy_clientes",
+      vehiculos: "arcy_vehiculos",
+      facturas: "arcy_facturas",
+      rentas: "arcy_rentas",
+    };
+
+    function loadArray(key) {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : [];
+    }
+
+    function saveArray(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    let clientes = loadArray(STORAGE_KEYS.clientes);
+    let vehiculos = loadArray(STORAGE_KEYS.vehiculos);
+    let facturas = loadArray(STORAGE_KEYS.facturas);
+    let rentas = loadArray(STORAGE_KEYS.rentas);
+
+    // ID del cliente abierto en el modal
+    let clienteModalId = null;
+
+    // ID del vehículo abierto en el modal
+    let vehiculoModalId = null;
+
+    // ----- RENDERIZADO DE TABLAS / CARDS -----
+    
+    
+    function aplicarFiltroClientes() {
+      const input = document.getElementById("clienteBuscar");
+      const tbody = document.querySelector("#tablaClientes tbody");
+      if (!input || !tbody) return;
+      const texto = input.value.toLowerCase().trim();
+      const filas = tbody.querySelectorAll("tr");
+      filas.forEach((tr) => {
+        const celdas = tr.querySelectorAll("td");
+        if (celdas.length === 0) return;
+        const id = (celdas[0].textContent || "").toLowerCase();
+        const nombre = (celdas[1].textContent || "").toLowerCase();
+        const telefono = (celdas[2].textContent || "").toLowerCase();
+        const cedula = (celdas[3].textContent || "").toLowerCase();
+        const coincide =
+          !texto ||
+          id.includes(texto) ||
+          nombre.includes(texto) ||
+          telefono.includes(texto) ||
+          cedula.includes(texto);
+        tr.style.display = coincide ? "" : "none";
+      });
+    }
+
+    function seleccionarClienteParaFactura(idCliente) {
+      // Cambiar a la pestaña de factura
+      const tabFactura = document.querySelector('.tab-btn[data-tab="factura"]');
+      if (tabFactura) {
+        tabFactura.click();
+      }
+      // Seleccionar el cliente en el select de factura
+      const selectCliente = document.getElementById("selectCliente");
+      if (selectCliente) {
+        selectCliente.value = String(idCliente);
+      }
+      // Hacer scroll al formulario de factura
+      const facturaSection = document.getElementById("factura");
+      if (facturaSection) {
+        facturaSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+
+function renderClientes() {
+      const tbody = document.querySelector("#tablaClientes tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      clientes.forEach((c) => {
+        const tr = document.createElement("tr");
+        const nota = (c.nota !== undefined && c.nota !== null) ? c.nota : (c.email || "");
+        const valor = Number(c.valoracion || 0);
+        const estrellas = valor ? "★".repeat(valor) + "☆".repeat(5 - valor) : "";
+        tr.innerHTML = `
+          <td>${c.id}</td>
+          <td>${c.nombre}</td>
+          <td>${c.telefono || ""}</td>
+          <td>${c.cedula || ""}</td>
+          <td>${nota}</td>
+          <td>${estrellas || "-"}</td>
+          <td>
+            <button type="button" class="btn-table" data-id="${c.id}" data-action="editar">Ver / Editar</button>
+            <button type="button" class="btn-table" data-id="${c.id}" data-action="factura">Usar en factura</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Eventos para abrir modal de cliente o usar en factura
+      const botones = tbody.querySelectorAll(".btn-table");
+      botones.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-id");
+          const action = btn.getAttribute("data-action") || "editar";
+          if (action === "factura") {
+            seleccionarClienteParaFactura(id);
+          } else {
+            abrirClienteModal(id);
+          }
+        });
+      });
+
+      const selectCliente = document.getElementById("selectCliente");
+      if (!selectCliente) return;
+      selectCliente.innerHTML = "";
+      if (clientes.length === 0) {
+        selectCliente.innerHTML = '<option value="">Primero registra clientes</option>';
+      } else {
+        selectCliente.innerHTML = '<option value="">Selecciona cliente</option>';
+        clientes.forEach((c) => {
+          const opt = document.createElement("option");
+          opt.value = c.id;
+          opt.textContent = `${c.id} - ${c.nombre}`;
+          selectCliente.appendChild(opt);
+        });
+      }
+
+      aplicarFiltroClientes();
+    }
+
+    function renderVehiculosPreview() {
+      const cont = document.getElementById("vehiculosPreview");
+      if (!cont) return;
+      cont.innerHTML = "";
+
+      if (vehiculos.length === 0) {
+        cont.innerHTML = '<p class="muted">Aún no tienes vehículos registrados.</p>';
+        return;
+      }
+
+      // Últimos 4 vehículos agregados (más recientes)
+      const lista = vehiculos.slice(-4).reverse();
+      lista.forEach((v) => {
+        const div = document.createElement("div");
+        div.className = "veh-card";
+
+        const iniciales =
+          (v.marca ? v.marca.charAt(0) : "") +
+          (v.modelo ? v.modelo.charAt(0) : "");
+
+        const imgHtml = v.imagen
+          ? `<div class="veh-card-img-wrap"><img src="${v.imagen}" alt="${v.marca} ${v.modelo}"></div>`
+          : `<div class="veh-card-img-placeholder">${iniciales || "AR"}</div>`;
+
+        const estadoClass =
+          v.estado === "Disponible" ? "ok" : v.estado === "Rentado" ? "warn" : "";
+
+        div.innerHTML = `
+          ${imgHtml}
+          <div class="veh-card-body">
+            <h3>${v.marca} ${v.modelo}</h3>
+            <p class="veh-card-sub">${v.ano ? "Año " + v.ano : ""}</p>
+            <p class="veh-card-sub">RD$ ${Number(v.precioDia).toFixed(2)} / día</p>
+            <p class="veh-card-sub">${v.placa ? "Placa: " + v.placa : ""}</p>
+            <p class="veh-card-tag ${estadoClass}">${v.estado}</p>
+            <button class="veh-card-btn" type="button" data-id="${v.id}">Ver detalles</button>
+          </div>
+        `;
+        cont.appendChild(div);
+      });
+
+      // Eventos de ver detalles en preview
+      const botonesDetalles = cont.querySelectorAll(".veh-card-btn");
+      botonesDetalles.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-id");
+          abrirVehiculoModal(id);
+        });
+      });
+    }
+
+function renderVehiculos() {
+      const cards = document.getElementById("cardsVehiculos");
+      if (cards) {
+        cards.innerHTML = "";
+        vehiculos.forEach((v) => {
+          const div = document.createElement("div");
+          div.className = "veh-card";
+
+          const iniciales =
+            (v.marca ? v.marca.charAt(0) : "") +
+            (v.modelo ? v.modelo.charAt(0) : "");
+
+          const imgHtml = v.imagen
+            ? `<div class="veh-card-img-wrap"><img src="${v.imagen}" alt="${v.marca} ${v.modelo}"></div>`
+            : `<div class="veh-card-img-placeholder">${iniciales || "AR"}</div>`;
+
+          const estadoClass =
+            v.estado === "Disponible" ? "ok" : v.estado === "Rentado" ? "warn" : "";
+
+          div.innerHTML = `
+            ${imgHtml}
+            <div class="veh-card-body">
+              <h3>${v.marca} ${v.modelo}</h3>
+              <p class="veh-card-sub">${v.ano ? "Año " + v.ano : ""}</p>
+              <p class="veh-card-sub">RD$ ${Number(v.precioDia).toFixed(2)} / día</p>
+              <p class="veh-card-sub">${v.placa ? "Placa: " + v.placa : ""}</p>
+              <p class="veh-card-tag ${estadoClass}">${v.estado}</p>
+              <button class="veh-card-btn" type="button" data-id="${v.id}">Ver detalles</button>
+            </div>
+          `;
+          cards.appendChild(div);
+        });
+
+        const botonesDetalles = cards.querySelectorAll(".veh-card-btn");
+        botonesDetalles.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-id");
+            abrirVehiculoModal(id);
+          });
+        });
+      }
+
+      // Select de vehículos para facturas
+      const selectVehiculo = document.getElementById("selectVehiculo");
+      if (!selectVehiculo) return;
+      selectVehiculo.innerHTML = "";
+      if (vehiculos.length === 0) {
+        selectVehiculo.innerHTML = '<option value="">Primero registra vehículos</option>';
+      } else {
+        selectVehiculo.innerHTML = '<option value="">Selecciona vehículo</option>';
+        vehiculos.forEach((v) => {
+          const opt = document.createElement("option");
+          opt.value = v.id;
+          opt.textContent = `${v.id} - ${v.marca} ${v.modelo}`;
+          selectVehiculo.appendChild(opt);
+        });
+      }
+
+      // Actualizar vista previa en dashboard
+      renderVehiculosPreview();
+    }
+
+    function renderFacturas() {
+      const tbody = document.querySelector("#tablaFacturas tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      facturas.forEach((f) => {
+        const cliente = clientes.find((c) => c.id === f.idCliente);
+        const vehiculo = vehiculos.find((v) => v.id === f.idVehiculo);
+        const nombreCliente = cliente ? cliente.nombre : "";
+        const descVehiculo = vehiculo ? `${vehiculo.marca} ${vehiculo.modelo}` : "";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${f.id}</td><td>${f.fecha}</td><td>${nombreCliente}</td><td>${descVehiculo}</td><td>${f.dias}</td><td>${Number(f.total).toFixed(2)}</td><td><button class="btn-table btn-pdf" data-id="${f.id}">PDF</button><button class="btn-table btn-edit" data-id="${f.id}">Editar</button><button class="btn-table btn-del" data-id="${f.id}">Eliminar</button></td>`;
+        tbody.appendChild(tr);
+      });
+
+      const pdfButtons = tbody.querySelectorAll(".btn-pdf");
+      pdfButtons.forEach((btn) => {
+
+    // ---------------- ELIMINAR FACTURA ----------------
+    tbody.querySelectorAll(".btn-del").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const id = Number(btn.dataset.id);
+            if (!confirm("¿Eliminar factura y su renta asociada?")) return;
+
+            facturas = facturas.filter(f => f.id !== id);
+            rentas = rentas.filter(r => r.idFactura !== id);
+
+            saveArray(STORAGE_KEYS.facturas, facturas);
+            saveArray(STORAGE_KEYS.rentas, rentas);
+
+            renderFacturas();
+            renderDisponibilidad();
+            recalcularDashboard();
+
+            alert("Factura eliminada.");
+        });
+    });
+
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-id");
+          exportarFacturaPDF(id);
+        });
+      });
+    }
+
+    
+    function obtenerRentasPorVehiculo(idVehiculo) {
+      return rentas.filter((r) => r.idVehiculo === idVehiculo);
+    }
+
+    function construirCalendarioPara(mesBase, anioBase, rentasVehiculo) {
+      const primerDia = new Date(anioBase, mesBase, 1);
+      const diaSemanaInicio = primerDia.getDay(); // 0 domingo
+      const diasEnMes = new Date(anioBase, mesBase + 1, 0).getDate();
+
+      const dias = [];
+      // Ajustar para iniciar en lunes (L=1)
+      const offset = (diaSemanaInicio + 6) % 7;
+      for (let i = 0; i < offset; i++) {
+        dias.push(null);
+      }
+      for (let d = 1; d <= diasEnMes; d++) {
+        dias.push(d);
+      }
+
+      function estaRentado(dia) {
+        if (!dia) return false;
+        const fechaStr = (n) => n.toString().padStart(2, "0");
+        const diaStr = fechaStr(dia);
+        const mesStr = fechaStr(mesBase + 1);
+        const fecha = `${anioBase}-${mesStr}-${diaStr}`;
+        return rentasVehiculo.some((r) => {
+          return r.fechaInicio && r.fechaFinal && fecha >= r.fechaInicio && fecha <= r.fechaFinal;
+        });
+      }
+
+      function obtenerRentaParaDia(dia) {
+        if (!dia) return null;
+        const fechaStr = (n) => n.toString().padStart(2, "0");
+        const diaStr = fechaStr(dia);
+        const mesStr = fechaStr(mesBase + 1);
+        const fecha = `${anioBase}-${mesStr}-${diaStr}`;
+        return rentasVehiculo.find((r) => {
+          return r.fechaInicio && r.fechaFinal && fecha >= r.fechaInicio && fecha <= r.fechaFinal;
+        }) || null;
+      }
+
+      return { dias, estaRentado, obtenerRentaParaDia };
+    }
+
+    function renderDisponibilidad() {
+      const cont = document.getElementById("contenedorDisponibilidad");
+      if (!cont) return;
+      cont.innerHTML = "";
+      const hoy = new Date();
+      vehiculos.forEach((v) => {
+        const card = document.createElement("div");
+        card.className = "card-calendario";
+        let mes = hoy.getMonth();
+        let anio = hoy.getFullYear();
+
+        const rentasVehiculo = obtenerRentasPorVehiculo(v.id);
+
+        const header = document.createElement("div");
+        header.className = "card-calendario-header";
+
+        const titulo = document.createElement("div");
+        titulo.className = "card-calendario-titulo";
+        const descVehiculo = `${v.marca || ""} ${v.modelo || ""}`.trim() || `Vehículo ${v.id}`;
+        titulo.textContent = descVehiculo;
+
+        const nav = document.createElement("div");
+        nav.className = "card-calendario-nav";
+        const btnPrev = document.createElement("button");
+        btnPrev.textContent = "◀";
+        const btnNext = document.createElement("button");
+        btnNext.textContent = "▶";
+        const labelMes = document.createElement("span");
+        labelMes.style.margin = "0 4px";
+
+        nav.appendChild(btnPrev);
+        nav.appendChild(labelMes);
+        nav.appendChild(btnNext);
+
+        header.appendChild(titulo);
+        header.appendChild(nav);
+        card.appendChild(header);
+
+        const tabla = document.createElement("table");
+        tabla.className = "mini-calendario";
+        const thead = document.createElement("thead");
+        thead.innerHTML = "<tr><th>L</th><th>M</th><th>X</th><th>J</th><th>V</th><th>S</th><th>D</th></tr>";
+        tabla.appendChild(thead);
+        const tbody = document.createElement("tbody");
+        tabla.appendChild(tbody);
+        card.appendChild(tabla);
+
+        const listaRentas = document.createElement("div");
+        listaRentas.className = "lista-rentas";
+        card.appendChild(listaRentas);
+
+        function actualizar() {
+          const nombreMeses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+          labelMes.textContent = `${nombreMeses[mes]} ${anio}`;
+          tbody.innerHTML = "";
+          const { dias, estaRentado, obtenerRentaParaDia } = construirCalendarioPara(mes, anio, rentasVehiculo);
+
+          for (let i = 0; i < dias.length; i += 7) {
+            const tr = document.createElement("tr");
+            for (let j = 0; j < 7; j++) {
+              const dia = dias[i + j];
+              const td = document.createElement("td");
+              if (!dia) {
+                td.className = "dia-vacio";
+                td.textContent = "";
+              } else {
+                const rentaDia = obtenerRentaParaDia(dia);
+                if (estaRentado(dia) && rentaDia) {
+                  td.className = "dia-rentado";
+                  td.textContent = dia;
+                  let nombreCli = "";
+                  const facturaRel = facturas.find((f) => f.id === rentaDia.idFactura);
+                  if (facturaRel) {
+                    const cli = clientes.find((c) => c.id === facturaRel.idCliente);
+                    if (cli) nombreCli = cli.nombre;
+                  }
+                  td.title = nombreCli
+                    ? `${nombreCli} (${rentaDia.fechaInicio} a ${rentaDia.fechaFinal})`
+                    : `${rentaDia.fechaInicio} a ${rentaDia.fechaFinal}`;
+                } else {
+                  td.className = "dia-disponible";
+                  td.textContent = dia;
+                }
+              }
+              tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+          }
+
+          listaRentas.innerHTML = "";
+          if (rentasVehiculo.length === 0) {
+            const p = document.createElement("div");
+            p.className = "lista-rentas-item";
+            p.textContent = "Este vehículo no tiene rentas en este mes.";
+            listaRentas.appendChild(p);
+          } else {
+            rentasVehiculo.forEach((r) => {
+              let nombreCli = "";
+              const facturaRel = facturas.find((f) => f.id === r.idFactura);
+              if (facturaRel) {
+                const cli = clientes.find((c) => c.id === facturaRel.idCliente);
+                if (cli) nombreCli = cli.nombre;
+              }
+              const item = document.createElement("div");
+              item.className = "lista-rentas-item";
+              item.textContent = `🟥 ${r.fechaInicio} a ${r.fechaFinal} — Cliente: ${nombreCli}`;
+              listaRentas.appendChild(item);
+            });
+          }
+        }
+
+        btnPrev.addEventListener("click", () => {
+          mes--;
+          if (mes < 0) {
+            mes = 11;
+            anio--;
+          }
+          actualizar();
+        });
+
+        btnNext.addEventListener("click", () => {
+          mes++;
+          if (mes > 11) {
+            mes = 0;
+            anio++;
+          }
+          actualizar();
+        });
+
+        actualizar();
+        cont.appendChild(card);
+      });
+    }
+
+// ----- DASHBOARD -----
+    function recalcularDashboard() {
+      const totalFacturado = facturas.reduce((acc, f) => acc + Number(f.total || 0), 0);
+      const elTotal = document.getElementById("kpiTotalFacturado");
+      if (elTotal) elTotal.textContent = totalFacturado.toFixed(2);
+      const elCantFact = document.getElementById("kpiCantidadFacturas");
+      if (elCantFact) elCantFact.textContent = facturas.length;
+      const elCantRentas = document.getElementById("kpiCantidadRentas");
+      if (elCantRentas) elCantRentas.textContent = rentas.length;
+
+      const meses = [
+        "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+      ];
+      const porMes = Array(12).fill(0);
+      facturas.forEach((f) => {
+        if (!f.fecha) return;
+        const d = new Date(f.fecha);
+        if (!isNaN(d)) {
+          porMes[d.getMonth()] += Number(f.total || 0);
+        }
+      });
+      const tbodyMeses = document.querySelector("#tablaMeses tbody");
+      if (tbodyMeses) {
+        tbodyMeses.innerHTML = "";
+        meses.forEach((m, idx) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${m}</td><td>${porMes[idx].toFixed(2)}</td>`;
+          tbodyMeses.appendChild(tr);
+        });
+      }
+
+      const porVehiculo = {};
+      rentas.forEach((r) => {
+        if (!porVehiculo[r.idVehiculo]) porVehiculo[r.idVehiculo] = 0;
+        porVehiculo[r.idVehiculo] += Number(r.totalRenta || 0);
+      });
+      const tbodyVehDash = document.querySelector("#tablaVehiculosDashboard tbody");
+      if (tbodyVehDash) {
+        tbodyVehDash.innerHTML = "";
+        let topId = null;
+        let topMonto = 0;
+        Object.keys(porVehiculo).forEach((id) => {
+          const monto = porVehiculo[id];
+          const v = vehiculos.find((x) => x.id === Number(id));
+          const desc = v ? `${v.marca} ${v.modelo}` : "";
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${id}</td><td>${desc}</td><td>${monto.toFixed(2)}</td>`;
+          tbodyVehDash.appendChild(tr);
+          if (monto > topMonto) {
+            topMonto = monto;
+            topId = id;
+          }
+        });
+        const topVehiculoLabel = document.getElementById("kpiTopVehiculo");
+        const topVehiculoMonto = document.getElementById("kpiTopVehiculoMonto");
+        if (topId) {
+          const vTop = vehiculos.find((v) => v.id === Number(topId));
+          if (topVehiculoLabel) topVehiculoLabel.textContent = vTop ? `${vTop.marca} ${vTop.modelo}` : `ID ${topId}`;
+          if (topVehiculoMonto) topVehiculoMonto.textContent = `Total rentado: RD$ ${topMonto.toFixed(2)}`;
+        } else {
+          if (topVehiculoLabel) topVehiculoLabel.textContent = "N/A";
+          if (topVehiculoMonto) topVehiculoMonto.textContent = "";
+        }
+      }
+    }
+
+    // ----- FACTURA Y RENTA -----
+    
+// ---------------- VALIDACIÓN DE FECHAS CRUZADAS ----------------
+function fechasSeCruzan(inicio1, fin1, inicio2, fin2) {
+    return (inicio1 <= fin2) && (inicio2 <= fin1);
+}
+function calcularFactura() {
+      const idVehiculo = Number(document.getElementById("selectVehiculo").value);
+      const v = vehiculos.find((x) => x.id === idVehiculo);
+
+      const fechaInicio = document.getElementById("fechaInicio").value;
+      const fechaFinal = document.getElementById("fechaFinal").value;
+
+      // VALIDAR FECHAS DISPONIBLES
+      const reservas = rentas.filter((r) => r.idVehiculo === idVehiculo);
+      for (let r of reservas) {
+        if (fechasSeCruzan(fechaInicio, fechaFinal, r.fechaInicio, r.fechaFinal)) {
+          alert(`🚫 El vehículo NO está disponible. Ya está rentado del ${r.fechaInicio} al ${r.fechaFinal}`);
+          return null;
+        }
+      }
+
+      if (!fechaInicio || !fechaFinal || !v) {
+        alert("Selecciona vehículo y fechas de renta");
+        return null;
+      }
+
+      const d1 = new Date(fechaInicio);
+      const d2 = new Date(fechaFinal);
+      if (d2 < d1) {
+        alert("La fecha final no puede ser menor que la fecha inicio");
+        return null;
+      }
+
+      const diffMs = d2 - d1;
+      const dias = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1;
+
+      const precioInput = document.getElementById("precioDia");
+      let precioDia = Number(precioInput ? precioInput.value : 0);
+
+      // Si está vacío o inválido, usar el precio base del vehículo
+      if (!precioDia || precioDia <= 0) {
+        precioDia = Number(v.precioDia || 0);
+        if (precioInput) precioInput.value = precioDia.toFixed(2);
+      }
+
+      const total = dias * precioDia;
+
+      document.getElementById("dias").value = dias;
+      document.getElementById("total").value = total.toFixed(2);
+
+      return { dias, precioDia, total };
+    }
+
+    function login() {
+      const userInput = document.getElementById("loginUser");
+      const passInput = document.getElementById("loginPass");
+      const user = userInput ? userInput.value.trim() : "";
+      const pass = passInput ? passInput.value.trim() : "";
+
+      const storedUser = localStorage.getItem("arcy_user") || "admin";
+      const storedPass = localStorage.getItem("arcy_pass") || "1234";
+
+      if (user === storedUser && pass === storedPass) {
+        const screen = document.getElementById("loginScreen");
+        if (screen) screen.style.display = "none";
+        localStorage.setItem("arcy_logged", "1");
+        const err = document.getElementById("loginError");
+        if (err) err.style.display = "none";
+      } else {
+        const err = document.getElementById("loginError");
+        if (err) err.style.display = "block";
+      }
+    }
+
+// --- MODAL CLIENTE ---
+    function abrirClienteModal(id) {
+      const c = clientes.find((x) => x.id === id);
+      if (!c) return;
+      clienteModalId = id;
+
+      const backdrop = document.getElementById("clienteModalBackdrop");
+      const titulo = document.getElementById("modalCliTitulo");
+      const cont = document.getElementById("modalCliContenido");
+      const btnGuardar = document.getElementById("btnGuardarCambiosCliente");
+
+      if (titulo) {
+        titulo.textContent = c.nombre || `Cliente ${c.id}`;
+      }
+
+      if (cont) {
+        const nota = (c.nota !== undefined && c.nota !== null) ? c.nota : (c.email || "");
+        const valoracion = Number(c.valoracion || 5);
+        cont.innerHTML = `
+          <div class="modal-row">
+            <label>Nombre</label>
+            <input id="modalCliNombre" class="modal-input modal-cli-input" value="${c.nombre || ""}" disabled>
+          </div>
+          <div class="modal-row">
+            <label>Teléfono</label>
+            <input id="modalCliTelefono" class="modal-input modal-cli-input" value="${c.telefono || ""}" disabled>
+          </div>
+          <div class="modal-row">
+            <label>Cédula / ID</label>
+            <input id="modalCliCedula" class="modal-input modal-cli-input" value="${c.cedula || ""}" disabled>
+          </div>
+          <div class="modal-row">
+            <label>Nota del cliente</label>
+            <input id="modalCliNota" class="modal-input modal-cli-input" value="${nota}" disabled>
+          </div>
+          <div class="modal-row">
+            <label>Valoración (1-5 estrellas)</label>
+            <select id="modalCliValoracion" class="modal-input modal-cli-input" disabled>
+              <option value="5">★★★★★ (5)</option>
+              <option value="4">★★★★☆ (4)</option>
+              <option value="3">★★★☆☆ (3)</option>
+              <option value="2">★★☆☆☆ (2)</option>
+              <option value="1">★☆☆☆☆ (1)</option>
+            </select>
+          </div>
+          <div class="modal-row">
+            <strong>ID interno:</strong> ${c.id}
+          </div>
+        `;
+        const selVal = document.getElementById("modalCliValoracion");
+        if (selVal) selVal.value = String(valoracion || 5);
+      }
+      document.querySelectorAll(".modal-cli-input").forEach((el) => (el.disabled = true));
+      if (btnGuardar) btnGuardar.style.display = "none";
+
+      if (backdrop) backdrop.style.display = "flex";
+    }
+
+    function cerrarClienteModal() {
+      const backdrop = document.getElementById("clienteModalBackdrop");
+      if (backdrop) backdrop.style.display = "none";
+      clienteModalId = null;
+    }
+
+    function habilitarEdicionCliente() {
+      document.querySelectorAll(".modal-cli-input").forEach((el) => (el.disabled = false));
+      const btnGuardar = document.getElementById("btnGuardarCambiosCliente");
+      if (btnGuardar) btnGuardar.style.display = "inline-block";
+    }
+
+    function guardarCambiosCliente() {
+      if (clienteModalId == null) return;
+      const idx = clientes.findIndex((c) => c.id === clienteModalId);
+      if (idx === -1) return;
+
+      const nombre = document.getElementById("modalCliNombre").value.trim();
+      const telefono = document.getElementById("modalCliTelefono").value.trim();
+      const cedula = document.getElementById("modalCliCedula").value.trim();
+      const nota = document.getElementById("modalCliNota").value.trim();
+      const valoracion = Number(document.getElementById("modalCliValoracion").value || 5);
+
+      if (!nombre) {
+        alert("El nombre es obligatorio");
+        return;
+      }
+
+      const c = clientes[idx];
+      c.nombre = nombre;
+      c.telefono = telefono;
+      c.cedula = cedula;
+      c.nota = nota;
+      c.valoracion = valoracion;
+      if (c.email !== undefined) {
+        delete c.email;
+      }
+
+      saveArray(STORAGE_KEYS.clientes, clientes);
+      renderClientes();
+      renderFacturas(); // para actualizar el nombre en las facturas
+      alert("Cliente actualizado");
+      cerrarClienteModal();
+    }
+
+    function eliminarCliente() {
+      if (clienteModalId == null) return;
+      const c = clientes.find((x) => x.id === clienteModalId);
+      const nombre = c ? c.nombre : `ID ${clienteModalId}`;
+      if (!confirm(`¿Seguro que deseas eliminar el cliente ${nombre}? También se eliminarán sus facturas y rentas asociadas.`)) return;
+
+      // Facturas asociadas al cliente
+      const facturasEliminar = facturas.filter((f) => f.idCliente === clienteModalId).map((f) => f.id);
+      facturas = facturas.filter((f) => f.idCliente !== clienteModalId);
+      rentas = rentas.filter((r) => !facturasEliminar.includes(r.idFactura));
+      clientes = clientes.filter((cli) => cli.id !== clienteModalId);
+
+      saveArray(STORAGE_KEYS.clientes, clientes);
+      saveArray(STORAGE_KEYS.facturas, facturas);
+      saveArray(STORAGE_KEYS.rentas, rentas);
+
+      renderClientes();
+      renderFacturas();
+      recalcularDashboard();
+      cerrarClienteModal();
+      alert("Cliente y registros relacionados eliminados");
+    }
+
+// --- MODAL VEHÍCULO ---
+    function abrirVehiculoModal(id) {
+      const v = vehiculos.find((x) => x.id === id);
+      if (!v) return;
+      vehiculoModalId = id;
+
+      const backdrop = document.getElementById("vehiculoModalBackdrop");
+      const titulo = document.getElementById("modalVehTitulo");
+      const img = document.getElementById("modalVehImg");
+      const cont = document.getElementById("modalVehContenido");
+      const btnGuardar = document.getElementById("btnGuardarCambiosVehiculo");
+
+      titulo.textContent = `${v.marca} ${v.modelo}`;
+
+      if (v.imagen) {
+        img.src = v.imagen;
+        img.alt = `${v.marca} ${v.modelo}`;
+        img.style.display = "block";
+      } else {
+        img.style.display = "none";
+      }
+
+      cont.innerHTML = `
+        <div class="modal-row">
+          <label>Marca</label>
+          <input id="modalVehMarca" class="modal-input" value="${v.marca || ""}" disabled>
+        </div>
+        <div class="modal-row">
+          <label>Modelo</label>
+          <input id="modalVehModelo" class="modal-input" value="${v.modelo || ""}" disabled>
+        </div>
+        <div class="modal-row">
+          <label>Año</label>
+          <input id="modalVehAno" class="modal-input" value="${v.ano || ""}" disabled>
+        </div>
+        <div class="modal-row">
+          <label>Placa</label>
+          <input id="modalVehPlaca" class="modal-input" value="${v.placa || ""}" disabled>
+        </div>
+        <div class="modal-row">
+          <label>Estado</label>
+          <select id="modalVehEstado" class="modal-input" disabled>
+            <option value="Disponible">Disponible</option>
+            <option value="Rentado">Rentado</option>
+            <option value="Mantenimiento">Mantenimiento</option>
+          </select>
+        </div>
+        <div class="modal-row">
+          <label>Precio por día (RD$)</label>
+          <input id="modalVehPrecioDia" class="modal-input" value="${v.precioDia || ""}" disabled>
+        </div>
+        <div class="modal-row">
+          <label>URL Imagen</label>
+          <input id="modalVehImagenUrl" class="modal-input" value="${v.imagen || ""}" disabled>
+        </div>
+        <div class="modal-row">
+          <strong>ID interno:</strong> ${v.id}
+        </div>
+      `;
+
+      // set estado select value
+      const selectEstado = document.getElementById("modalVehEstado");
+      if (selectEstado) {
+        selectEstado.value = v.estado || "Disponible";
+      }
+
+      // desactivar edición por defecto
+      document.querySelectorAll(".modal-input").forEach(el => el.disabled = true);
+      if (btnGuardar) btnGuardar.style.display = "none";
+
+      backdrop.style.display = "flex";
+    }
+
+    function cerrarVehiculoModal() {
+      const backdrop = document.getElementById("vehiculoModalBackdrop");
+      if (backdrop) backdrop.style.display = "none";
+      vehiculoModalId = null;
+    }
+
+    function habilitarEdicionVehiculo() {
+      document.querySelectorAll(".modal-input").forEach(el => el.disabled = false);
+      const btnGuardar = document.getElementById("btnGuardarCambiosVehiculo");
+      if (btnGuardar) btnGuardar.style.display = "inline-block";
+    }
+
+    function guardarCambiosVehiculo() {
+      if (vehiculoModalId == null) return;
+      const idx = vehiculos.findIndex(v => v.id === vehiculoModalId);
+      if (idx === -1) return;
+      const v = vehiculos[idx];
+
+      const marca = document.getElementById("modalVehMarca").value.trim();
+      const modelo = document.getElementById("modalVehModelo").value.trim();
+      const ano = document.getElementById("modalVehAno").value.trim();
+      const placa = document.getElementById("modalVehPlaca").value.trim();
+      const estado = document.getElementById("modalVehEstado").value;
+      const precioDia = Number(document.getElementById("modalVehPrecioDia").value || 0);
+      const imagen = document.getElementById("modalVehImagenUrl").value.trim();
+
+      if (!marca || !modelo || !precioDia) {
+        alert("Marca, modelo y precio por día son obligatorios");
+        return;
+      }
+
+      v.marca = marca;
+      v.modelo = modelo;
+      v.ano = ano ? Number(ano) : null;
+      v.placa = placa;
+      v.estado = estado;
+      v.precioDia = precioDia;
+      v.imagen = imagen;
+
+      saveArray(STORAGE_KEYS.vehiculos, vehiculos);
+      renderVehiculos();
+      recalcularDashboard();
+      alert("Vehículo actualizado");
+      cerrarVehiculoModal();
+    }
+
+    function eliminarVehiculo() {
+      if (vehiculoModalId == null) return;
+      const v = vehiculos.find(x => x.id === vehiculoModalId);
+      const desc = v ? `${v.marca} ${v.modelo}` : `ID ${vehiculoModalId}`;
+      if (!confirm(`¿Seguro que deseas eliminar el vehículo ${desc}? También se eliminarán rentas/facturas asociadas.`)) return;
+
+      vehiculos = vehiculos.filter(vh => vh.id !== vehiculoModalId);
+      facturas = facturas.filter(f => f.idVehiculo !== vehiculoModalId);
+      rentas = rentas.filter(r => r.idVehiculo !== vehiculoModalId);
+
+      saveArray(STORAGE_KEYS.vehiculos, vehiculos);
+      saveArray(STORAGE_KEYS.facturas, facturas);
+      saveArray(STORAGE_KEYS.rentas, rentas);
+
+      renderVehiculos();
+      renderFacturas();
+      recalcularDashboard();
+      cerrarVehiculoModal();
+      alert("Vehículo y registros relacionados eliminados");
+    }
+
+    document.addEventListener("click", (e) => {
+      const backdrop = document.getElementById("vehiculoModalBackdrop");
+      const modal = document.querySelector(".modal");
+      if (!backdrop || !modal) return;
+      if (backdrop.style.display === "flex" && e.target === backdrop) {
+        cerrarVehiculoModal();
+      }
+    });
+    document.addEventListener("click", (e) => {
+      const backdropCli = document.getElementById("clienteModalBackdrop");
+      const modalCli = document.querySelector("#clienteModalBackdrop .modal");
+      if (!backdropCli || !modalCli) return;
+      if (backdropCli.style.display === "flex" && e.target === backdropCli) {
+        cerrarClienteModal();
+      }
+    });
+
+
+    // ----- INICIALIZACIÓN -----
+    
+    function cargarCredencialesSeguridad() {
+      const user = localStorage.getItem("arcy_user") || "admin";
+      const pass = localStorage.getItem("arcy_pass") || "1234";
+      const inputUser = document.getElementById("segUsuario");
+      const inputPass = document.getElementById("segContrasena");
+      if (inputUser) inputUser.value = user;
+      if (inputPass) inputPass.value = pass;
+    }
+
+    function guardarCredencialesSeguridad() {
+      const inputUser = document.getElementById("segUsuario");
+      const inputPass = document.getElementById("segContrasena");
+      if (!inputUser || !inputPass) return;
+      const user = inputUser.value.trim();
+      const pass = inputPass.value.trim();
+      if (!user || !pass) {
+        alert("Debes escribir usuario y contraseña.");
+        return;
+      }
+      localStorage.setItem("arcy_user", user);
+      localStorage.setItem("arcy_pass", pass);
+      alert("Usuario y contraseña guardados. Se usarán en el próximo inicio de sesión.");
+    }
+
+    function logout() {
+      localStorage.removeItem("arcy_logged");
+      const screen = document.getElementById("loginScreen");
+      if (screen) {
+        screen.style.display = "flex";
+      }
+    }
+
+
+   function exportarFacturaPDF(idFactura) {
+  const { jsPDF } = window.jspdf;
+
+  const doc = new jsPDF({
+    orientation: "p",
+    unit: "mm",
+    format: "letter"
+  });
+
+  const factura = facturas.find(f => f.id === idFactura);
+  if (!factura) {
+    alert("Factura no encontrada");
+    return;
+  }
+
+  const cliente = clientes.find(c => c.id === factura.idCliente) || {};
+  const vehiculo = vehiculos.find(v => v.id === factura.idVehiculo) || {};
+
+  const ROJO = [193, 18, 31];
+  const GRIS = [240, 240, 240];
+  const NEGRO = [0, 0, 0];
+
+  let y = 20;
+  const X = 20;
+  const W = 170;
+
+  /* ===== HEADER ===== */
+  doc.setFillColor(...ROJO);
+  doc.rect(0, 0, 216, 22, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(15);
+  doc.text("ARCY RENT CAR", 108, 14, { align: "center" });
+
+  doc.setFontSize(10);
+  doc.text("Factura de Renta", 108, 19, { align: "center" });
+
+  /* ===== INFO FACTURA ===== */
+  doc.setTextColor(...NEGRO);
+  y = 35;
+  doc.setFontSize(10);
+  doc.text(`Factura No: ${factura.id}`, X, y);
+  doc.text(`Fecha: ${factura.fecha}`, X + W, y, { align: "right" });
+
+  /* ===== CLIENTE ===== */
+  y += 8;
+  doc.setFillColor(...GRIS);
+  doc.rect(X, y, W, 18, "F");
+
+  doc.setFontSize(11);
+  doc.text("DATOS DEL CLIENTE", X + 2, y + 6);
+
+  doc.setFontSize(10);
+  doc.text(`Nombre: ${cliente.nombre || ""}`, X + 2, y + 13);
+  doc.text(`Teléfono: ${cliente.telefono || ""}`, X + 100, y + 13);
+
+  /* ===== VEHICULO ===== */
+  y += 26;
+  doc.setFillColor(...GRIS);
+  doc.rect(X, y, W, 22, "F");
+
+  doc.setFontSize(11);
+  doc.text("DATOS DEL VEHÍCULO", X + 2, y + 6);
+
+  doc.setFontSize(10);
+  doc.text(
+    `Vehículo: ${vehiculo.marca || ""} ${vehiculo.modelo || ""}`,
+    X + 2,
+    y + 13
+  );
+  doc.text(`Placa: ${vehiculo.placa || ""}`, X + 2, y + 19);
+  doc.text(
+    `Precio por día: RD$ ${factura.precioDia}`,
+    X + 100,
+    y + 13
+  );
+
+  /* ===== DETALLE ===== */
+  y += 32;
+  doc.setFontSize(11);
+  doc.text("DETALLE DE LA RENTA", X, y);
+
+  y += 8;
+  doc.setFontSize(10);
+  doc.text("Días rentados:", X, y);
+  doc.text(String(factura.dias), X + W, y, { align: "right" });
+
+  y += 6;
+  doc.text("Precio por día:", X, y);
+  doc.text(`RD$ ${factura.precioDia}`, X + W, y, { align: "right" });
+
+  /* ===== TOTAL ===== */
+  y += 12;
+  doc.setDrawColor(200);
+  doc.line(X, y, X + W, y);
+
+  y += 10;
+  doc.setFontSize(13);
+  doc.setTextColor(...ROJO);
+  doc.text("TOTAL A PAGAR", X, y);
+  doc.text(`RD$ ${factura.total}`, X + W, y, { align: "right" });
+
+  /* ===== FOOTER ===== */
+  y += 15;
+  doc.setFontSize(9);
+  doc.setTextColor(120);
+  doc.text(
+    "Gracias por preferir Arcy Rent Car",
+    108,
+    y,
+    { align: "center" }
+  );
+  y += 5;
+  doc.text(
+    "809-752-8739 | María del Carmen #5, Bonao, R.D.",
+    108,
+    y,
+    { align: "center" }
+  );
+
+  doc.save(`Factura_${factura.id}.pdf`);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+      // Tabs
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+          document.querySelectorAll(".section").forEach((s) => s.classList.remove("active"));
+          btn.classList.add("active");
+          document.getElementById(btn.dataset.tab).classList.add("active");
+        });
+      });
+
+
+      renderClientes();
+      renderVehiculos();
+      renderFacturas();
+      recalcularDashboard();
+      renderDisponibilidad();
+
+      // Seguridad: cargar usuario/contraseña actuales
+      cargarCredencialesSeguridad();
+      const btnGuardarSeg = document.getElementById("btnGuardarSeguridad");
+      if (btnGuardarSeg) {
+        btnGuardarSeg.addEventListener("click", guardarCredencialesSeguridad);
+      }
+
+      const btnLogout = document.getElementById("btnLogout");
+      if (btnLogout) {
+        btnLogout.addEventListener("click", logout);
+      }
+
+      const inputBuscarCliente = document.getElementById("clienteBuscar");
+      if (inputBuscarCliente) {
+        inputBuscarCliente.addEventListener("input", aplicarFiltroClientes);
+      }
+
+      // Ocultar login si ya inició antes
+      // if (localStorage.getItem("arcy_logged") === "1") {
+        // const screen = document.getElementById("loginScreen");
+        // if (screen) screen.style.display = "none";
+      // } 
+
+      // Guardar cliente
+      const btnGuardarCliente = document.getElementById("btnGuardarCliente");
+      if (btnGuardarCliente) {
+        btnGuardarCliente.addEventListener("click", () => {
+          const nombre = document.getElementById("clienteNombre").value.trim();
+          if (!nombre) {
+            alert("Escribe el nombre del cliente");
+            return;
+          }
+          const telefono = document.getElementById("clienteTelefono").value.trim();
+          const cedula = document.getElementById("clienteCedula").value.trim();
+          const nota = document.getElementById("clienteNota").value.trim();
+          const valoracion = Number(document.getElementById("clienteValoracion").value || 5);
+          const nuevoId = clientes.length ? clientes[clientes.length - 1].id + 1 : 1;
+          clientes.push({ id: nuevoId, nombre, telefono, cedula, nota, valoracion });
+          saveArray(STORAGE_KEYS.clientes, clientes);
+          document.getElementById("formCliente").reset();
+          renderClientes();
+          alert("Cliente guardado");
+        });
+      }
+
+      // Guardar vehículo
+      const btnGuardarVehiculo = document.getElementById("btnGuardarVehiculo");
+      if (btnGuardarVehiculo) {
+        btnGuardarVehiculo.addEventListener("click", () => {
+          const marca = document.getElementById("vehMarca").value.trim();
+          const modelo = document.getElementById("vehModelo").value.trim();
+          if (!marca || !modelo) {
+            alert("Marca y modelo son obligatorios");
+            return;
+          }
+          const ano = document.getElementById("vehAno").value;
+          const placa = document.getElementById("vehPlaca").value;
+          const estado = document.getElementById("vehEstado").value;
+          const precioDia = Number(document.getElementById("vehPrecioDia").value || 0);
+          const imagen = document.getElementById("vehImagen").value.trim();
+          if (!precioDia) {
+            alert("Precio por día es obligatorio");
+            return;
+          }
+          const nuevoId = vehiculos.length ? vehiculos[vehiculos.length - 1].id + 1 : 1;
+          vehiculos.push({
+            id: nuevoId,
+            marca,
+            modelo,
+            ano: ano ? Number(ano) : null,
+            placa,
+            estado,
+            precioDia,
+            imagen
+          });
+          saveArray(STORAGE_KEYS.vehiculos, vehiculos);
+          document.getElementById("formVehiculo").reset();
+          renderVehiculos();
+          recalcularDashboard();
+          alert("Vehículo guardado");
+        });
+      }
+
+      // Calcular factura
+      const btnCalcular = document.getElementById("btnCalcular");
+      if (btnCalcular) {
+        btnCalcular.addEventListener("click", () => {
+          calcularFactura();
+        });
+      }
+      /* PRECIO DIA: actualizar al seleccionar vehículo + recalcular */
+      const selVeh = document.getElementById("selectVehiculo");
+      const precioDiaInput = document.getElementById("precioDia");
+      if (selVeh && precioDiaInput) {
+        selVeh.addEventListener("change", () => {
+          const idVeh = Number(selVeh.value);
+          const v = vehiculos.find((x) => x.id === idVeh);
+          if (v) {
+            precioDiaInput.value = Number(v.precioDia || 0).toFixed(2);
+            // Si ya hay fechas seleccionadas, recalcular sin necesidad de tocar el botón
+            const fi = document.getElementById("fechaInicio").value;
+            const ff = document.getElementById("fechaFinal").value;
+            if (fi && ff) calcularFactura();
+          }
+        });
+
+        precioDiaInput.addEventListener("input", () => {
+          const fi = document.getElementById("fechaInicio").value;
+          const ff = document.getElementById("fechaFinal").value;
+          if (fi && ff && selVeh.value) {
+            // Recalcular al cambiar precio manualmente
+            calcularFactura();
+          }
+        });
+      }
+      // número de factura automático
+  function generarNumeroFactura() {
+  const key = "contadorFacturas";
+  let contador = Number(localStorage.getItem(key)) || 0;
+  contador++;
+  localStorage.setItem(key, contador);
+  return "FAC-" + String(contador).padStart(4, "0");
+}
+
+
+      // Guardar factura + renta
+     document.getElementById("btnGuardarFactura").addEventListener("click", () => {
+
+  const idCliente = Number(selectCliente.value);
+  const idVehiculo = Number(selectVehiculo.value);
+  const fechaInicio = document.getElementById("fechaInicio").value;
+  const fechaFinal = document.getElementById("fechaFinal").value;
+
+
+  const calculo = calcularFactura();
+  if (!calculo) return;
+
+  // 🔁 MODO EDICIÓN
+  if (facturaEditando !== null) {
+
+    const f = facturas.find(x => x.id === facturaEditando);
+    const r = rentas.find(x => x.idFactura === facturaEditando);
+
+    if (!f || !r) {
+      alert("No se pudo editar la factura.");
+      return;
+    }
+
+    // actualizar factura
+    f.idCliente = idCliente;
+    f.idVehiculo = idVehiculo;
+    f.fecha = new Date().toISOString().split("T")[0];
+    f.dias = calculo.dias;
+    f.total = calculo.total;
+
+        f.precioDia = calculo.precioDia;
+// actualizar renta
+    r.idVehiculo = idVehiculo;
+    r.fechaInicio = fechaInicio;
+    r.fechaFinal = fechaFinal;
+    r.totalRenta = calculo.total;
+
+    saveArray(STORAGE_KEYS.facturas, facturas);
+    saveArray(STORAGE_KEYS.rentas, rentas);
+
+    facturaEditando = null;
+
+    alert("✅ Factura editada correctamente");
+
+  } 
+  // ➕ MODO NUEVA FACTURA
+  else {
+
+    const nuevaFactura = {
+      id: generarNumeroFactura(),
+      idCliente,
+      idVehiculo,
+      fecha: new Date().toISOString().split("T")[0],
+      dias: calculo.dias,
+      precioDia: calculo.precioDia,
+      total: calculo.total
+    };
+
+    const nuevaRenta = {
+      idFactura: nuevaFactura.id,
+      idVehiculo,
+      fechaInicio,
+      fechaFinal,
+      totalRenta: calculo.total
+    };
+
+    facturas.push(nuevaFactura);
+    rentas.push(nuevaRenta);
+
+    guardarFacturaEnBD(factura);
+
+
+    saveArray(STORAGE_KEYS.facturas, facturas);
+    saveArray(STORAGE_KEYS.rentas, rentas);
+
+    alert("✅ Factura creada");
+  }
+
+  renderFacturas();
+  renderDisponibilidad();
+  recalcularDashboard();
+
+});
+
+      // EXPORTAR / IMPORTAR
+const btnExportar = document.getElementById("btnExportar");
+      if (btnExportar) {
+        btnExportar.addEventListener("click", () => {
+          const data = { clientes, vehiculos, facturas, rentas };
+          const json = JSON.stringify(data, null, 2);
+          const preview = document.getElementById("previewExport");
+          if (preview) preview.textContent = json;
+          const blob = new Blob([json], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "arcy_rent_car_backup.json";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+      }
+
+      const btnImportar = document.getElementById("btnImportar");
+      const inputImportar = document.getElementById("inputImportar");
+      if (btnImportar && inputImportar) {
+        btnImportar.addEventListener("click", () => {
+          inputImportar.click();
+        });
+
+        inputImportar.addEventListener("change", (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            try {
+              const data = JSON.parse(ev.target.result);
+              clientes = data.clientes || [];
+              vehiculos = data.vehiculos || [];
+              facturas = data.facturas || [];
+              rentas = data.rentas || [];
+              saveArray(STORAGE_KEYS.clientes, clientes);
+              saveArray(STORAGE_KEYS.vehiculos, vehiculos);
+              saveArray(STORAGE_KEYS.facturas, facturas);
+              saveArray(STORAGE_KEYS.rentas, rentas);
+              renderClientes();
+              renderVehiculos();
+              renderFacturas();
+              recalcularDashboard();
+              alert("Datos importados correctamente");
+            } catch (err) {
+              alert("Archivo inválido");
+            }
+          };
+          reader.readAsText(file);
+        });
+      }
+
+      const btnBorrarTodo = document.getElementById("btnBorrarTodo");
+      if (btnBorrarTodo) {
+        btnBorrarTodo.addEventListener("click", () => {
+          if (!confirm("¿Seguro que quieres borrar todo?")) return;
+          clientes = [];
+          vehiculos = [];
+          facturas = [];
+          rentas = [];
+          saveArray(STORAGE_KEYS.clientes, clientes);
+          saveArray(STORAGE_KEYS.vehiculos, vehiculos);
+          saveArray(STORAGE_KEYS.facturas, facturas);
+          saveArray(STORAGE_KEYS.rentas, rentas);
+          renderClientes();
+          renderVehiculos();
+          renderFacturas();
+          recalcularDashboard();
+          const preview = document.getElementById("previewExport");
+          if (preview) preview.textContent = "";
+        });
+      }
+    });
+    async function guardarFacturaEnBD(factura) {
+  try {
+    const res = await fetch(API_URL + "/facturas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: factura.id,
+        fecha: factura.fecha,
+        cliente_nombre: factura.nombreCliente,
+        cliente_telefono: factura.telefono || "",
+        vehiculo: factura.vehiculo,
+        placa: factura.placa || "",
+        dias: factura.dias,
+        precio_dia: factura.precioDia,
+        total: factura.total
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error("Error backend:", data);
+      alert("❌ Error al guardar la factura");
+      return;
+    }
+
+    console.log("✅ Factura guardada en BD:", data);
+    // 🔕 ya NO mostramos error si se guardó bien
+
+  } catch (err) {
+    console.error("Error de conexión:", err);
+    // (removed duplicate error alert)
+  }
+}
+  
+async function cargarFacturasDesdeBD() {
+  try {
+    const res = await fetch(API_URL + "/facturas");
+    const facturas = await res.json();
+    const tbody = document.getElementById("tbodyFacturas");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    if (!Array.isArray(facturas) || facturas.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6">No hay facturas registradas</td></tr>';
+      return;
+    }
+
+    facturas.forEach(f => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${f.id}</td>
+        <td>${f.fecha}</td>
+        <td>${f.cliente_nombre}</td>
+        <td>${f.vehiculo}</td>
+        <td>${f.dias}</td>
+        <td>RD$ ${Number(f.total).toLocaleString()}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (e) {
+    console.error("Error cargando facturas desde BD:", e);
+  }
+}
+
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+        crossorigin="anonymous"></script>
+</body>
+</html>
