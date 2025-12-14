@@ -1,0 +1,294 @@
+{
+  "clientes": [
+    {
+      "id": 1,
+      "nombre": "frank",
+      "telefono": "8097528739",
+      "cedula": "9876yuhj8io90",
+      "nota": "Excelente cliente",
+      "valoracion": 5
+    },
+    {
+      "id": 2,
+      "nombre": "xiomara",
+      "telefono": "",
+      "cedula": "",
+      "nota": "Entrego el vehiculo sin gasolina",
+      "valoracion": 3
+    },
+    {
+      "id": 3,
+      "nombre": "leyssi",
+      "telefono": "",
+      "cedula": "",
+      "nota": "entrego el vehiculo bien",
+      "valoracion": 5
+    },
+    {
+      "id": 4,
+      "nombre": "welin",
+      "telefono": "",
+      "cedula": "",
+      "nota": "Me choco el vehiculo y no resolvio",
+      "valoracion": 1
+    },
+    {
+      "id": 5,
+      "nombre": "arcy",
+      "telefono": "",
+      "cedula": "",
+      "nota": "Mala paga",
+      "valoracion": 1
+    },
+    {
+      "id": 6,
+      "nombre": "ruth",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 7,
+      "nombre": "papa",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 8,
+      "nombre": "rebecca",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 9,
+      "nombre": "lourdes",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 10,
+      "nombre": "ruben",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 11,
+      "nombre": "dario",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 12,
+      "nombre": "nano",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 13,
+      "nombre": "melany",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 14,
+      "nombre": "humberto",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 15,
+      "nombre": "jesion",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 16,
+      "nombre": "raly",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 17,
+      "nombre": "caly",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 18,
+      "nombre": "fote",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    },
+    {
+      "id": 19,
+      "nombre": "moya",
+      "telefono": "",
+      "cedula": "",
+      "nota": "",
+      "valoracion": 5
+    }
+  ],
+  "vehiculos": [
+    {
+      "id": 1,
+      "marca": "Honda",
+      "modelo": "Crv Roja",
+      "ano": 2018,
+      "placa": "1234rsvsds",
+      "estado": "Disponible",
+      "precioDia": 2500,
+      "imagen": "https://di-shared-assets.dealerinspire.com/legacy/rackspace/ldm-images/2018-Honda-CR-V-EX-L-2WD-CVT.png"
+    },
+    {
+      "id": 2,
+      "marca": "Honda",
+      "modelo": "Crv Gris",
+      "ano": 2020,
+      "placa": "434vzsdf",
+      "estado": "Disponible",
+      "precioDia": 2000,
+      "imagen": "https://www.hondalatincaribbean.com/upload/car/cr-v-2019/color/lhd-modern-steel-metallic/1.png"
+    },
+    {
+      "id": 3,
+      "marca": "Honda",
+      "modelo": "Crv Azul",
+      "ano": 2020,
+      "placa": "f44azfafs",
+      "estado": "Rentado",
+      "precioDia": 3000,
+      "imagen": "https://s3.amazonaws.com/di-honda-enrollment/2020-cr-v/colors/model-color-2020-cr-v-obsidian-blue-pearl.png"
+    }
+  ],
+  "facturas": [
+    {
+      "id": 2,
+      "fecha": "2025-12-06",
+      "idCliente": 3,
+      "idVehiculo": 3,
+      "dias": 10,
+      "total": 450
+    },
+    {
+      "id": 3,
+      "fecha": "2025-12-06",
+      "idCliente": 7,
+      "idVehiculo": 2,
+      "dias": 3,
+      "total": 135
+    },
+    {
+      "id": 4,
+      "fecha": "2025-12-06",
+      "idCliente": 11,
+      "idVehiculo": 2,
+      "dias": 3,
+      "total": 135
+    },
+    {
+      "id": 5,
+      "fecha": "2025-12-06",
+      "idCliente": 4,
+      "idVehiculo": 3,
+      "dias": 18,
+      "total": 54000
+    },
+    {
+      "id": 1765580073880,
+      "fecha": "2025-12-19",
+      "idCliente": 9,
+      "idVehiculo": 3,
+      "dias": 37,
+      "total": 111000
+    },
+    {
+      "id": 1765581573685,
+      "fecha": "2025-12-12",
+      "idCliente": 1,
+      "idVehiculo": 1,
+      "dias": 13,
+      "total": 32500
+    }
+  ],
+  "rentas": [
+    {
+      "id": 2,
+      "idFactura": 2,
+      "idVehiculo": 3,
+      "fechaInicio": "2025-12-16",
+      "fechaFinal": "2025-12-25",
+      "dias": 10,
+      "precioDia": 45,
+      "totalRenta": 450
+    },
+    {
+      "id": 3,
+      "idFactura": 3,
+      "idVehiculo": 2,
+      "fechaInicio": "2025-12-06",
+      "fechaFinal": "2025-12-08",
+      "dias": 3,
+      "precioDia": 45,
+      "totalRenta": 135
+    },
+    {
+      "id": 4,
+      "idFactura": 4,
+      "idVehiculo": 2,
+      "fechaInicio": "2025-12-06",
+      "fechaFinal": "2025-12-08",
+      "dias": 3,
+      "precioDia": 45,
+      "totalRenta": 135
+    },
+    {
+      "id": 5,
+      "idFactura": 5,
+      "idVehiculo": 3,
+      "fechaInicio": "2025-12-14",
+      "fechaFinal": "2025-12-31",
+      "dias": 18,
+      "precioDia": 3000,
+      "totalRenta": 54000
+    },
+    {
+      "idFactura": 1765580073880,
+      "idVehiculo": 3,
+      "fechaInicio": "2026-01-13",
+      "fechaFinal": "2026-02-18",
+      "totalRenta": 111000
+    },
+    {
+      "idFactura": 1765581573685,
+      "idVehiculo": 1,
+      "fechaInicio": "2026-01-20",
+      "fechaFinal": "2026-02-01",
+      "totalRenta": 32500
+    }
+  ]
+}
