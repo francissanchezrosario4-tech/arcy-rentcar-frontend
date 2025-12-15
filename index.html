@@ -959,6 +959,8 @@ table {
   </div>
 
   <script>
+const API_URL = "https://arcy-rentcar-backend-production.up.railway.app";
+
     // ----- UTILIDADES DE STORAGE -----
     let facturaEditando = null;
     const STORAGE_KEYS = {
@@ -1060,7 +1062,7 @@ function renderClientes() {
       const botones = tbody.querySelectorAll(".btn-table");
       botones.forEach((btn) => {
         btn.addEventListener("click", () => {
-          const id = btn.getAttribute("data-id");
+          const id = Number(btn.getAttribute("data-id"));
           const action = btn.getAttribute("data-action") || "editar";
           if (action === "factura") {
             seleccionarClienteParaFactura(id);
@@ -1133,7 +1135,7 @@ function renderClientes() {
       const botonesDetalles = cont.querySelectorAll(".veh-card-btn");
       botonesDetalles.forEach((btn) => {
         btn.addEventListener("click", () => {
-          const id = btn.getAttribute("data-id");
+          const id = Number(btn.getAttribute("data-id"));
           abrirVehiculoModal(id);
         });
       });
@@ -1175,7 +1177,7 @@ function renderVehiculos() {
         const botonesDetalles = cards.querySelectorAll(".veh-card-btn");
         botonesDetalles.forEach((btn) => {
           btn.addEventListener("click", () => {
-            const id = btn.getAttribute("data-id");
+            const id = Number(btn.getAttribute("data-id"));
             abrirVehiculoModal(id);
           });
         });
@@ -1239,7 +1241,7 @@ function renderVehiculos() {
     });
 
         btn.addEventListener("click", () => {
-          const id = btn.getAttribute("data-id");
+          const id = Number(btn.getAttribute("data-id"));
           exportarFacturaPDF(id);
         });
       });
@@ -2220,9 +2222,6 @@ document.addEventListener("DOMContentLoaded", () => {
     facturas.push(nuevaFactura);
     rentas.push(nuevaRenta);
 
-    guardarFacturaEnBD(factura);
-
-
     saveArray(STORAGE_KEYS.facturas, facturas);
     saveArray(STORAGE_KEYS.rentas, rentas);
 
@@ -2311,73 +2310,58 @@ const btnExportar = document.getElementById("btnExportar");
         });
       }
     });
-    async function guardarFacturaEnBD(factura) {
-  try {
-    const res = await fetch(API_URL + "/facturas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: factura.id,
-        fecha: factura.fecha,
-        cliente_nombre: factura.nombreCliente,
-        cliente_telefono: factura.telefono || "",
-        vehiculo: factura.vehiculo,
-        placa: factura.placa || "",
-        dias: factura.dias,
-        precio_dia: factura.precioDia,
-        total: factura.total
-      })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      console.error("Error backend:", data);
-      alert("❌ Error al guardar la factura");
-      return;
-    }
-
-    console.log("✅ Factura guardada en BD:", data);
-    // 🔕 ya NO mostramos error si se guardó bien
-
-  } catch (err) {
-    console.error("Error de conexión:", err);
-    // (removed duplicate error alert)
-  }
-}
   
-async function cargarFacturasDesdeBD() {
-  try {
-    const res = await fetch(API_URL + "/facturas");
-    const facturas = await res.json();
-    const tbody = document.getElementById("tbodyFacturas");
-    if (!tbody) return;
-    tbody.innerHTML = "";
+/* ===== DISPONIBILIDAD + RENTAS (FINAL) ===== */
+async function verificarDisponibilidad(vehiculo_id, inicio, fin) {
+  const res = await fetch(`${API_URL}/disponibilidad/${vehiculo_id}?inicio=${inicio}&fin=${fin}`);
+  const data = await res.json();
+  return data.disponible === true;
+}
 
-    if (!Array.isArray(facturas) || facturas.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6">No hay facturas registradas</td></tr>';
+async function crearRentaBD(vehiculo_id, fecha_inicio, fecha_fin, factura_id) {
+  const res = await fetch(API_URL + "/rentas", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ vehiculo_id, fecha_inicio, fecha_fin, factura_id })
+  });
+  return await res.json();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const btnGuardarFactura = document.getElementById("btnGuardarFactura");
+  const vehiculoSelect = document.getElementById("vehiculoSelect") || document.getElementById("vehiculo");
+  const fechaInicioInput = document.getElementById("fechaInicio") || document.getElementById("fecha_inicio");
+  const fechaFinInput = document.getElementById("fechaFin") || document.getElementById("fecha_fin");
+
+  if (!btnGuardarFactura || !vehiculoSelect || !fechaInicioInput || !fechaFinInput) return;
+
+  btnGuardarFactura.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    const vehiculo_id = vehiculoSelect.value;
+    const inicio = fechaInicioInput.value;
+    const fin = fechaFinInput.value;
+
+    if (!vehiculo_id || !inicio || !fin) {
+      alert("Completa vehículo y fechas");
       return;
     }
 
-    facturas.forEach(f => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${f.id}</td>
-        <td>${f.fecha}</td>
-        <td>${f.cliente_nombre}</td>
-        <td>${f.vehiculo}</td>
-        <td>${f.dias}</td>
-        <td>RD$ ${Number(f.total).toLocaleString()}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch (e) {
-    console.error("Error cargando facturas desde BD:", e);
-  }
-}
+    const disponible = await verificarDisponibilidad(vehiculo_id, inicio, fin);
+
+    if (!disponible) {
+      alert("❌ Vehículo no disponible en esas fechas");
+      return;
+    }
+
+    // Aquí se asume que ya se creó la factura antes y existe facturaActualId
+    if (window.facturaActualId) {
+      await crearRentaBD(vehiculo_id, inicio, fin, window.facturaActualId);
+    }
+  });
+});
 
 </script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
         crossorigin="anonymous"></script>
 </body>
