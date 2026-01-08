@@ -1550,22 +1550,9 @@ function renderVehiculos() {
       }
 
       const porVehiculo = {};
-      // Calcula ingresos por vehículo a partir de FACTURAS (Neon guarda facturas con placa + total)
-      // Así no dependemos de campos inexistentes en /rentas (como idVehiculo/totalRenta).
-      facturas.forEach((f) => {
-        const total = Number(f.total || 0);
-        const placa = String(f.placa || "").trim();
-
-        // Intentar mapear por placa -> vehículo.id
-        let vehId = null;
-        if (placa) {
-          const v = vehiculos.find((x) => String(x.placa || "").toLowerCase() === placa.toLowerCase());
-          if (v && v.id != null) vehId = v.id;
-        }
-
-        const key = vehId != null ? String(vehId) : (placa ? `placa:${placa}` : "N/A");
-        if (!porVehiculo[key]) porVehiculo[key] = 0;
-        porVehiculo[key] += total;
+      rentas.forEach((r) => {
+        if (!porVehiculo[r.idVehiculo]) porVehiculo[r.idVehiculo] = 0;
+        porVehiculo[r.idVehiculo] += Number(r.totalRenta || 0);
       });
       const tbodyVehDash = document.querySelector("#tablaVehiculosDashboard tbody");
       if (tbodyVehDash) {
@@ -1574,29 +1561,11 @@ function renderVehiculos() {
         let topMonto = 0;
         Object.keys(porVehiculo).forEach((id) => {
           const monto = porVehiculo[id];
-
-          let idLabel = id;
-          let desc = "";
-
-          // Si el key es un ID numérico (vehículo encontrado)
-          if (/^\d+$/.test(String(id))) {
-            const v = vehiculos.find((x) => String(x.id) === String(id));
-            desc = v ? `${v.marca} ${v.modelo}` : `ID ${id}`;
-          } else if (String(id).startsWith("placa:")) {
-            const placaKey = String(id).replace("placa:", "");
-            // Buscar descripción usando facturas (por si el vehículo no está en lista)
-            const fAny = facturas.find((f) => String(f.placa || "").toLowerCase() === placaKey.toLowerCase());
-            desc = fAny ? `${fAny.vehiculo || ""} (${placaKey})`.trim() : `Placa ${placaKey}`;
-            idLabel = "N/A";
-          } else {
-            idLabel = "N/A";
-            desc = "";
-          }
-
+          const v = vehiculos.find((x) => x.id === Number(id));
+          const desc = v ? `${v.marca} ${v.modelo}` : "";
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${idLabel}</td><td>${desc}</td><td>${monto.toFixed(2)}</td>`;
+          tr.innerHTML = `<td>${id}</td><td>${desc}</td><td>${monto.toFixed(2)}</td>`;
           tbodyVehDash.appendChild(tr);
-
           if (monto > topMonto) {
             topMonto = monto;
             topId = id;
@@ -1605,17 +1574,9 @@ function renderVehiculos() {
         const topVehiculoLabel = document.getElementById("kpiTopVehiculo");
         const topVehiculoMonto = document.getElementById("kpiTopVehiculoMonto");
         if (topId) {
-          let label = "N/A";
-          if (/^\d+$/.test(String(topId))) {
-            const vTop = vehiculos.find((v) => String(v.id) === String(topId));
-            label = vTop ? `${vTop.marca} ${vTop.modelo}` : `ID ${topId}`;
-          } else if (String(topId).startsWith("placa:")) {
-            const placaKey = String(topId).replace("placa:", "");
-            const fAny = facturas.find((f) => String(f.placa || "").toLowerCase() === placaKey.toLowerCase());
-            label = fAny ? `${fAny.vehiculo || "Vehículo"} (${placaKey})` : `Placa ${placaKey}`;
-          }
-          if (topVehiculoLabel) topVehiculoLabel.textContent = label;
-          if (topVehiculoMonto) topVehiculoMonto.textContent = `Total: RD$ ${topMonto.toFixed(2)}`;
+          const vTop = vehiculos.find((v) => v.id === Number(topId));
+          if (topVehiculoLabel) topVehiculoLabel.textContent = vTop ? `${vTop.marca} ${vTop.modelo}` : `ID ${topId}`;
+          if (topVehiculoMonto) topVehiculoMonto.textContent = `Total rentado: RD$ ${topMonto.toFixed(2)}`;
         } else {
           if (topVehiculoLabel) topVehiculoLabel.textContent = "N/A";
           if (topVehiculoMonto) topVehiculoMonto.textContent = "";
