@@ -986,7 +986,31 @@ const API_URL = "https://arcy-rentcar-backend.onrender.com";
       return data;
     }
 
-    async function verificarDisponibilidadOnline(vehiculo_id, inicio, fin) {
+    async function apiPut(path, body) {
+      const res = await fetch(API_URL + path, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error || (typeof data === "string" ? data : "Error");
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    async function apiDelete(path) {
+      const res = await fetch(API_URL + path, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.error || (typeof data === "string" ? data : "Error");
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    async function verificarDisponibilidadOnline(vehiculo_id, inicio, fin) {(vehiculo_id, inicio, fin) {
       const q = `?inicio=${encodeURIComponent(inicio)}&fin=${encodeURIComponent(fin)}`;
       const data = await apiGet(`/disponibilidad/${vehiculo_id}${q}`);
       return data && data.disponible === true;
@@ -1689,7 +1713,7 @@ function calcularFactura() {
 
 // --- MODAL CLIENTE ---
     function abrirClienteModal(id) {
-      const c = clientes.find((x) => x.id === id);
+      const c = clientes.find((x) => idEq(x.id, id));
       if (!c) return;
       clienteModalId = id;
 
@@ -1757,10 +1781,9 @@ function calcularFactura() {
       if (btnGuardar) btnGuardar.style.display = "inline-block";
     }
 
-    function guardarCambiosCliente() {
+    
+    async function guardarCambiosCliente() {
       if (clienteModalId == null) return;
-      const idx = clientes.findIndex((c) => c.id === clienteModalId);
-      if (idx === -1) return;
 
       const nombre = document.getElementById("modalCliNombre").value.trim();
       const telefono = document.getElementById("modalCliTelefono").value.trim();
@@ -1772,6 +1795,19 @@ function calcularFactura() {
         alert("El nombre es obligatorio");
         return;
       }
+
+      try {
+        await apiPut(`/clientes/${clienteModalId}`, { nombre, telefono, cedula, nota, valoracion });
+        clientes = await apiGet("/clientes");
+        renderClientes();
+        renderFacturas(); // para actualizar el nombre en las facturas (si aplica)
+        alert("✅ Cliente actualizado (ONLINE)");
+        cerrarClienteModal();
+      } catch (e) {
+        console.error(e);
+        alert("❌ No se pudo actualizar el cliente en la base de datos.");
+      }
+    }
 
       const c = clientes[idx];
       c.nombre = nombre;
@@ -1790,27 +1826,22 @@ function calcularFactura() {
       cerrarClienteModal();
     }
 
-    function eliminarCliente() {
+    
+    async function eliminarCliente() {
       if (clienteModalId == null) return;
-      const c = clientes.find((x) => x.id === clienteModalId);
+      const c = clientes.find((x) => idEq(x.id, clienteModalId));
       const nombre = c ? c.nombre : `ID ${clienteModalId}`;
-      if (!confirm(`¿Seguro que deseas eliminar el cliente ${nombre}? También se eliminarán sus facturas y rentas asociadas.`)) return;
+      if (!confirm(`¿Seguro que deseas eliminar el cliente ${nombre}?`)) return;
 
-      // Facturas asociadas al cliente
-      const facturasEliminar = facturas.filter((f) => f.idCliente === clienteModalId).map((f) => f.id);
-      facturas = facturas.filter((f) => f.idCliente !== clienteModalId);
-      rentas = rentas.filter((r) => !facturasEliminar.includes(r.idFactura));
-      clientes = clientes.filter((cli) => cli.id !== clienteModalId);
-
-      // (ONLINE) clientes se guardan en BD
-      // (ONLINE) facturas se guardan en BD
-      // (ONLINE) rentas se guardan en BD
-
-      renderClientes();
-      renderFacturas();
-      recalcularDashboard();
-      cerrarClienteModal();
-      alert("Cliente y registros relacionados eliminados");
+      try {
+        await apiDelete(`/clientes/${clienteModalId}`);
+        await cargarTodoOnline(); // recarga clientes/facturas/vehiculos/rentas desde BD
+        cerrarClienteModal();
+        alert("✅ Cliente eliminado (ONLINE)");
+      } catch (e) {
+        console.error(e);
+        alert("❌ No se pudo eliminar el cliente en la base de datos.");
+      }
     }
 
 // --- MODAL VEHÍCULO ---
@@ -1898,15 +1929,13 @@ function calcularFactura() {
       if (btnGuardar) btnGuardar.style.display = "inline-block";
     }
 
-    function guardarCambiosVehiculo() {
+    
+    async function guardarCambiosVehiculo() {
       if (vehiculoModalId == null) return;
-      const idx = vehiculos.findIndex(v => idEq(v.id, vehiculoModalId));
-      if (idx === -1) return;
-      const v = vehiculos[idx];
 
       const marca = document.getElementById("modalVehMarca").value.trim();
       const modelo = document.getElementById("modalVehModelo").value.trim();
-      const ano = document.getElementById("modalVehAno").value.trim();
+      const anoRaw = document.getElementById("modalVehAno").value.trim();
       const placa = document.getElementById("modalVehPlaca").value.trim();
       const estado = document.getElementById("modalVehEstado").value;
       const precioDia = Number(document.getElementById("modalVehPrecioDia").value || 0);
@@ -1916,6 +1945,35 @@ function calcularFactura() {
         alert("Marca, modelo y precio por día son obligatorios");
         return;
       }
+
+      const ano = anoRaw ? Number(anoRaw) : null;
+
+      try {
+        await apiPut(`/vehiculos/${vehiculoModalId}`, {
+          marca,
+          modelo,
+          placa,
+          precio_dia: precioDia,
+          ano,
+          estado,
+          imagen
+        });
+
+        // si el backend guarda imagen, ya no dependemos del fallback; pero lo mantenemos por si acaso
+        setVehiculoImagen(vehiculoModalId, imagen);
+
+        // recargar desde BD
+        const v = await apiGet("/vehiculos");
+        vehiculos = normalizarVehiculos(v);
+        renderVehiculos();
+        recalcularDashboard();
+        alert("✅ Vehículo actualizado (ONLINE)");
+        cerrarVehiculoModal();
+      } catch (e) {
+        console.error(e);
+        alert("❌ No se pudo actualizar el vehículo en la base de datos.");
+      }
+    }
 
       v.marca = marca;
       v.modelo = modelo;
@@ -1933,25 +1991,22 @@ function calcularFactura() {
       cerrarVehiculoModal();
     }
 
-    function eliminarVehiculo() {
+    
+    async function eliminarVehiculo() {
       if (vehiculoModalId == null) return;
-      const v = vehiculos.find(x => idEq(x.id, vehiculoModalId));
+      const v = vehiculos.find((x) => idEq(x.id, vehiculoModalId));
       const desc = v ? `${v.marca} ${v.modelo}` : `ID ${vehiculoModalId}`;
-      if (!confirm(`¿Seguro que deseas eliminar el vehículo ${desc}? También se eliminarán rentas/facturas asociadas.`)) return;
+      if (!confirm(`¿Seguro que deseas eliminar el vehículo ${desc}?`)) return;
 
-      vehiculos = vehiculos.filter(vh => !idEq(vh.id, vehiculoModalId));
-      facturas = facturas.filter(f => !idEq(f.idVehiculo, vehiculoModalId));
-      rentas = rentas.filter(r => !idEq(r.idVehiculo, vehiculoModalId));
-
-      // (ONLINE) vehiculos se guardan en BD
-      // (ONLINE) facturas se guardan en BD
-      // (ONLINE) rentas se guardan en BD
-
-      renderVehiculos();
-      renderFacturas();
-      recalcularDashboard();
-      cerrarVehiculoModal();
-      alert("Vehículo y registros relacionados eliminados");
+      try {
+        await apiDelete(`/vehiculos/${vehiculoModalId}`);
+        await cargarTodoOnline(); // recarga todo desde BD
+        cerrarVehiculoModal();
+        alert("✅ Vehículo eliminado (ONLINE)");
+      } catch (e) {
+        console.error(e);
+        alert("❌ No se pudo eliminar el vehículo en la base de datos.");
+      }
     }
 
     document.addEventListener("click", (e) => {
