@@ -992,6 +992,24 @@ const API_URL = "https://arcy-rentcar-backend.onrender.com";
       return data && data.disponible === true;
     }
 
+
+    // ----- NORMALIZACIÓN (BACKEND -> FRONT) -----
+    // El backend puede devolver campos en snake_case (ej: precio_dia). Aquí los convertimos al formato que usa la UI.
+    function normalizarVehiculo(v) {
+      return {
+        ...v,
+        precioDia: (v && (v.precioDia ?? v.precio_dia)) ?? 0,
+        ano: (v && (v.ano ?? v.anio ?? v.año)) ?? null,
+        imagen: (v && (v.imagen ?? v.imagen_url ?? v.urlImagen)) ?? "",
+        estado: (v && v.estado) ?? "Disponible",
+        placa: (v && v.placa) ?? ""
+      };
+    }
+
+    function normalizarVehiculos(lista) {
+      return Array.isArray(lista) ? lista.map(normalizarVehiculo) : [];
+    }
+
     async function cargarTodoOnline() {
       // Cargar en paralelo
       const [c, v, f] = await Promise.all([
@@ -1000,7 +1018,7 @@ const API_URL = "https://arcy-rentcar-backend.onrender.com";
         apiGet("/facturas")
       ]);
       clientes = Array.isArray(c) ? c : [];
-      vehiculos = Array.isArray(v) ? v : [];
+      vehiculos = normalizarVehiculos(v);
       facturas = Array.isArray(f) ? f : [];
 
       // Intentar cargar rentas (si tu backend tiene GET /rentas; si no, queda vacío)
@@ -2160,6 +2178,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             document.getElementById("formVehiculo").reset();
             vehiculos = await apiGet("/vehiculos");
+            vehiculos = normalizarVehiculos(vehiculos);
             renderVehiculos();
             recalcularDashboard();
             alert("✅ Vehículo guardado (ONLINE)");
