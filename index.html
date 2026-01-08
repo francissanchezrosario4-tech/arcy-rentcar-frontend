@@ -1398,6 +1398,7 @@ function renderVehiculos() {
         const cliente = (f.cliente_nombre || "").toString();
         const veh = (f.vehiculo || "").toString();
         const placa = (f.placa || "").toString();
+        const dias = (f.dias ?? "").toString();
         const total = Number(f.total ?? 0).toFixed(2);
 
         tr.innerHTML = `
@@ -1405,6 +1406,7 @@ function renderVehiculos() {
           <td>${fecha}</td>
           <td>${cliente}</td>
           <td>${veh}${placa ? " (" + placa + ")" : ""}</td>
+          <td>${dias}</td>
           <td>RD$ ${total}</td>
           <td>
             <button class="btn-table btn-pdf" data-id="${f.id}">PDF</button>
@@ -1896,38 +1898,41 @@ function calcularFactura() {
       if (btnGuardar) btnGuardar.style.display = "inline-block";
     }
 
-    function guardarCambiosCliente() {
-      if (clienteModalId == null) return;
-      const idx = clientes.findIndex((c) => c.id === clienteModalId);
-      if (idx === -1) return;
+    async function guardarCambiosCliente() {
+  if (clienteModalId == null) return;
 
-      const nombre = document.getElementById("modalCliNombre").value.trim();
-      const telefono = document.getElementById("modalCliTelefono").value.trim();
-      const cedula = document.getElementById("modalCliCedula").value.trim();
-      const nota = document.getElementById("modalCliNota").value.trim();
-      const valoracion = Number(document.getElementById("modalCliValoracion").value || 5);
+  const nombre = document.getElementById("modalCliNombre").value.trim();
+  const telefono = document.getElementById("modalCliTelefono").value.trim();
+  const cedula = document.getElementById("modalCliCedula").value.trim();
+  const nota = document.getElementById("modalCliNota").value.trim();
+  const valoracion = Number(document.getElementById("modalCliValoracion").value || 5);
 
-      if (!nombre) {
-        alert("El nombre es obligatorio");
-        return;
-      }
+  if (!nombre) {
+    alert("El nombre es obligatorio");
+    return;
+  }
 
-      const c = clientes[idx];
-      c.nombre = nombre;
-      c.telefono = telefono;
-      c.cedula = cedula;
-      c.nota = nota;
-      c.valoracion = valoracion;
-      if (c.email !== undefined) {
-        delete c.email;
-      }
+  try {
+    await apiPut(`/clientes/${clienteModalId}`, { nombre, telefono, cedula, nota, valoracion });
+  } catch (e) {
+    console.error(e);
+    alert("❌ No se pudo guardar el cliente en la base de datos.");
+    return;
+  }
 
-      // (ONLINE) clientes se guardan en BD
-      renderClientes();
-      renderFacturas(); // para actualizar el nombre en las facturas
-      alert("Cliente actualizado");
-      cerrarClienteModal();
-    }
+  try {
+    await cargarTodoOnline(); // refresca clientes y facturas (nombres)
+    renderClientes();
+    renderFacturas();
+    recalcularDashboard();
+    alert("✅ Cliente actualizado (ONLINE)");
+    cerrarClienteModal();
+  } catch (e) {
+    console.error(e);
+    alert("✅ Cliente actualizado, pero no se pudo refrescar la pantalla. Recarga la página.");
+    cerrarClienteModal();
+  }
+}
 
     async function eliminarCliente() {
       if (clienteModalId == null) return;
@@ -2048,39 +2053,53 @@ function calcularFactura() {
       if (btnGuardar) btnGuardar.style.display = "inline-block";
     }
 
-    function guardarCambiosVehiculo() {
-      if (vehiculoModalId == null) return;
-      const idx = vehiculos.findIndex(v => v.id === vehiculoModalId);
-      if (idx === -1) return;
-      const v = vehiculos[idx];
+    async function guardarCambiosVehiculo() {
+  if (vehiculoModalId == null) return;
 
-      const marca = document.getElementById("modalVehMarca").value.trim();
-      const modelo = document.getElementById("modalVehModelo").value.trim();
-      const ano = document.getElementById("modalVehAno").value.trim();
-      const placa = document.getElementById("modalVehPlaca").value.trim();
-      const estado = document.getElementById("modalVehEstado").value;
-      const precioDia = Number(document.getElementById("modalVehPrecioDia").value || 0);
-      const imagen = document.getElementById("modalVehImagenUrl").value.trim();
+  const marca = document.getElementById("modalVehMarca").value.trim();
+  const modelo = document.getElementById("modalVehModelo").value.trim();
+  const ano = document.getElementById("modalVehAno").value.trim();
+  const placa = document.getElementById("modalVehPlaca").value.trim();
+  const estado = document.getElementById("modalVehEstado").value;
+  const precioDia = Number(document.getElementById("modalVehPrecioDia").value || 0);
+  const imagen = document.getElementById("modalVehImagenUrl").value.trim();
 
-      if (!marca || !modelo || !precioDia) {
-        alert("Marca, modelo y precio por día son obligatorios");
-        return;
-      }
+  if (!marca || !modelo || !precioDia) {
+    alert("Marca, modelo y precio por día son obligatorios");
+    return;
+  }
 
-      v.marca = marca;
-      v.modelo = modelo;
-      v.ano = ano ? Number(ano) : null;
-      v.placa = placa;
-      v.estado = estado;
-      v.precioDia = precioDia;
-      v.imagen = imagen;
+  try {
+    await apiPut(`/vehiculos/${vehiculoModalId}`, {
+      marca,
+      modelo,
+      ano: ano ? Number(ano) : null,
+      placa,
+      estado,
+      precio_dia: precioDia,
+      imagen
+    });
+  } catch (e) {
+    console.error(e);
+    alert("❌ No se pudo guardar el vehículo en la base de datos.");
+    return;
+  }
 
-      // (ONLINE) vehiculos se guardan en BD
-      renderVehiculos();
-      recalcularDashboard();
-      alert("Vehículo actualizado");
-      cerrarVehiculoModal();
-    }
+  try {
+    await cargarTodoOnline(); // refresca vehiculos + rentas + facturas
+    renderVehiculos();
+    renderFacturas();
+    renderRentas();
+    renderDisponibilidad();
+    recalcularDashboard();
+    alert("✅ Vehículo actualizado (ONLINE)");
+    cerrarVehiculoModal();
+  } catch (e) {
+    console.error(e);
+    alert("✅ Vehículo actualizado, pero no se pudo refrescar la pantalla. Recarga la página.");
+    cerrarVehiculoModal();
+  }
+}
 
     async function eliminarVehiculo() {
       if (vehiculoModalId == null) return;
