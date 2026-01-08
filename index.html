@@ -288,6 +288,13 @@ table {
       font-size:0.85rem;
       margin-bottom:4px;
     }
+    .card-calendario-nav {
+      display:flex;
+      align-items:center;
+      gap:6px;
+      transform: translateX(-12px); /* mueve un poquito a la izquierda */
+    }
+
     .card-calendario-titulo {
       font-weight:600;
     }
@@ -1397,9 +1404,11 @@ function renderVehiculos() {
         const fecha = formatFechaUI(f.fecha);
         const cliente = (f.cliente_nombre || "").toString();
         const vehBase = (f.vehiculo || "").toString();
-        const vObj = vehiculos.find(v => String(v.placa||"") === String(placa));
-        const veh = (vObj && (vObj.marca || vObj.modelo)) ? `${(vObj.marca||"")} ${(vObj.modelo||"")}`.trim() + (vObj.ano ? ` (${vObj.ano})` : "") : vehBase;
         const placa = (f.placa || "").toString();
+        const vObj = vehiculos.find(v => String(v.placa || "") === String(placa));
+        const veh = vObj
+          ? `${(vObj.marca || "")} ${(vObj.modelo || "")}`.trim() + (vObj.ano ? ` (${vObj.ano})` : "")
+          : vehBase;
         const dias = (f.dias ?? "").toString();
         const total = Number(f.total ?? 0).toFixed(2);
 
@@ -2639,7 +2648,3 @@ const btnExportar = document.getElementById("btnExportar");
         crossorigin="anonymous"></script>
 </body>
 </html>
-
-
-
-
