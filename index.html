@@ -995,40 +995,75 @@ const API_URL = "https://arcy-rentcar-backend.onrender.com";
 
     // ----- NORMALIZACIÓN (BACKEND -> FRONT) -----
     // El backend puede devolver campos en snake_case (ej: precio_dia). Aquí los convertimos al formato que usa la UI.
+
+    // Comparar IDs aunque vengan como number o string
+    function idEq(a, b) {
+      return String(a) === String(b);
+    }
+
+    // ===== Normalización de VEHÍCULOS =====
     function normalizarVehiculo(v) {
       return {
         ...v,
-        precioDia: (v && (v.precioDia ?? v.precio_dia)) ?? 0,
-        ano: (v && (v.ano ?? v.anio ?? v.año)) ?? null,
-        imagen: (v && (v.imagen ?? v.imagen_url ?? v.urlImagen)) ?? "",
-        estado: (v && v.estado) ?? "Disponible",
-        placa: (v && v.placa) ?? ""
+        precioDia: Number(v?.precioDia ?? v?.precio_dia ?? 0),
+        // soporta ano/anio/año
+        ano: v?.ano ?? v?.anio ?? v?.año ?? null,
+        imagen: v?.imagen ?? v?.imagen_url ?? v?.urlImagen ?? "",
+        estado: v?.estado ?? "Disponible",
+        placa: v?.placa ?? ""
       };
     }
 
     function normalizarVehiculos(lista) {
       return Array.isArray(lista) ? lista.map(normalizarVehiculo) : [];
-    
+    }
 
+    // ===== Normalización de FACTURAS =====
     function normalizarFactura(f) {
+      if (!f) return f;
+      const fechaStr = (f.fecha || "").toString().split("T")[0];
       return {
         ...f,
-        // compatibilidad camel/snake
+        fecha: fechaStr,
         cliente_nombre: f.cliente_nombre ?? f.clienteNombre ?? "",
         cliente_telefono: f.cliente_telefono ?? f.clienteTelefono ?? "",
-        precio_dia: f.precio_dia ?? f.precioDia ?? 0,
-        // también dejamos alias camel por si alguna parte del UI lo usa
-        precioDia: f.precioDia ?? f.precio_dia ?? 0,
-        fecha: (f.fecha || "").toString().split("T")[0]
+        vehiculo: f.vehiculo ?? "",
+        placa: f.placa ?? "",
+        // snake_case de BD
+        precio_dia: Number(f.precio_dia ?? f.precioDia ?? 0),
+        // alias camel para UI
+        precioDia: Number(f.precioDia ?? f.precio_dia ?? 0),
+        dias: Number(f.dias ?? 0),
+        total: Number(f.total ?? 0)
       };
     }
 
     function normalizarFacturas(lista) {
       return Array.isArray(lista) ? lista.map(normalizarFactura) : [];
     }
-}
 
-    async function cargarTodoOnline() {
+    // ===== Normalización de RENTAS =====
+    function normalizarRenta(r) {
+      if (!r) return r;
+      return {
+        ...r,
+        vehiculo_id: r.vehiculo_id ?? r.idVehiculo ?? null,
+        fecha_inicio: r.fecha_inicio ?? r.fechaInicio ?? "",
+        fecha_fin: r.fecha_fin ?? r.fechaFinal ?? "",
+        factura_id: r.factura_id ?? r.idFactura ?? "",
+        // alias legacy para funciones existentes
+        idVehiculo: r.idVehiculo ?? r.vehiculo_id ?? null,
+        fechaInicio: r.fechaInicio ?? r.fecha_inicio ?? "",
+        fechaFinal: r.fechaFinal ?? r.fecha_fin ?? "",
+        idFactura: r.idFactura ?? r.factura_id ?? ""
+      };
+    }
+
+    function normalizarRentas(lista) {
+      return Array.isArray(lista) ? lista.map(normalizarRenta) : [];
+    }
+
+async function cargarTodoOnline() {
       // Cargar en paralelo
       const [c, v, f] = await Promise.all([
         apiGet("/clientes"),
@@ -1041,7 +1076,7 @@ const API_URL = "https://arcy-rentcar-backend.onrender.com";
 
       // Intentar cargar rentas (si tu backend tiene GET /rentas; si no, queda vacío)
       try {
-        rentas = await apiGet("/rentas");
+        rentas = normalizarRentas(await apiGet("/rentas"));
       } catch (e) {
         rentas = [];
       }
@@ -1340,7 +1375,7 @@ function renderVehiculos() {
 
     
     function obtenerRentasPorVehiculo(idVehiculo) {
-      return rentas.filter((r) => r.idVehiculo === idVehiculo);
+      return rentas.filter((r) => idEq(r.idVehiculo ?? r.vehiculo_id, idVehiculo));
     }
 
     function construirCalendarioPara(mesBase, anioBase, rentasVehiculo) {
@@ -1456,8 +1491,8 @@ function renderVehiculos() {
                   let nombreCli = "";
                   const facturaRel = facturas.find((f) => f.id === rentaDia.idFactura);
                   if (facturaRel) {
-                    const cli = clientes.find((c) => c.id === facturaRel.idCliente);
-                    if (cli) nombreCli = cli.nombre;
+                    /* factura ya trae el nombre */ const cli = null;
+                    if (facturaRel && facturaRel.cliente_nombre) nombreCli = facturaRel.cliente_nombre;
                   }
                   td.title = nombreCli
                     ? `${nombreCli} (${rentaDia.fechaInicio} a ${rentaDia.fechaFinal})`
@@ -1483,8 +1518,8 @@ function renderVehiculos() {
               let nombreCli = "";
               const facturaRel = facturas.find((f) => f.id === r.idFactura);
               if (facturaRel) {
-                const cli = clientes.find((c) => c.id === facturaRel.idCliente);
-                if (cli) nombreCli = cli.nombre;
+                /* factura ya trae el nombre */ const cli = null;
+                if (facturaRel && facturaRel.cliente_nombre) nombreCli = facturaRel.cliente_nombre;
               }
               const item = document.createElement("div");
               item.className = "lista-rentas-item";
@@ -1519,26 +1554,26 @@ function renderVehiculos() {
 
 // ----- DASHBOARD -----
     function recalcularDashboard() {
+      // KPIs base
       const totalFacturado = facturas.reduce((acc, f) => acc + Number(f.total || 0), 0);
       const elTotal = document.getElementById("kpiTotalFacturado");
       if (elTotal) elTotal.textContent = totalFacturado.toFixed(2);
+
       const elCantFact = document.getElementById("kpiCantidadFacturas");
       if (elCantFact) elCantFact.textContent = facturas.length;
+
       const elCantRentas = document.getElementById("kpiCantidadRentas");
       if (elCantRentas) elCantRentas.textContent = rentas.length;
 
-      const meses = [
-        "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-        "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
-      ];
+      // ===== Ingresos por MES (desde facturas) =====
+      const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
       const porMes = Array(12).fill(0);
       facturas.forEach((f) => {
         if (!f.fecha) return;
         const d = new Date(f.fecha);
-        if (!isNaN(d)) {
-          porMes[d.getMonth()] += Number(f.total || 0);
-        }
+        if (!isNaN(d)) porMes[d.getMonth()] += Number(f.total || 0);
       });
+
       const tbodyMeses = document.querySelector("#tablaMeses tbody");
       if (tbodyMeses) {
         tbodyMeses.innerHTML = "";
@@ -1549,39 +1584,74 @@ function renderVehiculos() {
         });
       }
 
-      const porVehiculo = {};
-      rentas.forEach((r) => {
-        if (!porVehiculo[r.idVehiculo]) porVehiculo[r.idVehiculo] = 0;
-        porVehiculo[r.idVehiculo] += Number(r.totalRenta || 0);
+      // ===== Ingresos por VEHÍCULO (desde facturas) =====
+      // Map por placa -> vehiculo
+      const mapVehByPlaca = {};
+      vehiculos.forEach((v) => {
+        const p = (v.placa || "").toString().trim().toLowerCase();
+        if (p) mapVehByPlaca[p] = v;
       });
+
+      const porVehiculo = {}; // idVehiculo -> monto
+      facturas.forEach((f) => {
+        const placa = (f.placa || "").toString().trim().toLowerCase();
+        const v = placa ? mapVehByPlaca[placa] : null;
+        const idVeh = v ? String(v.id) : null;
+        if (!idVeh) return; // si la factura no tiene placa o no coincide, la omitimos aquí
+        porVehiculo[idVeh] = (porVehiculo[idVeh] || 0) + Number(f.total || 0);
+      });
+
       const tbodyVehDash = document.querySelector("#tablaVehiculosDashboard tbody");
+      let topId = null;
+      let topMonto = 0;
+
       if (tbodyVehDash) {
         tbodyVehDash.innerHTML = "";
-        let topId = null;
-        let topMonto = 0;
-        Object.keys(porVehiculo).forEach((id) => {
-          const monto = porVehiculo[id];
-          const v = vehiculos.find((x) => x.id === Number(id));
-          const desc = v ? `${v.marca} ${v.modelo}` : "";
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${id}</td><td>${desc}</td><td>${monto.toFixed(2)}</td>`;
-          tbodyVehDash.appendChild(tr);
-          if (monto > topMonto) {
-            topMonto = monto;
-            topId = id;
-          }
-        });
-        const topVehiculoLabel = document.getElementById("kpiTopVehiculo");
-        const topVehiculoMonto = document.getElementById("kpiTopVehiculoMonto");
-        if (topId) {
-          const vTop = vehiculos.find((v) => v.id === Number(topId));
-          if (topVehiculoLabel) topVehiculoLabel.textContent = vTop ? `${vTop.marca} ${vTop.modelo}` : `ID ${topId}`;
-          if (topVehiculoMonto) topVehiculoMonto.textContent = `Total rentado: RD$ ${topMonto.toFixed(2)}`;
-        } else {
-          if (topVehiculoLabel) topVehiculoLabel.textContent = "N/A";
-          if (topVehiculoMonto) topVehiculoMonto.textContent = "";
-        }
+        Object.keys(porVehiculo)
+          .sort((a,b) => porVehiculo[b] - porVehiculo[a])
+          .forEach((id) => {
+            const monto = porVehiculo[id] || 0;
+            const v = vehiculos.find((x) => idEq(x.id, id));
+            const desc = v ? `${v.marca || ""} ${v.modelo || ""}`.trim() : "";
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${id}</td><td>${desc}</td><td>${monto.toFixed(2)}</td>`;
+            tbodyVehDash.appendChild(tr);
+            if (monto > topMonto) { topMonto = monto; topId = id; }
+          });
       }
+
+      const topVehiculoLabel = document.getElementById("kpiTopVehiculo");
+      const topVehiculoMonto = document.getElementById("kpiTopVehiculoMonto");
+      if (topId) {
+        const vTop = vehiculos.find((v) => idEq(v.id, topId));
+        if (topVehiculoLabel) topVehiculoLabel.textContent = vTop ? `${vTop.marca || ""} ${vTop.modelo || ""}`.trim() : `ID ${topId}`;
+        if (topVehiculoMonto) topVehiculoMonto.textContent = `RD$ ${topMonto.toFixed(2)}`;
+      } else {
+        if (topVehiculoLabel) topVehiculoLabel.textContent = "N/A";
+        if (topVehiculoMonto) topVehiculoMonto.textContent = "";
+      }
+
+      // Preview (si existe)
+      try {
+        const preview = document.getElementById("vehiculosPreview");
+        if (preview) {
+          preview.innerHTML = "";
+          vehiculos.slice(0, 6).forEach((v) => {
+            const card = document.createElement("div");
+            card.className = "veh-card";
+            card.innerHTML = `
+              <div class="veh-img">
+                ${v.imagen ? `<img src="${v.imagen}" alt="">` : `<div class="veh-img-fallback">${((v.marca||"V")[0]||"V").toUpperCase()}${((v.modelo||"")[0]||"")}</div>`}
+              </div>
+              <div class="veh-body">
+                <div class="veh-name">${(v.marca||"").toString()} ${(v.modelo||"").toString()}</div>
+                <div class="veh-sub">Placa: ${(v.placa||"")}</div>
+              </div>
+            `;
+            preview.appendChild(card);
+          });
+        }
+      } catch(e) {}
     }
 
     // ----- FACTURA Y RENTA -----
@@ -1598,7 +1668,7 @@ function calcularFactura() {
       const fechaFinal = document.getElementById("fechaFinal").value;
 
       // VALIDAR FECHAS DISPONIBLES
-      const reservas = rentas.filter((r) => r.idVehiculo === idVehiculo);
+      const reservas = rentas.filter((r) => idEq(r.idVehiculo ?? r.vehiculo_id, idVehiculo));
       for (let r of reservas) {
         if (fechasSeCruzan(fechaInicio, fechaFinal, r.fechaInicio, r.fechaFinal)) {
           alert(`🚫 El vehículo NO está disponible. Ya está rentado del ${r.fechaInicio} al ${r.fechaFinal}`);
@@ -2299,7 +2369,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Recargar desde BD
     facturas = normalizarFacturas(await apiGet("/facturas"));
-    try { rentas = await apiGet("/rentas"); } catch {}
+    try { rentas = normalizarRentas(await apiGet("/rentas")); } catch {}
     renderFacturas();
     renderDisponibilidad();
     recalcularDashboard();
@@ -2427,4 +2497,5 @@ const btnExportar = document.getElementById("btnExportar");
         crossorigin="anonymous"></script>
 </body>
 </html>
+
 
