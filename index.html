@@ -992,21 +992,67 @@ const API_URL = "https://arcy-rentcar-backend.onrender.com";
       return data && data.disponible === true;
     }
 
+    // =========================
+    // Helpers: IDs + imagenes (fallback)
+    // =========================
+    // Compara IDs aunque vengan como number o string
+    function idEq(a, b) {
+      return String(a) === String(b);
+    }
+
+    // Si el backend NO persiste la imagen, guardamos un fallback local por ID
+    const VEH_IMG_KEY = "arcy_veh_img_map";
+
+    function loadVehImgMap() {
+      try {
+        return JSON.parse(localStorage.getItem(VEH_IMG_KEY) || "{}") || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveVehImgMap(map) {
+      try {
+        localStorage.setItem(VEH_IMG_KEY, JSON.stringify(map || {}));
+      } catch {}
+    }
+
+    function getVehiculoImagen(id) {
+      const map = loadVehImgMap();
+      return map[String(id)] || "";
+    }
+
+    function setVehiculoImagen(id, url) {
+      const map = loadVehImgMap();
+      const key = String(id);
+      if (url) map[key] = url;
+      else delete map[key];
+      saveVehImgMap(map);
+    }
+
 
     // ----- NORMALIZACIÓN (BACKEND -> FRONT) -----
     // El backend puede devolver campos en snake_case (ej: precio_dia). Aquí los convertimos al formato que usa la UI.
     function normalizarVehiculo(v) {
+      const id = v && (v.id ?? v.vehiculo_id ?? v.vehiculoId);
+      const imgFallback = id != null ? getVehiculoImagen(id) : "";
+
+      // Normalizamos diferentes nombres posibles
+      const imagen =
+        (v && (v.imagen ?? v.imagen_url ?? v.urlImagen ?? v.url_imagen ?? v.image ?? v.image_url ?? v.foto ?? v.foto_url)) ??
+        "";
+
       return {
         ...v,
-        precioDia: (v && (v.precioDia ?? v.precio_dia)) ?? 0,
+        id: id != null ? id : v.id,
+        precioDia: (v && (v.precioDia ?? v.precio_dia ?? v.precioDiaRD ?? v.precio)) ?? 0,
         ano: (v && (v.ano ?? v.anio ?? v.año)) ?? null,
-        imagen: (v && (v.imagen ?? v.imagen_url ?? v.urlImagen)) ?? "",
+        imagen: (imagen || imgFallback || "").trim(),
         estado: (v && v.estado) ?? "Disponible",
         placa: (v && v.placa) ?? ""
       };
     }
-
-    function normalizarVehiculos(lista) {
+function normalizarVehiculos(lista) {
       return Array.isArray(lista) ? lista.map(normalizarVehiculo) : [];
     }
 
@@ -1769,9 +1815,9 @@ function calcularFactura() {
 
 // --- MODAL VEHÍCULO ---
     function abrirVehiculoModal(id) {
-      const v = vehiculos.find((x) => x.id === id);
+      const v = vehiculos.find((x) => idEq(x.id, id));
       if (!v) return;
-      vehiculoModalId = id;
+      vehiculoModalId = String(v.id);
 
       const backdrop = document.getElementById("vehiculoModalBackdrop");
       const titulo = document.getElementById("modalVehTitulo");
@@ -1854,7 +1900,7 @@ function calcularFactura() {
 
     function guardarCambiosVehiculo() {
       if (vehiculoModalId == null) return;
-      const idx = vehiculos.findIndex(v => v.id === vehiculoModalId);
+      const idx = vehiculos.findIndex(v => idEq(v.id, vehiculoModalId));
       if (idx === -1) return;
       const v = vehiculos[idx];
 
@@ -1878,6 +1924,7 @@ function calcularFactura() {
       v.estado = estado;
       v.precioDia = precioDia;
       v.imagen = imagen;
+      setVehiculoImagen(v.id, imagen);
 
       // (ONLINE) vehiculos se guardan en BD
       renderVehiculos();
@@ -1888,13 +1935,13 @@ function calcularFactura() {
 
     function eliminarVehiculo() {
       if (vehiculoModalId == null) return;
-      const v = vehiculos.find(x => x.id === vehiculoModalId);
+      const v = vehiculos.find(x => idEq(x.id, vehiculoModalId));
       const desc = v ? `${v.marca} ${v.modelo}` : `ID ${vehiculoModalId}`;
       if (!confirm(`¿Seguro que deseas eliminar el vehículo ${desc}? También se eliminarán rentas/facturas asociadas.`)) return;
 
-      vehiculos = vehiculos.filter(vh => vh.id !== vehiculoModalId);
-      facturas = facturas.filter(f => f.idVehiculo !== vehiculoModalId);
-      rentas = rentas.filter(r => r.idVehiculo !== vehiculoModalId);
+      vehiculos = vehiculos.filter(vh => !idEq(vh.id, vehiculoModalId));
+      facturas = facturas.filter(f => !idEq(f.idVehiculo, vehiculoModalId));
+      rentas = rentas.filter(r => !idEq(r.idVehiculo, vehiculoModalId));
 
       // (ONLINE) vehiculos se guardan en BD
       // (ONLINE) facturas se guardan en BD
@@ -2174,7 +2221,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // Backend guarda marca/modelo/placa/precio_dia. Enviamos extras por si luego amplías la tabla.
-            await apiPost("/vehiculos", { marca, modelo, placa, precio_dia: precioDia, ano: ano ? Number(ano) : null, estado, imagen });
+            const createdVeh = await apiPost("/vehiculos", { marca, modelo, placa, precio_dia: precioDia, ano: ano ? Number(ano) : null, estado, imagen });
+
+            // Fallback: si el backend no persiste imagen, la guardamos local por ID
+            const createdId = createdVeh && (createdVeh.id ?? createdVeh.vehiculo_id ?? createdVeh.vehiculoId);
+            if (createdId != null && imagen) setVehiculoImagen(createdId, imagen);
 
             document.getElementById("formVehiculo").reset();
             vehiculos = await apiGet("/vehiculos");
@@ -2199,8 +2250,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const precioDiaInput = document.getElementById("precioDia");
       if (selVeh && precioDiaInput) {
         selVeh.addEventListener("change", () => {
-          const idVeh = Number(selVeh.value);
-          const v = vehiculos.find((x) => x.id === idVeh);
+          const idVeh = selVeh.value;
+          const v = vehiculos.find((x) => idEq(x.id, idVeh));
           if (v) {
             precioDiaInput.value = Number(v.precioDia || 0).toFixed(2);
             // Si ya hay fechas seleccionadas, recalcular sin necesidad de tocar el botón
