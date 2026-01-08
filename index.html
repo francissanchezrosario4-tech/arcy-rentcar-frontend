@@ -1010,11 +1010,12 @@ const API_URL = "https://arcy-rentcar-backend.onrender.com";
       return data;
     }
 
-    async function verificarDisponibilidadOnline(vehiculo_id, inicio, fin) {(vehiculo_id, inicio, fin) {
-      const q = `?inicio=${encodeURIComponent(inicio)}&fin=${encodeURIComponent(fin)}`;
-      const data = await apiGet(`/disponibilidad/${vehiculo_id}${q}`);
-      return data && data.disponible === true;
-    }
+    async function verificarDisponibilidadOnline(vehiculo_id, inicio, fin) {
+   const q = `?inicio=${encodeURIComponent(inicio)}&fin=${encodeURIComponent(fin)}`;
+   const data = await apiGet(`/disponibilidad/${vehiculo_id}${q}`);
+   return data && data.disponible === true;
+   }
+
 
     // =========================
     // Helpers: IDs + imagenes (fallback)
@@ -1809,23 +1810,6 @@ function calcularFactura() {
       }
     }
 
-      const c = clientes[idx];
-      c.nombre = nombre;
-      c.telefono = telefono;
-      c.cedula = cedula;
-      c.nota = nota;
-      c.valoracion = valoracion;
-      if (c.email !== undefined) {
-        delete c.email;
-      }
-
-      // (ONLINE) clientes se guardan en BD
-      renderClientes();
-      renderFacturas(); // para actualizar el nombre en las facturas
-      alert("Cliente actualizado");
-      cerrarClienteModal();
-    }
-
     
     async function eliminarCliente() {
       if (clienteModalId == null) return;
@@ -1973,22 +1957,6 @@ function calcularFactura() {
         console.error(e);
         alert("❌ No se pudo actualizar el vehículo en la base de datos.");
       }
-    }
-
-      v.marca = marca;
-      v.modelo = modelo;
-      v.ano = ano ? Number(ano) : null;
-      v.placa = placa;
-      v.estado = estado;
-      v.precioDia = precioDia;
-      v.imagen = imagen;
-      setVehiculoImagen(v.id, imagen);
-
-      // (ONLINE) vehiculos se guardan en BD
-      renderVehiculos();
-      recalcularDashboard();
-      alert("Vehículo actualizado");
-      cerrarVehiculoModal();
     }
 
     
