@@ -986,7 +986,26 @@ const API_URL = "https://arcy-rentcar-backend.onrender.com";
       return data;
     }
 
-    async function verificarDisponibilidadOnline(vehiculo_id, inicio, fin) {
+    
+    async function apiPut(path, body) {
+      const res = await fetch(API_URL + path, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || (typeof data === "string" ? data : "Error"));
+      return data;
+    }
+
+    async function apiDelete(path) {
+      const res = await fetch(API_URL + path, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || (typeof data === "string" ? data : "Error"));
+      return data;
+    }
+
+async function verificarDisponibilidadOnline(vehiculo_id, inicio, fin) {
       const q = `?inicio=${encodeURIComponent(inicio)}&fin=${encodeURIComponent(fin)}`;
       const data = await apiGet(`/disponibilidad/${vehiculo_id}${q}`);
       return data && data.disponible === true;
@@ -1058,6 +1077,30 @@ const API_URL = "https://arcy-rentcar-backend.onrender.com";
         idFactura: r.idFactura ?? r.factura_id ?? ""
       };
     }
+    function toDateOnlyString(d) {
+      if (!d) return "";
+      if (typeof d === "string") {
+        // ISO -> YYYY-MM-DD
+        if (d.includes("T")) return d.split("T")[0];
+        return d;
+      }
+      try {
+        return new Date(d).toISOString().slice(0, 10);
+      } catch {
+        return String(d);
+      }
+    }
+
+    function formatFechaUI(d) {
+      const s = toDateOnlyString(d);
+      if (!s) return "";
+      // s expected YYYY-MM-DD
+      const [y, m, day] = s.split("-");
+      if (!y || !m || !day) return s;
+      return `${day}/${m}/${y}`;
+    }
+
+
 
     function normalizarRentas(lista) {
       return Array.isArray(lista) ? lista.map(normalizarRenta) : [];
@@ -1333,42 +1376,56 @@ function renderVehiculos() {
       const tbody = document.querySelector("#tablaFacturas tbody");
       if (!tbody) return;
       tbody.innerHTML = "";
+
       facturas.forEach((f) => {
-        const cliente = clientes.find((c) => c.id === f.idCliente);
-        const vehiculo = vehiculos.find((v) => v.id === f.idVehiculo);
-        const nombreCliente = cliente ? cliente.nombre : "";
-        const descVehiculo = vehiculo ? `${vehiculo.marca} ${vehiculo.modelo}` : "";
         const tr = document.createElement("tr");
-        tr.innerHTML = `<td>${f.id}</td><td>${f.fecha}</td><td>${nombreCliente}</td><td>${descVehiculo}</td><td>${f.dias}</td><td>${Number(f.total).toFixed(2)}</td><td><button class="btn-table btn-pdf" data-id="${f.id}">PDF</button><button class="btn-table btn-edit" data-id="${f.id}">Editar</button><button class="btn-table btn-del" data-id="${f.id}">Eliminar</button></td>`;
+        const fecha = formatFechaUI(f.fecha);
+        const cliente = (f.cliente_nombre || "").toString();
+        const veh = (f.vehiculo || "").toString();
+        const placa = (f.placa || "").toString();
+        const total = Number(f.total ?? 0).toFixed(2);
+
+        tr.innerHTML = `
+          <td>${f.id || ""}</td>
+          <td>${fecha}</td>
+          <td>${cliente}</td>
+          <td>${veh}${placa ? " (" + placa + ")" : ""}</td>
+          <td>RD$ ${total}</td>
+          <td>
+            <button class="btn-table btn-pdf" data-id="${f.id}">PDF</button>
+            <button class="btn-table btn-del" data-id="${f.id}">Eliminar</button>
+          </td>
+        `;
         tbody.appendChild(tr);
       });
 
-      const pdfButtons = tbody.querySelectorAll(".btn-pdf");
-      pdfButtons.forEach((btn) => {
-
-    // ---------------- ELIMINAR FACTURA ----------------
-    tbody.querySelectorAll(".btn-del").forEach(btn => {
-        btn.addEventListener("click", () => {
-            const id = btn.dataset.id;
-            if (!confirm("¿Eliminar factura y su renta asociada?")) return;
-
-            facturas = facturas.filter(f => f.id !== id);
-            rentas = rentas.filter(r => r.idFactura !== id);
-
-            // (ONLINE) facturas se guardan en BD
-            // (ONLINE) rentas se guardan en BD
-
-            renderFacturas();
-            renderDisponibilidad();
-            recalcularDashboard();
-
-            alert("Factura eliminada.");
-        });
-    });
-
+      // PDF
+      tbody.querySelectorAll(".btn-pdf").forEach((btn) => {
         btn.addEventListener("click", () => {
           const id = btn.getAttribute("data-id");
-          exportarFacturaPDF(id);
+          if (id) exportarFacturaPDF(id);
+        });
+      });
+
+      // Eliminar (ONLINE)
+      tbody.querySelectorAll(".btn-del").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.getAttribute("data-id");
+          if (!id) return;
+          if (!confirm(`¿Eliminar la factura ${id}?`)) return;
+
+          try {
+            await apiDelete(`/facturas/${id}`);
+            await cargarTodoOnline();
+            renderFacturas();
+            renderRentas();
+            renderDisponibilidad();
+            recalcularDashboard();
+            alert("✅ Factura eliminada (ONLINE)");
+          } catch (e) {
+            console.error(e);
+            alert("❌ No se pudo eliminar la factura en la base de datos.\n\nSi tu backend aún no tiene DELETE /facturas/:id, dímelo y te paso el bloque para agregarlo.");
+          }
         });
       });
     }
@@ -1523,7 +1580,7 @@ function renderVehiculos() {
               }
               const item = document.createElement("div");
               item.className = "lista-rentas-item";
-              item.textContent = `🟥 ${r.fechaInicio} a ${r.fechaFinal} — Cliente: ${nombreCli}`;
+              item.textContent = `🟥 ${formatFechaUI(r.fechaInicio)} a ${formatFechaUI(r.fechaFinal)} — Cliente: ${nombreCli}`;
               listaRentas.appendChild(item);
             });
           }
@@ -1640,17 +1697,33 @@ function renderVehiculos() {
             const card = document.createElement("div");
             card.className = "veh-card";
             card.innerHTML = `
-              <div class="veh-img">
-                ${v.imagen ? `<img src="${v.imagen}" alt="">` : `<div class="veh-img-fallback">${((v.marca||"V")[0]||"V").toUpperCase()}${((v.modelo||"")[0]||"")}</div>`}
-              </div>
-              <div class="veh-body">
-                <div class="veh-name">${(v.marca||"").toString()} ${(v.modelo||"").toString()}</div>
-                <div class="veh-sub">Placa: ${(v.placa||"")}</div>
+              ${v.imagen
+                ? `<div class="veh-card-img-wrap"><img src="${v.imagen}" alt="${(v.marca||"")} ${(v.modelo||"")}" /></div>`
+                : `<div class="veh-card-img-placeholder">${(((v.marca||"V")[0]||"V").toUpperCase())}${(((v.modelo||"")[0]||"").toUpperCase())}</div>`}
+              <div class="veh-card-body">
+                <h3>${(v.marca||"")} ${(v.modelo||"")}</h3>
+                <p class="veh-card-sub">${v.ano ? "Año " + v.ano : ""}</p>
+                <p class="veh-card-sub">RD$ ${Number(v.precioDia ?? v.precio_dia ?? 0).toFixed(2)} / día</p>
+                <p class="veh-card-sub">Placa: ${(v.placa||"")}</p>
+                <span class="veh-card-tag ${v.estado === "Disponible" ? "ok" : (v.estado === "Rentado" ? "warn" : "")}">${v.estado || ""}</span>
+                <div style="margin-top:10px;">
+                  <button class="btn btn-secondary btn-sm btn-ver-detalles" data-id="${v.id}">Ver detalles</button>
+                </div>
               </div>
             `;
             preview.appendChild(card);
           });
-        }
+          // Eventos: ver detalles desde el dashboard
+          preview.querySelectorAll(".btn-ver-detalles").forEach((btn) => {
+            btn.addEventListener("click", (ev) => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              const id = btn.getAttribute("data-id");
+              if (id) abrirVehiculoModal(id);
+            });
+          });
+
+      }
       } catch(e) {}
     }
 
@@ -1731,9 +1804,9 @@ function calcularFactura() {
 
 // --- MODAL CLIENTE ---
     function abrirClienteModal(id) {
-      const c = clientes.find((x) => x.id === id);
+      const c = clientes.find((x) => idEq(x.id, id));
       if (!c) return;
-      clienteModalId = id;
+      clienteModalId = String(c.id);
 
       const backdrop = document.getElementById("clienteModalBackdrop");
       const titulo = document.getElementById("modalCliTitulo");
@@ -1832,34 +1905,34 @@ function calcularFactura() {
       cerrarClienteModal();
     }
 
-    function eliminarCliente() {
+    async function eliminarCliente() {
       if (clienteModalId == null) return;
-      const c = clientes.find((x) => x.id === clienteModalId);
+
+      const c = clientes.find((x) => idEq(x.id, clienteModalId));
       const nombre = c ? c.nombre : `ID ${clienteModalId}`;
-      if (!confirm(`¿Seguro que deseas eliminar el cliente ${nombre}? También se eliminarán sus facturas y rentas asociadas.`)) return;
+      if (!confirm(`¿Seguro que deseas eliminar el cliente ${nombre}?`)) return;
 
-      // Facturas asociadas al cliente
-      const facturasEliminar = facturas.filter((f) => f.idCliente === clienteModalId).map((f) => f.id);
-      facturas = facturas.filter((f) => f.idCliente !== clienteModalId);
-      rentas = rentas.filter((r) => !facturasEliminar.includes(r.idFactura));
-      clientes = clientes.filter((cli) => cli.id !== clienteModalId);
-
-      // (ONLINE) clientes se guardan en BD
-      // (ONLINE) facturas se guardan en BD
-      // (ONLINE) rentas se guardan en BD
-
-      renderClientes();
-      renderFacturas();
-      recalcularDashboard();
-      cerrarClienteModal();
-      alert("Cliente y registros relacionados eliminados");
+      try {
+        await apiDelete(`/clientes/${clienteModalId}`);
+        await cargarTodoOnline();
+        renderClientes();
+        renderFacturas();
+        renderRentas();
+        renderDisponibilidad();
+        recalcularDashboard();
+        cerrarClienteModal();
+        alert("✅ Cliente eliminado (ONLINE)");
+      } catch (e) {
+        console.error(e);
+        alert("❌ No se pudo eliminar el cliente en la base de datos.");
+      }
     }
 
 // --- MODAL VEHÍCULO ---
     function abrirVehiculoModal(id) {
-      const v = vehiculos.find((x) => x.id === id);
+      const v = vehiculos.find((x) => idEq(x.id, id));
       if (!v) return;
-      vehiculoModalId = id;
+      vehiculoModalId = String(v.id);
 
       const backdrop = document.getElementById("vehiculoModalBackdrop");
       const titulo = document.getElementById("modalVehTitulo");
@@ -1974,25 +2047,27 @@ function calcularFactura() {
       cerrarVehiculoModal();
     }
 
-    function eliminarVehiculo() {
+    async function eliminarVehiculo() {
       if (vehiculoModalId == null) return;
-      const v = vehiculos.find(x => x.id === vehiculoModalId);
+
+      const v = vehiculos.find((x) => idEq(x.id, vehiculoModalId));
       const desc = v ? `${v.marca} ${v.modelo}` : `ID ${vehiculoModalId}`;
-      if (!confirm(`¿Seguro que deseas eliminar el vehículo ${desc}? También se eliminarán rentas/facturas asociadas.`)) return;
+      if (!confirm(`¿Seguro que deseas eliminar el vehículo ${desc}?`)) return;
 
-      vehiculos = vehiculos.filter(vh => vh.id !== vehiculoModalId);
-      facturas = facturas.filter(f => f.idVehiculo !== vehiculoModalId);
-      rentas = rentas.filter(r => r.idVehiculo !== vehiculoModalId);
-
-      // (ONLINE) vehiculos se guardan en BD
-      // (ONLINE) facturas se guardan en BD
-      // (ONLINE) rentas se guardan en BD
-
-      renderVehiculos();
-      renderFacturas();
-      recalcularDashboard();
-      cerrarVehiculoModal();
-      alert("Vehículo y registros relacionados eliminados");
+      try {
+        await apiDelete(`/vehiculos/${vehiculoModalId}`);
+        await cargarTodoOnline();
+        renderVehiculos();
+        renderFacturas();
+        renderRentas();
+        renderDisponibilidad();
+        recalcularDashboard();
+        cerrarVehiculoModal();
+        alert("✅ Vehículo eliminado (ONLINE)");
+      } catch (e) {
+        console.error(e);
+        alert("❌ No se pudo eliminar el vehículo en la base de datos.");
+      }
     }
 
     document.addEventListener("click", (e) => {
@@ -2068,7 +2143,7 @@ function calcularFactura() {
   const vehiculoTexto = factura.vehiculo ?? "";
   const placaTexto = factura.placa ?? "";
   const precioDia = factura.precio_dia ?? factura.precioDia ?? "";
-  const fechaTxt = (factura.fecha || "").toString().split("T")[0];
+  const fechaTxt = formatFechaUI(factura.fecha);
 
   const ROJO = [193, 18, 31];
   const GRIS = [240, 240, 240];
@@ -2497,5 +2572,6 @@ const btnExportar = document.getElementById("btnExportar");
         crossorigin="anonymous"></script>
 </body>
 </html>
+
 
 
