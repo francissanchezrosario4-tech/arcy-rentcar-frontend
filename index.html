@@ -1378,7 +1378,7 @@ function renderVehiculos() {
         vehiculos.forEach((v) => {
           const opt = document.createElement("option");
           opt.value = v.id;
-          opt.textContent = `${v.id} - ${v.marca} ${v.modelo}`;
+          opt.textContent = `${v.id} - ${v.marca} ${v.modelo}${v.ano ? ' (' + v.ano + ')' : ''}`;
           selectVehiculo.appendChild(opt);
         });
       }
@@ -1396,7 +1396,9 @@ function renderVehiculos() {
         const tr = document.createElement("tr");
         const fecha = formatFechaUI(f.fecha);
         const cliente = (f.cliente_nombre || "").toString();
-        const veh = (f.vehiculo || "").toString();
+        const vehBase = (f.vehiculo || "").toString();
+        const vObj = vehiculos.find(v => String(v.placa||"") === String(placa));
+        const veh = (vObj && (vObj.marca || vObj.modelo)) ? `${(vObj.marca||"")} ${(vObj.modelo||"")}`.trim() + (vObj.ano ? ` (${vObj.ano})` : "") : vehBase;
         const placa = (f.placa || "").toString();
         const dias = (f.dias ?? "").toString();
         const total = Number(f.total ?? 0).toFixed(2);
@@ -1519,7 +1521,7 @@ function renderVehiculos() {
 
         const titulo = document.createElement("div");
         titulo.className = "card-calendario-titulo";
-        const descVehiculo = `${v.marca || ""} ${v.modelo || ""}`.trim() || `Vehículo ${v.id}`;
+        const descVehiculo = `${v.marca || ""} ${v.modelo || ""}${v.ano ? ' (' + v.ano + ')' : ''}`.trim() || `Vehículo ${v.id}`;
         titulo.textContent = descVehiculo;
 
         const nav = document.createElement("div");
@@ -1695,7 +1697,7 @@ function renderVehiculos() {
           .forEach((id) => {
             const monto = porVehiculo[id] || 0;
             const v = vehiculos.find((x) => idEq(x.id, id));
-            const desc = v ? `${v.marca || ""} ${v.modelo || ""}`.trim() : "";
+            const desc = v ? `${v.marca || ""} ${v.modelo || ""}${v.ano ? ' (' + v.ano + ')' : ''}`.trim() : "";
             const tr = document.createElement("tr");
             tr.innerHTML = `<td>${id}</td><td>${desc}</td><td>${monto.toFixed(2)}</td>`;
             tbodyVehDash.appendChild(tr);
@@ -1707,7 +1709,7 @@ function renderVehiculos() {
       const topVehiculoMonto = document.getElementById("kpiTopVehiculoMonto");
       if (topId) {
         const vTop = vehiculos.find((v) => idEq(v.id, topId));
-        if (topVehiculoLabel) topVehiculoLabel.textContent = vTop ? `${vTop.marca || ""} ${vTop.modelo || ""}`.trim() : `ID ${topId}`;
+        if (topVehiculoLabel) topVehiculoLabel.textContent = vTop ? `${vTop.marca || ""} ${vTop.modelo || ""}${vTop.ano ? ' (' + vTop.ano + ')' : ''}`.trim() : `ID ${topId}`;
         if (topVehiculoMonto) topVehiculoMonto.textContent = `RD$ ${topMonto.toFixed(2)}`;
       } else {
         if (topVehiculoLabel) topVehiculoLabel.textContent = "N/A";
@@ -1719,7 +1721,7 @@ function renderVehiculos() {
         const preview = document.getElementById("vehiculosPreview");
         if (preview) {
           preview.innerHTML = "";
-          vehiculos.slice(0, 6).forEach((v) => {
+          vehiculos.forEach((v) => {
             const card = document.createElement("div");
             card.className = "veh-card";
             card.innerHTML = `
@@ -2637,6 +2639,7 @@ const btnExportar = document.getElementById("btnExportar");
         crossorigin="anonymous"></script>
 </body>
 </html>
+
 
 
 
