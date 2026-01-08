@@ -1000,10 +1000,25 @@ const API_URL = "https://arcy-rentcar-backend.onrender.com";
 
     async function apiDelete(path) {
       const res = await fetch(API_URL + path, { method: "DELETE" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || (typeof data === "string" ? data : "Error"));
+
+      // Algunos endpoints DELETE responden 204 (sin contenido) o no devuelven JSON.
+      let data = null;
+      const contentType = (res.headers.get("content-type") || "").toLowerCase();
+
+      if (contentType.includes("application/json")) {
+        data = await res.json().catch(() => null);
+      } else {
+        // consume el body si existe, pero no falles si viene vacío
+        await res.text().catch(() => "");
+      }
+
+      if (!res.ok) {
+        const msg = (data && data.error) ? data.error : `Error ${res.status}`;
+        throw new Error(msg);
+      }
       return data;
     }
+
 
 async function verificarDisponibilidadOnline(vehiculo_id, inicio, fin) {
       const q = `?inicio=${encodeURIComponent(inicio)}&fin=${encodeURIComponent(fin)}`;
@@ -1414,8 +1429,17 @@ function renderVehiculos() {
           if (!id) return;
           if (!confirm(`¿Eliminar la factura ${id}?`)) return;
 
+          // 1) eliminar en BD
           try {
             await apiDelete(`/facturas/${id}`);
+          } catch (e) {
+            console.error(e);
+            alert("❌ No se pudo eliminar la factura en la base de datos.");
+            return;
+          }
+
+          // 2) refrescar datos (si falla, la factura igual se eliminó)
+          try {
             await cargarTodoOnline();
             renderFacturas();
             renderRentas();
@@ -1424,7 +1448,7 @@ function renderVehiculos() {
             alert("✅ Factura eliminada (ONLINE)");
           } catch (e) {
             console.error(e);
-            alert("❌ No se pudo eliminar la factura en la base de datos.\n\nSi tu backend aún no tiene DELETE /facturas/:id, dímelo y te paso el bloque para agregarlo.");
+            alert("✅ Factura eliminada, pero no se pudo refrescar la pantalla. Recarga la página.");
           }
         });
       });
@@ -1912,8 +1936,18 @@ function calcularFactura() {
       const nombre = c ? c.nombre : `ID ${clienteModalId}`;
       if (!confirm(`¿Seguro que deseas eliminar el cliente ${nombre}?`)) return;
 
+      
+      // 1) eliminar en BD
       try {
         await apiDelete(`/clientes/${clienteModalId}`);
+      } catch (e) {
+        console.error(e);
+        alert("❌ No se pudo eliminar el cliente en la base de datos.");
+        return;
+      }
+
+      // 2) refrescar datos (si falla, no significa que el delete falló)
+      try {
         await cargarTodoOnline();
         renderClientes();
         renderFacturas();
@@ -1924,7 +1958,8 @@ function calcularFactura() {
         alert("✅ Cliente eliminado (ONLINE)");
       } catch (e) {
         console.error(e);
-        alert("❌ No se pudo eliminar el cliente en la base de datos.");
+        cerrarClienteModal();
+        alert("✅ Cliente eliminado, pero no se pudo refrescar la pantalla. Recarga la página.");
       }
     }
 
@@ -2054,8 +2089,18 @@ function calcularFactura() {
       const desc = v ? `${v.marca} ${v.modelo}` : `ID ${vehiculoModalId}`;
       if (!confirm(`¿Seguro que deseas eliminar el vehículo ${desc}?`)) return;
 
+      
+      // 1) eliminar en BD
       try {
         await apiDelete(`/vehiculos/${vehiculoModalId}`);
+      } catch (e) {
+        console.error(e);
+        alert("❌ No se pudo eliminar el vehículo en la base de datos.");
+        return;
+      }
+
+      // 2) refrescar datos
+      try {
         await cargarTodoOnline();
         renderVehiculos();
         renderFacturas();
@@ -2066,7 +2111,8 @@ function calcularFactura() {
         alert("✅ Vehículo eliminado (ONLINE)");
       } catch (e) {
         console.error(e);
-        alert("❌ No se pudo eliminar el vehículo en la base de datos.");
+        cerrarVehiculoModal();
+        alert("✅ Vehículo eliminado, pero no se pudo refrescar la pantalla. Recarga la página.");
       }
     }
 
