@@ -986,100 +986,47 @@ const API_URL = "https://arcy-rentcar-backend.onrender.com";
       return data;
     }
 
-    async function apiPut(path, body) {
-      const res = await fetch(API_URL + path, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = data.error || (typeof data === "string" ? data : "Error");
-        throw new Error(msg);
-      }
-      return data;
-    }
-
-    async function apiDelete(path) {
-      const res = await fetch(API_URL + path, { method: "DELETE" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = data.error || (typeof data === "string" ? data : "Error");
-        throw new Error(msg);
-      }
-      return data;
-    }
-
     async function verificarDisponibilidadOnline(vehiculo_id, inicio, fin) {
-   const q = `?inicio=${encodeURIComponent(inicio)}&fin=${encodeURIComponent(fin)}`;
-   const data = await apiGet(`/disponibilidad/${vehiculo_id}${q}`);
-   return data && data.disponible === true;
-   }
-
-
-    // =========================
-    // Helpers: IDs + imagenes (fallback)
-    // =========================
-    // Compara IDs aunque vengan como number o string
-    function idEq(a, b) {
-      return String(a) === String(b);
-    }
-
-    // Si el backend NO persiste la imagen, guardamos un fallback local por ID
-    const VEH_IMG_KEY = "arcy_veh_img_map";
-
-    function loadVehImgMap() {
-      try {
-        return JSON.parse(localStorage.getItem(VEH_IMG_KEY) || "{}") || {};
-      } catch {
-        return {};
-      }
-    }
-
-    function saveVehImgMap(map) {
-      try {
-        localStorage.setItem(VEH_IMG_KEY, JSON.stringify(map || {}));
-      } catch {}
-    }
-
-    function getVehiculoImagen(id) {
-      const map = loadVehImgMap();
-      return map[String(id)] || "";
-    }
-
-    function setVehiculoImagen(id, url) {
-      const map = loadVehImgMap();
-      const key = String(id);
-      if (url) map[key] = url;
-      else delete map[key];
-      saveVehImgMap(map);
+      const q = `?inicio=${encodeURIComponent(inicio)}&fin=${encodeURIComponent(fin)}`;
+      const data = await apiGet(`/disponibilidad/${vehiculo_id}${q}`);
+      return data && data.disponible === true;
     }
 
 
     // ----- NORMALIZACIÓN (BACKEND -> FRONT) -----
     // El backend puede devolver campos en snake_case (ej: precio_dia). Aquí los convertimos al formato que usa la UI.
     function normalizarVehiculo(v) {
-      const id = v && (v.id ?? v.vehiculo_id ?? v.vehiculoId);
-      const imgFallback = id != null ? getVehiculoImagen(id) : "";
-
-      // Normalizamos diferentes nombres posibles
-      const imagen =
-        (v && (v.imagen ?? v.imagen_url ?? v.urlImagen ?? v.url_imagen ?? v.image ?? v.image_url ?? v.foto ?? v.foto_url)) ??
-        "";
-
       return {
         ...v,
-        id: id != null ? id : v.id,
-        precioDia: (v && (v.precioDia ?? v.precio_dia ?? v.precioDiaRD ?? v.precio)) ?? 0,
+        precioDia: (v && (v.precioDia ?? v.precio_dia)) ?? 0,
         ano: (v && (v.ano ?? v.anio ?? v.año)) ?? null,
-        imagen: (imagen || imgFallback || "").trim(),
+        imagen: (v && (v.imagen ?? v.imagen_url ?? v.urlImagen)) ?? "",
         estado: (v && v.estado) ?? "Disponible",
         placa: (v && v.placa) ?? ""
       };
     }
-function normalizarVehiculos(lista) {
+
+    function normalizarVehiculos(lista) {
       return Array.isArray(lista) ? lista.map(normalizarVehiculo) : [];
+    
+
+    function normalizarFactura(f) {
+      return {
+        ...f,
+        // compatibilidad camel/snake
+        cliente_nombre: f.cliente_nombre ?? f.clienteNombre ?? "",
+        cliente_telefono: f.cliente_telefono ?? f.clienteTelefono ?? "",
+        precio_dia: f.precio_dia ?? f.precioDia ?? 0,
+        // también dejamos alias camel por si alguna parte del UI lo usa
+        precioDia: f.precioDia ?? f.precio_dia ?? 0,
+        fecha: (f.fecha || "").toString().split("T")[0]
+      };
     }
+
+    function normalizarFacturas(lista) {
+      return Array.isArray(lista) ? lista.map(normalizarFactura) : [];
+    }
+}
 
     async function cargarTodoOnline() {
       // Cargar en paralelo
@@ -1090,7 +1037,7 @@ function normalizarVehiculos(lista) {
       ]);
       clientes = Array.isArray(c) ? c : [];
       vehiculos = normalizarVehiculos(v);
-      facturas = Array.isArray(f) ? f : [];
+      facturas = normalizarFacturas(f);
 
       // Intentar cargar rentas (si tu backend tiene GET /rentas; si no, queda vacío)
       try {
@@ -1603,9 +1550,22 @@ function renderVehiculos() {
       }
 
       const porVehiculo = {};
-      rentas.forEach((r) => {
-        if (!porVehiculo[r.idVehiculo]) porVehiculo[r.idVehiculo] = 0;
-        porVehiculo[r.idVehiculo] += Number(r.totalRenta || 0);
+      // Calcula ingresos por vehículo a partir de FACTURAS (Neon guarda facturas con placa + total)
+      // Así no dependemos de campos inexistentes en /rentas (como idVehiculo/totalRenta).
+      facturas.forEach((f) => {
+        const total = Number(f.total || 0);
+        const placa = String(f.placa || "").trim();
+
+        // Intentar mapear por placa -> vehículo.id
+        let vehId = null;
+        if (placa) {
+          const v = vehiculos.find((x) => String(x.placa || "").toLowerCase() === placa.toLowerCase());
+          if (v && v.id != null) vehId = v.id;
+        }
+
+        const key = vehId != null ? String(vehId) : (placa ? `placa:${placa}` : "N/A");
+        if (!porVehiculo[key]) porVehiculo[key] = 0;
+        porVehiculo[key] += total;
       });
       const tbodyVehDash = document.querySelector("#tablaVehiculosDashboard tbody");
       if (tbodyVehDash) {
@@ -1614,11 +1574,29 @@ function renderVehiculos() {
         let topMonto = 0;
         Object.keys(porVehiculo).forEach((id) => {
           const monto = porVehiculo[id];
-          const v = vehiculos.find((x) => x.id === Number(id));
-          const desc = v ? `${v.marca} ${v.modelo}` : "";
+
+          let idLabel = id;
+          let desc = "";
+
+          // Si el key es un ID numérico (vehículo encontrado)
+          if (/^\d+$/.test(String(id))) {
+            const v = vehiculos.find((x) => String(x.id) === String(id));
+            desc = v ? `${v.marca} ${v.modelo}` : `ID ${id}`;
+          } else if (String(id).startsWith("placa:")) {
+            const placaKey = String(id).replace("placa:", "");
+            // Buscar descripción usando facturas (por si el vehículo no está en lista)
+            const fAny = facturas.find((f) => String(f.placa || "").toLowerCase() === placaKey.toLowerCase());
+            desc = fAny ? `${fAny.vehiculo || ""} (${placaKey})`.trim() : `Placa ${placaKey}`;
+            idLabel = "N/A";
+          } else {
+            idLabel = "N/A";
+            desc = "";
+          }
+
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${id}</td><td>${desc}</td><td>${monto.toFixed(2)}</td>`;
+          tr.innerHTML = `<td>${idLabel}</td><td>${desc}</td><td>${monto.toFixed(2)}</td>`;
           tbodyVehDash.appendChild(tr);
+
           if (monto > topMonto) {
             topMonto = monto;
             topId = id;
@@ -1627,9 +1605,17 @@ function renderVehiculos() {
         const topVehiculoLabel = document.getElementById("kpiTopVehiculo");
         const topVehiculoMonto = document.getElementById("kpiTopVehiculoMonto");
         if (topId) {
-          const vTop = vehiculos.find((v) => v.id === Number(topId));
-          if (topVehiculoLabel) topVehiculoLabel.textContent = vTop ? `${vTop.marca} ${vTop.modelo}` : `ID ${topId}`;
-          if (topVehiculoMonto) topVehiculoMonto.textContent = `Total rentado: RD$ ${topMonto.toFixed(2)}`;
+          let label = "N/A";
+          if (/^\d+$/.test(String(topId))) {
+            const vTop = vehiculos.find((v) => String(v.id) === String(topId));
+            label = vTop ? `${vTop.marca} ${vTop.modelo}` : `ID ${topId}`;
+          } else if (String(topId).startsWith("placa:")) {
+            const placaKey = String(topId).replace("placa:", "");
+            const fAny = facturas.find((f) => String(f.placa || "").toLowerCase() === placaKey.toLowerCase());
+            label = fAny ? `${fAny.vehiculo || "Vehículo"} (${placaKey})` : `Placa ${placaKey}`;
+          }
+          if (topVehiculoLabel) topVehiculoLabel.textContent = label;
+          if (topVehiculoMonto) topVehiculoMonto.textContent = `Total: RD$ ${topMonto.toFixed(2)}`;
         } else {
           if (topVehiculoLabel) topVehiculoLabel.textContent = "N/A";
           if (topVehiculoMonto) topVehiculoMonto.textContent = "";
@@ -1714,7 +1700,7 @@ function calcularFactura() {
 
 // --- MODAL CLIENTE ---
     function abrirClienteModal(id) {
-      const c = clientes.find((x) => idEq(x.id, id));
+      const c = clientes.find((x) => x.id === id);
       if (!c) return;
       clienteModalId = id;
 
@@ -1782,9 +1768,10 @@ function calcularFactura() {
       if (btnGuardar) btnGuardar.style.display = "inline-block";
     }
 
-    
-    async function guardarCambiosCliente() {
+    function guardarCambiosCliente() {
       if (clienteModalId == null) return;
+      const idx = clientes.findIndex((c) => c.id === clienteModalId);
+      if (idx === -1) return;
 
       const nombre = document.getElementById("modalCliNombre").value.trim();
       const telefono = document.getElementById("modalCliTelefono").value.trim();
@@ -1797,42 +1784,51 @@ function calcularFactura() {
         return;
       }
 
-      try {
-        await apiPut(`/clientes/${clienteModalId}`, { nombre, telefono, cedula, nota, valoracion });
-        clientes = await apiGet("/clientes");
-        renderClientes();
-        renderFacturas(); // para actualizar el nombre en las facturas (si aplica)
-        alert("✅ Cliente actualizado (ONLINE)");
-        cerrarClienteModal();
-      } catch (e) {
-        console.error(e);
-        alert("❌ No se pudo actualizar el cliente en la base de datos.");
+      const c = clientes[idx];
+      c.nombre = nombre;
+      c.telefono = telefono;
+      c.cedula = cedula;
+      c.nota = nota;
+      c.valoracion = valoracion;
+      if (c.email !== undefined) {
+        delete c.email;
       }
+
+      // (ONLINE) clientes se guardan en BD
+      renderClientes();
+      renderFacturas(); // para actualizar el nombre en las facturas
+      alert("Cliente actualizado");
+      cerrarClienteModal();
     }
 
-    
-    async function eliminarCliente() {
+    function eliminarCliente() {
       if (clienteModalId == null) return;
-      const c = clientes.find((x) => idEq(x.id, clienteModalId));
+      const c = clientes.find((x) => x.id === clienteModalId);
       const nombre = c ? c.nombre : `ID ${clienteModalId}`;
-      if (!confirm(`¿Seguro que deseas eliminar el cliente ${nombre}?`)) return;
+      if (!confirm(`¿Seguro que deseas eliminar el cliente ${nombre}? También se eliminarán sus facturas y rentas asociadas.`)) return;
 
-      try {
-        await apiDelete(`/clientes/${clienteModalId}`);
-        await cargarTodoOnline(); // recarga clientes/facturas/vehiculos/rentas desde BD
-        cerrarClienteModal();
-        alert("✅ Cliente eliminado (ONLINE)");
-      } catch (e) {
-        console.error(e);
-        alert("❌ No se pudo eliminar el cliente en la base de datos.");
-      }
+      // Facturas asociadas al cliente
+      const facturasEliminar = facturas.filter((f) => f.idCliente === clienteModalId).map((f) => f.id);
+      facturas = facturas.filter((f) => f.idCliente !== clienteModalId);
+      rentas = rentas.filter((r) => !facturasEliminar.includes(r.idFactura));
+      clientes = clientes.filter((cli) => cli.id !== clienteModalId);
+
+      // (ONLINE) clientes se guardan en BD
+      // (ONLINE) facturas se guardan en BD
+      // (ONLINE) rentas se guardan en BD
+
+      renderClientes();
+      renderFacturas();
+      recalcularDashboard();
+      cerrarClienteModal();
+      alert("Cliente y registros relacionados eliminados");
     }
 
 // --- MODAL VEHÍCULO ---
     function abrirVehiculoModal(id) {
-      const v = vehiculos.find((x) => idEq(x.id, id));
+      const v = vehiculos.find((x) => x.id === id);
       if (!v) return;
-      vehiculoModalId = String(v.id);
+      vehiculoModalId = id;
 
       const backdrop = document.getElementById("vehiculoModalBackdrop");
       const titulo = document.getElementById("modalVehTitulo");
@@ -1913,13 +1909,15 @@ function calcularFactura() {
       if (btnGuardar) btnGuardar.style.display = "inline-block";
     }
 
-    
-    async function guardarCambiosVehiculo() {
+    function guardarCambiosVehiculo() {
       if (vehiculoModalId == null) return;
+      const idx = vehiculos.findIndex(v => v.id === vehiculoModalId);
+      if (idx === -1) return;
+      const v = vehiculos[idx];
 
       const marca = document.getElementById("modalVehMarca").value.trim();
       const modelo = document.getElementById("modalVehModelo").value.trim();
-      const anoRaw = document.getElementById("modalVehAno").value.trim();
+      const ano = document.getElementById("modalVehAno").value.trim();
       const placa = document.getElementById("modalVehPlaca").value.trim();
       const estado = document.getElementById("modalVehEstado").value;
       const precioDia = Number(document.getElementById("modalVehPrecioDia").value || 0);
@@ -1930,51 +1928,40 @@ function calcularFactura() {
         return;
       }
 
-      const ano = anoRaw ? Number(anoRaw) : null;
+      v.marca = marca;
+      v.modelo = modelo;
+      v.ano = ano ? Number(ano) : null;
+      v.placa = placa;
+      v.estado = estado;
+      v.precioDia = precioDia;
+      v.imagen = imagen;
 
-      try {
-        await apiPut(`/vehiculos/${vehiculoModalId}`, {
-          marca,
-          modelo,
-          placa,
-          precio_dia: precioDia,
-          ano,
-          estado,
-          imagen
-        });
-
-        // si el backend guarda imagen, ya no dependemos del fallback; pero lo mantenemos por si acaso
-        setVehiculoImagen(vehiculoModalId, imagen);
-
-        // recargar desde BD
-        const v = await apiGet("/vehiculos");
-        vehiculos = normalizarVehiculos(v);
-        renderVehiculos();
-        recalcularDashboard();
-        alert("✅ Vehículo actualizado (ONLINE)");
-        cerrarVehiculoModal();
-      } catch (e) {
-        console.error(e);
-        alert("❌ No se pudo actualizar el vehículo en la base de datos.");
-      }
+      // (ONLINE) vehiculos se guardan en BD
+      renderVehiculos();
+      recalcularDashboard();
+      alert("Vehículo actualizado");
+      cerrarVehiculoModal();
     }
 
-    
-    async function eliminarVehiculo() {
+    function eliminarVehiculo() {
       if (vehiculoModalId == null) return;
-      const v = vehiculos.find((x) => idEq(x.id, vehiculoModalId));
+      const v = vehiculos.find(x => x.id === vehiculoModalId);
       const desc = v ? `${v.marca} ${v.modelo}` : `ID ${vehiculoModalId}`;
-      if (!confirm(`¿Seguro que deseas eliminar el vehículo ${desc}?`)) return;
+      if (!confirm(`¿Seguro que deseas eliminar el vehículo ${desc}? También se eliminarán rentas/facturas asociadas.`)) return;
 
-      try {
-        await apiDelete(`/vehiculos/${vehiculoModalId}`);
-        await cargarTodoOnline(); // recarga todo desde BD
-        cerrarVehiculoModal();
-        alert("✅ Vehículo eliminado (ONLINE)");
-      } catch (e) {
-        console.error(e);
-        alert("❌ No se pudo eliminar el vehículo en la base de datos.");
-      }
+      vehiculos = vehiculos.filter(vh => vh.id !== vehiculoModalId);
+      facturas = facturas.filter(f => f.idVehiculo !== vehiculoModalId);
+      rentas = rentas.filter(r => r.idVehiculo !== vehiculoModalId);
+
+      // (ONLINE) vehiculos se guardan en BD
+      // (ONLINE) facturas se guardan en BD
+      // (ONLINE) rentas se guardan en BD
+
+      renderVehiculos();
+      renderFacturas();
+      recalcularDashboard();
+      cerrarVehiculoModal();
+      alert("Vehículo y registros relacionados eliminados");
     }
 
     document.addEventListener("click", (e) => {
@@ -2045,8 +2032,12 @@ function calcularFactura() {
     return;
   }
 
-  const cliente = clientes.find(c => c.id === factura.idCliente) || {};
-  const vehiculo = vehiculos.find(v => v.id === factura.idVehiculo) || {};
+  const clienteNombre = factura.cliente_nombre ?? factura.clienteNombre ?? "";
+  const clienteTelefono = factura.cliente_telefono ?? factura.clienteTelefono ?? "";
+  const vehiculoTexto = factura.vehiculo ?? "";
+  const placaTexto = factura.placa ?? "";
+  const precioDia = factura.precio_dia ?? factura.precioDia ?? "";
+  const fechaTxt = (factura.fecha || "").toString().split("T")[0];
 
   const ROJO = [193, 18, 31];
   const GRIS = [240, 240, 240];
@@ -2072,7 +2063,7 @@ function calcularFactura() {
   y = 35;
   doc.setFontSize(10);
   doc.text(`Factura No: ${factura.id}`, X, y);
-  doc.text(`Fecha: ${factura.fecha}`, X + W, y, { align: "right" });
+  doc.text(`Fecha: ${fechaTxt}`, X + W, y, { align: "right" });
 
   /* ===== CLIENTE ===== */
   y += 8;
@@ -2083,8 +2074,8 @@ function calcularFactura() {
   doc.text("DATOS DEL CLIENTE", X + 2, y + 6);
 
   doc.setFontSize(10);
-  doc.text(`Nombre: ${cliente.nombre || ""}`, X + 2, y + 13);
-  doc.text(`Teléfono: ${cliente.telefono || ""}`, X + 100, y + 13);
+  doc.text(`Nombre: ${clienteNombre}`, X + 2, y + 13);
+  doc.text(`Teléfono: ${clienteTelefono}`, X + 100, y + 13);
 
   /* ===== VEHICULO ===== */
   y += 26;
@@ -2096,13 +2087,13 @@ function calcularFactura() {
 
   doc.setFontSize(10);
   doc.text(
-    `Vehículo: ${vehiculo.marca || ""} ${vehiculo.modelo || ""}`,
+    `Vehículo: ${vehiculoTexto}`,
     X + 2,
     y + 13
   );
-  doc.text(`Placa: ${vehiculo.placa || ""}`, X + 2, y + 19);
+  doc.text(`Placa: ${placaTexto}`, X + 2, y + 19);
   doc.text(
-    `Precio por día: RD$ ${factura.precioDia}`,
+    `Precio por día: RD$ ${precioDia}`,
     X + 100,
     y + 13
   );
@@ -2119,7 +2110,7 @@ function calcularFactura() {
 
   y += 6;
   doc.text("Precio por día:", X, y);
-  doc.text(`RD$ ${factura.precioDia}`, X + W, y, { align: "right" });
+  doc.text(`RD$ ${precioDia}`, X + W, y, { align: "right" });
 
   /* ===== TOTAL ===== */
   y += 12;
@@ -2244,11 +2235,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // Backend guarda marca/modelo/placa/precio_dia. Enviamos extras por si luego amplías la tabla.
-            const createdVeh = await apiPost("/vehiculos", { marca, modelo, placa, precio_dia: precioDia, ano: ano ? Number(ano) : null, estado, imagen });
-
-            // Fallback: si el backend no persiste imagen, la guardamos local por ID
-            const createdId = createdVeh && (createdVeh.id ?? createdVeh.vehiculo_id ?? createdVeh.vehiculoId);
-            if (createdId != null && imagen) setVehiculoImagen(createdId, imagen);
+            await apiPost("/vehiculos", { marca, modelo, placa, precio_dia: precioDia, ano: ano ? Number(ano) : null, estado, imagen });
 
             document.getElementById("formVehiculo").reset();
             vehiculos = await apiGet("/vehiculos");
@@ -2273,8 +2260,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const precioDiaInput = document.getElementById("precioDia");
       if (selVeh && precioDiaInput) {
         selVeh.addEventListener("change", () => {
-          const idVeh = selVeh.value;
-          const v = vehiculos.find((x) => idEq(x.id, idVeh));
+          const idVeh = Number(selVeh.value);
+          const v = vehiculos.find((x) => x.id === idVeh);
           if (v) {
             precioDiaInput.value = Number(v.precioDia || 0).toFixed(2);
             // Si ya hay fechas seleccionadas, recalcular sin necesidad de tocar el botón
@@ -2350,7 +2337,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Recargar desde BD
-    facturas = await apiGet("/facturas");
+    facturas = normalizarFacturas(await apiGet("/facturas"));
     try { rentas = await apiGet("/rentas"); } catch {}
     renderFacturas();
     renderDisponibilidad();
@@ -2472,69 +2459,6 @@ const btnExportar = document.getElementById("btnExportar");
   }
 }
   
-/* =======================
-   CLIENTES ONLINE (FINAL)
-======================= */
-async function guardarClienteOnline(nombre, telefono) {
-  const res = await fetch(API_URL + "/clientes", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nombre, telefono })
-  });
-  return await res.json();
-}
-
-async function cargarClientesOnline() {
-  const res = await fetch(API_URL + "/clientes");
-  const clientes = await res.json();
-
-  const tbody = document.getElementById("tbodyClientes");
-  if (!tbody) return;
-
-  tbody.innerHTML = "";
-
-  clientes.forEach(c => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${c.id}</td>
-      <td>${c.nombre}</td>
-      <td>${c.telefono || ""}</td>
-      <td>—</td>
-      <td></td>
-      <td></td>
-      <td>
-        <button>Ver / Editar</button>
-        <button>Usar en factura</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  cargarClientesOnline();
-
-  const btn = document.getElementById("btnGuardarCliente");
-  if (!btn) return;
-
-  btn.addEventListener("click", async () => {
-    const nombre = document.getElementById("nombreCliente")?.value || "";
-    const telefono = document.getElementById("telefonoCliente")?.value || "";
-
-    if (!nombre) {
-      alert("Nombre requerido");
-      return;
-    }
-
-    await guardarClienteOnline(nombre, telefono);
-
-    document.getElementById("nombreCliente").value = "";
-    document.getElementById("telefonoCliente").value = "";
-
-    await cargarClientesOnline();
-    alert("✅ Cliente guardado");
-  });
-});
 
 </script>
 
@@ -2542,3 +2466,4 @@ document.addEventListener("DOMContentLoaded", () => {
         crossorigin="anonymous"></script>
 </body>
 </html>
+
