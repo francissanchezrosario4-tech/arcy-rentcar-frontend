@@ -604,6 +604,7 @@ table {
   <main class="wrapper">
     <div class="tabs">
       <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="reportes">Reportes</button>
       <button class="tab-btn" data-tab="factura">Factura</button>
       <button class="tab-btn" data-tab="clientes">Clientes</button>
       <button class="tab-btn" data-tab="vehiculos">Vehículos</button>
@@ -631,12 +632,7 @@ table {
             <div id="kpiCantidadFacturas" class="kpi-value">0</div>
             <div class="kpi-sub">Registradas en el sistema</div>
           </div>
-          <div class="kpi">
-            <div class="kpi-label">Cantidad de rentas</div>
-            <div id="kpiCantidadRentas" class="kpi-value">0</div>
-            <div class="kpi-sub">Incluye cada contrato de renta</div>
-          </div>
-          <div class="kpi">
+<div class="kpi">
             <div class="kpi-label">Vehículo más rentable</div>
             <div id="kpiTopVehiculo" class="kpi-value">N/A</div>
             <div class="kpi-sub" id="kpiTopVehiculoMonto"></div>
@@ -684,6 +680,118 @@ table {
           <div class="pill">Vista previa</div>
         </div>
         <div id="vehiculosPreview" class="veh-grid"></div>
+      </div>
+    </section>
+
+
+    <!-- REPORTES -->
+    <section id="reportes" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Reportes</div>
+          <div class="pill">Por mes</div>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:10px;">
+          <div style="min-width:220px; flex:0 0 260px;">
+            <label>Mes</label>
+            <select id="repMes"></select>
+          </div>
+          <button class="btn" id="btnRepActualizar" type="button">Actualizar</button>
+          <button class="btn secondary" id="btnRepCSVVeh" type="button">Exportar CSV (Vehículos)</button>
+          <button class="btn secondary" id="btnRepCSVClientes" type="button">Exportar CSV (Clientes)</button>
+          <button class="btn" id="btnRepPDF" type="button">Exportar PDF (Pro)</button>
+        </div>
+
+        <div class="grid-2">
+          <div class="kpi">
+            <div class="kpi-label">Ingresos del mes (RD$)</div>
+            <div id="repKpiIngresos" class="kpi-value">0.00</div>
+            <div class="kpi-sub" id="repKpiMesLabel"></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Cantidad de rentas (facturas)</div>
+            <div id="repKpiRentas" class="kpi-value">0</div>
+            <div class="kpi-sub">Facturas del mes</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Días rentados</div>
+            <div id="repKpiDias" class="kpi-value">0</div>
+            <div class="kpi-sub">Suma de días (facturas)</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Ticket promedio</div>
+            <div id="repKpiTicket" class="kpi-value">RD$ 0.00</div>
+            <div class="kpi-sub">Ingresos / rentas</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Precio promedio por día</div>
+            <div id="repKpiPorDia" class="kpi-value">RD$ 0.00</div>
+            <div class="kpi-sub">Ingresos / días</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Vehículo más rentable</div>
+            <div id="repKpiTopVeh" class="kpi-value">N/A</div>
+            <div class="kpi-sub" id="repKpiTopVehMonto"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Ingresos por vehículo (mes)</div>
+          </div>
+          <table id="repTablaVehiculos">
+            <thead>
+              <tr>
+                <th>Vehículo</th>
+                <th>Placa</th>
+                <th>Rentas</th>
+                <th>Días</th>
+                <th>Total RD$</th>
+                <th>%</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Ingresos por cliente (mes)</div>
+          </div>
+          <table id="repTablaClientes">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Teléfono</th>
+                <th>Rentas</th>
+                <th>Total RD$</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Ocupación por vehículo (mes)</div>
+          <div class="pill">Basado en rentas</div>
+        </div>
+        <p class="muted">Calcula cuántos días estuvo ocupado cada vehículo en el mes seleccionado.</p>
+        <table id="repTablaOcupacion">
+          <thead>
+            <tr>
+              <th>Vehículo</th>
+              <th>Placa</th>
+              <th>Días ocupados</th>
+              <th>% Ocupación</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
     </section>
 
@@ -1286,13 +1394,19 @@ function renderClientes() {
       if (!cont) return;
       cont.innerHTML = "";
 
-      if (vehiculos.length === 0) {
-        cont.innerHTML = '<p class="muted">Aún no tienes vehículos registrados.</p>';
+      // Mostrar SOLO vehículos en Rentado o Mantenimiento (estado)
+      const lista = (vehiculos || [])
+        .filter(v => {
+          const est = String(v.estado || "").trim().toLowerCase();
+          return est === "rentado" || est === "mantenimiento";
+        })
+        .sort((a,b) => Number(b.id||0) - Number(a.id||0)); // más recientes primero
+
+      if (lista.length === 0) {
+        cont.innerHTML = '<p class="muted">No hay vehículos en <strong>Rentado</strong> o <strong>Mantenimiento</strong> ahora mismo.</p>';
         return;
       }
 
-      // Últimos 4 vehículos agregados (más recientes)
-      const lista = vehiculos.slice(-4).reverse();
       lista.forEach((v) => {
         const div = document.createElement("div");
         div.className = "veh-card";
@@ -1306,7 +1420,7 @@ function renderClientes() {
           : `<div class="veh-card-img-placeholder">${iniciales || "AR"}</div>`;
 
         const estadoClass =
-          v.estado === "Disponible" ? "ok" : v.estado === "Rentado" ? "warn" : "";
+          String(v.estado || "").trim() === "Disponible" ? "ok" : (String(v.estado || "").trim() === "Rentado" ? "warn" : "");
 
         div.innerHTML = `
           ${imgHtml}
@@ -1322,9 +1436,7 @@ function renderClientes() {
         cont.appendChild(div);
       });
 
-      // Eventos de ver detalles en preview
-      const botonesDetalles = cont.querySelectorAll(".veh-card-btn");
-      botonesDetalles.forEach((btn) => {
+      cont.querySelectorAll(".veh-card-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
           const id = btn.getAttribute("data-id");
           abrirVehiculoModal(id);
@@ -1455,8 +1567,7 @@ function renderVehiculos() {
           try {
             await cargarTodoOnline();
             renderFacturas();
-            renderRentas();
-            renderDisponibilidad();
+renderDisponibilidad();
             recalcularDashboard();
             alert("✅ Factura eliminada (ONLINE)");
           } catch (e) {
@@ -1468,7 +1579,11 @@ function renderVehiculos() {
     }
 
     
-    function obtenerRentasPorVehiculo(idVehiculo) {
+    
+    // Legacy: ya no renderizamos una tabla separada de rentas aquí.
+    function renderRentas() { /* no-op */ }
+
+function obtenerRentasPorVehiculo(idVehiculo) {
       return rentas.filter((r) => idEq(r.idVehiculo ?? r.vehiculo_id, idVehiculo));
     }
 
@@ -1655,11 +1770,7 @@ function renderVehiculos() {
 
       const elCantFact = document.getElementById("kpiCantidadFacturas");
       if (elCantFact) elCantFact.textContent = facturas.length;
-
-      const elCantRentas = document.getElementById("kpiCantidadRentas");
-      if (elCantRentas) elCantRentas.textContent = rentas.length;
-
-      // ===== Ingresos por MES (desde facturas) =====
+// ===== Ingresos por MES (desde facturas) =====
       const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
       const porMes = Array(12).fill(0);
       facturas.forEach((f) => {
@@ -1726,42 +1837,10 @@ function renderVehiculos() {
       }
 
       // Preview (si existe)
+            // Preview (solo rentado / mantenimiento)
       try {
-        const preview = document.getElementById("vehiculosPreview");
-        if (preview) {
-          preview.innerHTML = "";
-          vehiculos.forEach((v) => {
-            const card = document.createElement("div");
-            card.className = "veh-card";
-            card.innerHTML = `
-              ${v.imagen
-                ? `<div class="veh-card-img-wrap"><img src="${v.imagen}" alt="${(v.marca||"")} ${(v.modelo||"")}" /></div>`
-                : `<div class="veh-card-img-placeholder">${(((v.marca||"V")[0]||"V").toUpperCase())}${(((v.modelo||"")[0]||"").toUpperCase())}</div>`}
-              <div class="veh-card-body">
-                <h3>${(v.marca||"")} ${(v.modelo||"")}</h3>
-                <p class="veh-card-sub">${v.ano ? "Año " + v.ano : ""}</p>
-                <p class="veh-card-sub">RD$ ${Number(v.precioDia ?? v.precio_dia ?? 0).toFixed(2)} / día</p>
-                <p class="veh-card-sub">Placa: ${(v.placa||"")}</p>
-                <span class="veh-card-tag ${v.estado === "Disponible" ? "ok" : (v.estado === "Rentado" ? "warn" : "")}">${v.estado || ""}</span>
-                <div style="margin-top:10px;">
-                  <button class="btn btn-secondary btn-sm btn-ver-detalles" data-id="${v.id}">Ver detalles</button>
-                </div>
-              </div>
-            `;
-            preview.appendChild(card);
-          });
-          // Eventos: ver detalles desde el dashboard
-          preview.querySelectorAll(".btn-ver-detalles").forEach((btn) => {
-            btn.addEventListener("click", (ev) => {
-              ev.preventDefault();
-              ev.stopPropagation();
-              const id = btn.getAttribute("data-id");
-              if (id) abrirVehiculoModal(id);
-            });
-          });
-
-      }
-      } catch(e) {}
+        renderVehiculosPreview();
+      } catch (e) {}
     }
 
     // ----- FACTURA Y RENTA -----
@@ -1967,8 +2046,7 @@ function calcularFactura() {
         await cargarTodoOnline();
         renderClientes();
         renderFacturas();
-        renderRentas();
-        renderDisponibilidad();
+renderDisponibilidad();
         recalcularDashboard();
         cerrarClienteModal();
         alert("✅ Cliente eliminado (ONLINE)");
@@ -2100,8 +2178,7 @@ function calcularFactura() {
     await cargarTodoOnline(); // refresca vehiculos + rentas + facturas
     renderVehiculos();
     renderFacturas();
-    renderRentas();
-    renderDisponibilidad();
+renderDisponibilidad();
     recalcularDashboard();
     alert("✅ Vehículo actualizado (ONLINE)");
     cerrarVehiculoModal();
@@ -2134,8 +2211,7 @@ function calcularFactura() {
         await cargarTodoOnline();
         renderVehiculos();
         renderFacturas();
-        renderRentas();
-        renderDisponibilidad();
+renderDisponibilidad();
         recalcularDashboard();
         cerrarVehiculoModal();
         alert("✅ Vehículo eliminado (ONLINE)");
@@ -2326,6 +2402,482 @@ function calcularFactura() {
   doc.save(`Factura_${factura.id}.pdf`);
 }
 
+
+    // =========================
+    // REPORTES (POR MES)
+    // =========================
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function monthKeyFromDateStr(s){
+      const d = new Date(s);
+      if (isNaN(d)) return "";
+      return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+    }
+    function monthLabelFromKey(key){
+      const [y,m] = key.split("-");
+      const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+      const mi = Number(m)-1;
+      return (mi>=0 && mi<12) ? `${meses[mi]} ${y}` : key;
+    }
+    function currencyRD(n){
+      const x = Number(n||0);
+      return `RD$ ${x.toFixed(2)}`;
+    }
+    function daysInMonth(year, month1to12){
+      return new Date(year, month1to12, 0).getDate();
+    }
+    function clampDateStr(s){
+      return toDateOnlyString(s);
+    }
+    function overlapDays(inicioA, finA, inicioB, finB){
+      const a1 = new Date(inicioA); const a2 = new Date(finA);
+      const b1 = new Date(inicioB); const b2 = new Date(finB);
+      if ([a1,a2,b1,b2].some(d=>isNaN(d))) return 0;
+      const start = new Date(Math.max(a1.getTime(), b1.getTime()));
+      const end = new Date(Math.min(a2.getTime(), b2.getTime()));
+      if (end < start) return 0;
+      // +1 para incluir ambos días como en tu cálculo de factura
+      return Math.floor((end - start)/(1000*60*60*24)) + 1;
+    }
+
+    function getVehiculoByPlaca(placa){
+      const p = String(placa||"").trim().toLowerCase();
+      if (!p) return null;
+      return vehiculos.find(v => String(v.placa||"").trim().toLowerCase() === p) || null;
+    }
+
+    function buildMesOptionsFromData(){
+      // meses presentes en facturas; si no hay, usa últimos 12 meses
+      const set = new Set();
+      (facturas||[]).forEach(f=>{
+        const key = monthKeyFromDateStr(f.fecha);
+        if (key) set.add(key);
+      });
+      let keys = Array.from(set);
+      keys.sort(); // asc
+      if (keys.length === 0){
+        const now = new Date();
+        for(let i=0;i<12;i++){
+          const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+          keys.push(`${d.getFullYear()}-${pad2(d.getMonth()+1)}`);
+        }
+      }
+      // mostrar más reciente primero
+      keys = keys.sort((a,b)=> b.localeCompare(a));
+      return keys;
+    }
+
+    
+    // =========================
+    // Reportes (PDF Pro)
+    // =========================
+    function exportarReportePDF(key){
+      const { jsPDF } = window.jspdf || {};
+      if (!jsPDF) { alert("jsPDF no está cargado"); return; }
+
+      const data = computeReportesMes(key);
+      const doc = new jsPDF({ orientation:"p", unit:"mm", format:"letter" });
+
+      const ROJO = [225, 6, 0];
+      const GRIS = [240, 240, 240];
+      const NEGRO = [0, 0, 0];
+
+      const pageW = doc.internal.pageSize.getWidth();
+      const marginX = 14;
+      let y = 12;
+
+      // Header
+      doc.setFillColor(...ROJO);
+      doc.rect(0, 0, pageW, 22, "F");
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(16);
+      doc.text("ARCY RENT CAR", pageW/2, 13, {align:"center"});
+      doc.setFontSize(10);
+      doc.text(`Reporte mensual — ${data.label}`, pageW/2, 19, {align:"center"});
+
+      // Meta
+      doc.setTextColor(...NEGRO);
+      y = 30;
+      doc.setFontSize(9);
+      const hoy = new Date();
+      const stamp = `${String(hoy.getDate()).padStart(2,"0")}/${String(hoy.getMonth()+1).padStart(2,"0")}/${hoy.getFullYear()}`;
+      doc.text(`Generado: ${stamp}`, marginX, y);
+
+      // KPI Cards
+      y += 8;
+      const kpis = [
+        ["Ingresos", `RD$ ${Number(data.ingresos||0).toFixed(2)}`],
+        ["Rentas", `${data.cant||0}`],
+        ["Días", `${data.dias||0}`],
+        ["Ticket prom.", `RD$ ${Number(data.ticket||0).toFixed(2)}`],
+        ["Prom./día", `RD$ ${Number(data.porDia||0).toFixed(2)}`],
+        ["Top vehículo", `${data.topVehDesc||"N/A"}`],
+      ];
+      const cardW = (pageW - marginX*2 - 6)/2;
+      const cardH = 14;
+      let col = 0;
+      kpis.forEach((k, i)=>{
+        const x = marginX + (col*(cardW+6));
+        doc.setFillColor(...GRIS);
+        doc.roundedRect(x, y, cardW, cardH, 2, 2, "F");
+        doc.setTextColor(...NEGRO);
+        doc.setFontSize(8);
+        doc.text(k[0], x+3, y+5);
+        doc.setFontSize(9);
+        doc.text(String(k[1]).slice(0, 46), x+3, y+11);
+        col++;
+        if (col === 2){ col = 0; y += (cardH+4); }
+      });
+      if (col !== 0) y += (cardH+4);
+
+      // Simple table drawer
+      function drawTable(title, headers, rows){
+        if (y > 250){ doc.addPage(); y = 16; }
+        doc.setFontSize(11);
+        doc.setTextColor(...NEGRO);
+        doc.text(title, marginX, y);
+        y += 5;
+
+        doc.setFillColor(24,24,24);
+        doc.setTextColor(255,255,255);
+        doc.rect(marginX, y, pageW - marginX*2, 7, "F");
+        doc.setFontSize(8);
+
+        const colWs = headers.map(h=>h.w);
+        let x = marginX + 2;
+        headers.forEach((h, idxH)=>{
+          doc.text(h.t, x, y+5);
+          x += colWs[idxH];
+        });
+
+        y += 8;
+        doc.setTextColor(...NEGRO);
+        doc.setFontSize(8);
+
+        const maxRows = 12; // pro: top 12 para que no se vea pesado
+        rows.slice(0, maxRows).forEach((r, ri)=>{
+          if (y > 262){ doc.addPage(); y = 16; }
+          let xx = marginX + 2;
+          r.forEach((cell, ci)=>{
+            const txt = String(cell ?? "").slice(0, 40);
+            doc.text(txt, xx, y);
+            xx += colWs[ci];
+          });
+          y += 6;
+        });
+
+        if (rows.length > maxRows){
+          doc.setFontSize(8);
+          doc.setTextColor(90);
+          doc.text(`Mostrando ${maxRows} de ${rows.length}.`, marginX, y);
+          doc.setTextColor(...NEGRO);
+          y += 7;
+        } else {
+          y += 4;
+        }
+      }
+
+      // Tables
+      drawTable(
+        "Ingresos por vehículo (Top)",
+        [{t:"Vehículo", w:78},{t:"Placa", w:24},{t:"Rentas", w:18},{t:"Días", w:16},{t:"Total", w:26}],
+        (data.vehRows||[]).map(r=>[r.desc, r.placa, r.rentas, r.dias, `RD$ ${r.total.toFixed(2)}`])
+      );
+
+      drawTable(
+        "Ingresos por cliente (Top)",
+        [{t:"Cliente", w:78},{t:"Teléfono", w:30},{t:"Rentas", w:18},{t:"Total", w:36}],
+        (data.cliRows||[]).map(r=>[r.nombre, r.telefono, r.rentas, `RD$ ${r.total.toFixed(2)}`])
+      );
+
+      drawTable(
+        "Ocupación por vehículo (Top)",
+        [{t:"Vehículo", w:78},{t:"Placa", w:24},{t:"Días", w:18},{t:"Ocupación", w:30}],
+        ((data.ocRows||data.occRows)||[]).map(r=>[r.desc, r.placa, r.dias, `${r.pct.toFixed(0)}%`])
+      );
+
+      // Footer
+      const pages = doc.getNumberOfPages();
+      for (let i=1; i<=pages; i++){
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(120);
+        doc.text(`Página ${i} de ${pages}`, pageW - marginX, 279, {align:"right"});
+      }
+
+      doc.save(`reporte_${data.key}.pdf`);
+    }
+function setSelectMesOptions(){
+      const sel = document.getElementById("repMes");
+      if (!sel) return;
+      const keys = buildMesOptionsFromData();
+      sel.innerHTML = "";
+      keys.forEach(k=>{
+        const opt = document.createElement("option");
+        opt.value = k;
+        opt.textContent = monthLabelFromKey(k);
+        sel.appendChild(opt);
+      });
+      // default: mes actual si existe; si no, el primero
+      const nowKey = `${new Date().getFullYear()}-${pad2(new Date().getMonth()+1)}`;
+      if (keys.includes(nowKey)) sel.value = nowKey;
+      else sel.value = keys[0] || nowKey;
+    }
+
+    function computeReportesMes(key){
+      const label = monthLabelFromKey(key);
+      const factMes = (facturas||[]).filter(f => monthKeyFromDateStr(f.fecha) === key);
+
+      const ingresos = factMes.reduce((a,f)=> a + Number(f.total||0), 0);
+      const cant = factMes.length;
+      const dias = factMes.reduce((a,f)=> a + Number(f.dias||0), 0);
+      const ticket = cant ? ingresos/cant : 0;
+      const porDia = dias ? ingresos/dias : 0;
+
+      // ingresos por vehículo (por placa)
+      const mapVeh = new Map(); // placa -> {placa, desc, rentas, dias, total}
+      factMes.forEach(f=>{
+        const placa = String(f.placa||"").trim();
+        const diasF = Number(f.dias||0);
+        const totalF = Number(f.total||0);
+        const v = getVehiculoByPlaca(placa);
+        const desc = v ? `${(v.marca||"")} ${(v.modelo||"")}${v.ano?` (${v.ano})`:""}`.trim() : (f.vehiculo||"");
+        const keyP = placa || desc || "Sin placa";
+        const cur = mapVeh.get(keyP) || { placa: placa || "", desc: desc || "Vehículo", rentas:0, dias:0, total:0 };
+        cur.rentas += 1;
+        cur.dias += diasF;
+        cur.total += totalF;
+        mapVeh.set(keyP, cur);
+      });
+      const vehRows = Array.from(mapVeh.values()).sort((a,b)=> b.total - a.total);
+
+      const topVeh = vehRows[0] || null;
+      const topVehDesc = topVeh ? `${topVeh.desc} — RD$ ${Number(topVeh.total||0).toFixed(2)}` : "N/A";
+
+      // ingresos por cliente
+      const mapCli = new Map(); // nombre -> {nombre, telefono, rentas, total}
+      factMes.forEach(f=>{
+        const nombre = String(f.cliente_nombre||"").trim() || "Sin nombre";
+        const tel = String(f.cliente_telefono||"").trim();
+        const totalF = Number(f.total||0);
+        const cur = mapCli.get(nombre) || { nombre, telefono: tel, rentas:0, total:0 };
+        cur.rentas += 1;
+        // si no tenía teléfono y ahora sí, lo ponemos
+        if (!cur.telefono && tel) cur.telefono = tel;
+        cur.total += totalF;
+        mapCli.set(nombre, cur);
+      });
+      const cliRows = Array.from(mapCli.values()).sort((a,b)=> b.total - a.total);
+
+      // ocupación por vehículo (rentas) en el mes seleccionado
+      const [yStr,mStr] = key.split("-");
+      const y = Number(yStr); const m = Number(mStr);
+      const mesStart = `${yStr}-${mStr}-01`;
+      const mesEnd = `${yStr}-${mStr}-${pad2(daysInMonth(y,m))}`;
+
+      const mapOcc = new Map(); // vehiculo_id -> dias
+      (function(){
+        const facturaIds = new Set((facturas||[]).map(f=>String(f.id)));
+        const rentasValidas = (rentas||[]).filter(r=>{
+          const fid = String(r.factura_id ?? r.idFactura ?? "");
+          // si la renta no tiene factura_id, la dejamos; si tiene, debe existir
+          return !fid || facturaIds.has(fid);
+        });
+        rentasValidas.forEach(r=>{
+        const vid = r.vehiculo_id ?? r.idVehiculo;
+        if (vid == null) return;
+        const ini = clampDateStr(r.fecha_inicio ?? r.fechaInicio);
+        const fin = clampDateStr(r.fecha_fin ?? r.fechaFinal);
+        if (!ini || !fin) return;
+        const d = overlapDays(ini, fin, mesStart, mesEnd);
+        if (!d) return;
+        const cur = mapOcc.get(String(vid)) || 0;
+        mapOcc.set(String(vid), cur + d);
+      });
+      })();
+
+      const occRows = vehiculos.map(v=>{
+        const diasO = mapOcc.get(String(v.id)) || 0;
+        const totalDiasMes = daysInMonth(y,m);
+        const pct = totalDiasMes ? (diasO/totalDiasMes)*100 : 0;
+        return {
+          desc: `${(v.marca||"")} ${(v.modelo||"")}${v.ano?` (${v.ano})`:""}`.trim(),
+          placa: v.placa || "",
+          dias: diasO,
+          pct
+        };
+      }).sort((a,b)=> b.dias - a.dias);
+
+      return { key, label, ingresos, cant, dias, ticket, porDia, vehRows, cliRows, topVeh, topVehDesc, occRows, ocRows: occRows };
+    }
+
+    function downloadCSV(filename, rows){
+      const escape = (v)=> {
+        const s = String(v ?? "");
+        if (s.includes('"') || s.includes(",") || s.includes("\n")) return `"${s.replace(/"/g,'""')}"`;
+        return s;
+      };
+      const csv = rows.map(r => r.map(escape).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function renderReportes(){
+      setSelectMesOptions();
+      const sel = document.getElementById("repMes");
+      const key = sel ? sel.value : "";
+      if (!key) return;
+
+      const data = computeReportesMes(key);
+
+      const elIngresos = document.getElementById("repKpiIngresos");
+      const elRentas = document.getElementById("repKpiRentas");
+      const elDias = document.getElementById("repKpiDias");
+      const elTicket = document.getElementById("repKpiTicket");
+      const elPorDia = document.getElementById("repKpiPorDia");
+      const elMesLabel = document.getElementById("repKpiMesLabel");
+      const elTopVeh = document.getElementById("repKpiTopVeh");
+      const elTopVehMonto = document.getElementById("repKpiTopVehMonto");
+
+      if (elIngresos) elIngresos.textContent = Number(data.ingresos).toFixed(2);
+      if (elRentas) elRentas.textContent = String(data.cant);
+      if (elDias) elDias.textContent = String(data.dias);
+      if (elTicket) elTicket.textContent = currencyRD(data.ticket);
+      if (elPorDia) elPorDia.textContent = currencyRD(data.porDia);
+      if (elMesLabel) elMesLabel.textContent = data.label;
+
+      if (data.topVeh){
+        if (elTopVeh) elTopVeh.textContent = data.topVeh.desc || "Vehículo";
+        if (elTopVehMonto) elTopVehMonto.textContent = currencyRD(data.topVeh.total);
+      } else {
+        if (elTopVeh) elTopVeh.textContent = "N/A";
+        if (elTopVehMonto) elTopVehMonto.textContent = "";
+      }
+
+      // Tabla vehículos
+      const tbV = document.querySelector("#repTablaVehiculos tbody");
+      if (tbV){
+        tbV.innerHTML = "";
+        const total = data.ingresos || 0;
+        data.vehRows.forEach(r=>{
+          const pct = total ? (r.total/total)*100 : 0;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.desc}</td>
+            <td>${r.placa}</td>
+            <td>${r.rentas}</td>
+            <td>${r.dias}</td>
+            <td>${currencyRD(r.total)}</td>
+            <td>${pct.toFixed(1)}%</td>
+          `;
+          tbV.appendChild(tr);
+        });
+        if (data.vehRows.length===0){
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="6" class="muted">No hay facturas en este mes.</td>`;
+          tbV.appendChild(tr);
+        }
+      }
+
+      // Tabla clientes
+      const tbC = document.querySelector("#repTablaClientes tbody");
+      if (tbC){
+        tbC.innerHTML = "";
+        data.cliRows.forEach(r=>{
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.nombre}</td>
+            <td>${r.telefono}</td>
+            <td>${r.rentas}</td>
+            <td>${currencyRD(r.total)}</td>
+          `;
+          tbC.appendChild(tr);
+        });
+        if (data.cliRows.length===0){
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="4" class="muted">No hay facturas en este mes.</td>`;
+          tbC.appendChild(tr);
+        }
+      }
+
+      // Ocupación
+      const tbO = document.querySelector("#repTablaOcupacion tbody");
+      if (tbO){
+        tbO.innerHTML = "";
+        data.occRows.forEach(r=>{
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.desc}</td>
+            <td>${r.placa}</td>
+            <td>${r.dias}</td>
+            <td>${r.pct.toFixed(1)}%</td>
+          `;
+          tbO.appendChild(tr);
+        });
+        if (data.occRows.length===0){
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="4" class="muted">No hay datos de rentas para este mes.</td>`;
+          tbO.appendChild(tr);
+        }
+      }
+
+      // Botones export
+      const btnVeh = document.getElementById("btnRepCSVVeh");
+      if (btnVeh && !btnVeh.dataset.bound){
+        btnVeh.dataset.bound = "1";
+        btnVeh.addEventListener("click", ()=>{
+          const rows = [["Vehículo","Placa","Rentas","Días","Total RD$","%"]];
+          const total = data.ingresos || 0;
+          data.vehRows.forEach(r=>{
+            const pct = total ? (r.total/total)*100 : 0;
+            rows.push([r.desc, r.placa, r.rentas, r.dias, r.total.toFixed(2), pct.toFixed(1)]);
+          });
+          downloadCSV(`reporte_vehiculos_${data.key}.csv`, rows);
+        });
+      }
+      const btnCli = document.getElementById("btnRepCSVClientes");
+      const btnPDF = document.getElementById("btnRepPDF");
+      if (btnCli && !btnCli.dataset.bound){
+        btnCli.dataset.bound = "1";
+        btnCli.addEventListener("click", ()=>{
+          const rows = [["Cliente","Teléfono","Rentas","Total RD$"]];
+          data.cliRows.forEach(r=>{
+            rows.push([r.nombre, r.telefono, r.rentas, r.total.toFixed(2)]);
+          });
+          downloadCSV(`reporte_clientes_${data.key}.csv`, rows);
+        });
+      }
+      if (btnPDF && !btnPDF.dataset.bound){
+        btnPDF.dataset.bound = "1";
+        btnPDF.addEventListener("click", ()=>{
+          const sel = document.getElementById("repMes");
+          const key = sel ? sel.value : "";
+          if (!key) return;
+          exportarReportePDF(key);
+        });
+      }
+
+      const btnAct = document.getElementById("btnRepActualizar");
+      if (btnAct && !btnAct.dataset.bound){
+        btnAct.dataset.bound = "1";
+        btnAct.addEventListener("click", ()=>{
+          renderReportes();
+        });
+      }
+
+      if (sel && !sel.dataset.bound){
+        sel.dataset.bound = "1";
+        sel.addEventListener("change", ()=> renderReportes());
+      }
+    }
+
+
 document.addEventListener("DOMContentLoaded", () => {
       
   cargarTodoOnline();
@@ -2336,7 +2888,9 @@ document.addEventListener("DOMContentLoaded", () => {
           document.querySelectorAll(".section").forEach((s) => s.classList.remove("active"));
           btn.classList.add("active");
           document.getElementById(btn.dataset.tab).classList.add("active");
-        });
+        
+          if (btn.dataset.tab === "reportes") { try { renderReportes(); } catch(e) {} }
+});
       });
 
 
@@ -2648,3 +3202,7 @@ const btnExportar = document.getElementById("btnExportar");
         crossorigin="anonymous"></script>
 </body>
 </html>
+
+
+
+
