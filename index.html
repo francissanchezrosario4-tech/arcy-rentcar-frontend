@@ -1577,15 +1577,20 @@ renderDisponibilidad();
         });
       });
     }
-
-    
-    
+ 
     // Legacy: ya no renderizamos una tabla separada de rentas aquí.
     function renderRentas() { /* no-op */ }
 
 function obtenerRentasPorVehiculo(idVehiculo) {
-      return rentas.filter((r) => idEq(r.idVehiculo ?? r.vehiculo_id, idVehiculo));
-    }
+  const facturasValidas = new Set((facturas || []).map(f => String(f.id)));
+
+  return (rentas || []).filter((r) => {
+    const vehOk = idEq(r.idVehiculo ?? r.vehiculo_id, idVehiculo);
+    const fid = String(r.idFactura ?? r.factura_id ?? "");
+    const facturaOk = fid && facturasValidas.has(fid);
+    return vehOk && facturaOk;
+  });
+}
 
     function construirCalendarioPara(mesBase, anioBase, rentasVehiculo) {
       const primerDia = new Date(anioBase, mesBase, 1);
