@@ -171,7 +171,18 @@
         <div id="fleetAttention" class="veh-grid"></div>
         <div class="muted" id="fleetEmpty" style="display:none;margin-top:6px">No hay vehículos rentados, en mantenimiento o con reservas pendientes.</div>
       </div>
-    </section>
+    
+      <div class="card">
+        <div class="card-header">
+          <div class="title">Ingresos por mes</div>
+          <div class="pill">Totales</div>
+        </div>
+        <table>
+          <thead><tr><th>Mes</th><th>Total RD$</th></tr></thead>
+          <tbody id="tblMeses"></tbody>
+        </table>
+      </div>
+</section>
 
     <!-- REPORTES -->
     <section id="reportes" class="section">
@@ -620,6 +631,25 @@
 
       document.getElementById("kpiAtencion").textContent = String(list.length);
 
+
+      // Ingresos por mes (tabla)
+      const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+      const porMes = Array(12).fill(0);
+      facturas.forEach(f=>{
+        if(!f.fecha) return;
+        const d = new Date(f.fecha);
+        if(!isNaN(d)) porMes[d.getMonth()] += Number(f.total||0);
+      });
+      const tbMes = document.getElementById("tblMeses");
+      if(tbMes){
+        tbMes.innerHTML="";
+        meses.forEach((m,idx)=>{
+          const tr=document.createElement("tr");
+          tr.innerHTML = `<td>${m}</td><td>${porMes[idx].toFixed(2)}</td>`;
+          tbMes.appendChild(tr);
+        });
+      }
+
       const cont = document.getElementById("fleetAttention");
       const empty = document.getElementById("fleetEmpty");
       cont.innerHTML = "";
@@ -729,7 +759,8 @@
       if(!total || total<=0) return alert("Total inválido. Dale a Calcular.");
 
       try{
-        await apiPost("/facturas", { fecha, cliente_id, vehiculo_id, fecha_inicio, fecha_fin, dias, precio_dia, total });
+        const id = `FAC-${Date.now()}`;
+        await apiPost("/facturas", { id, fecha, cliente_id, vehiculo_id, fecha_inicio, fecha_fin, dias, precio_dia, total });
         await refreshUI();
         alert("✅ Factura guardada (ONLINE)");
       }catch(e){
@@ -871,8 +902,17 @@
           <td>${c.cedula||""}</td>
           <td>${c.nota||""}</td>
           <td>${stars}</td>
-          <td><button class="btn small secondary">Ver</button></td>`;
-        tr.querySelector("button").addEventListener("click",()=>openCliModal(c.id));
+          <td>
+            <button class="btn small secondary" data-act="ver">Ver</button>
+            <button class="btn small" data-act="fact">Usar en factura</button>
+          </td>`;
+        tr.querySelector('[data-act="ver"]').addEventListener("click",()=>openCliModal(c.id));
+        tr.querySelector('[data-act="fact"]').addEventListener("click",()=>{
+          setTab("factura");
+          const sc = document.getElementById("fCliente");
+          sc.value = String(c.id);
+          document.getElementById("factura").scrollIntoView({behavior:"smooth", block:"start"});
+        });
         tb.appendChild(tr);
       });
     }
