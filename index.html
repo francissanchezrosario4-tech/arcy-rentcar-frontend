@@ -2,602 +2,121 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Arcy Rent Car - Sistema Web</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arcy Rent Car — Sistema</title>
   <style>
-    :root {
-      --rojo: #e10600;
-      --gris-oscuro: #1f1f1f;
-      --gris: #2b2b2b;
-      --texto: #ffffff;
-    }
-
-    * {
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    body {
-      margin: 0;
-      background: radial-gradient(circle at top left, #3b3b3b 0, #000 55%);
-      color: var(--texto);
-    }
-
-    .banner {
-      background: var(--gris) url("logo VEHICULO PAPI2.jpg") center/cover no-repeat;
-      border-bottom: 4px solid var(--rojo);
-      height: 180px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start; /* mover contenido a la izquierda */
-        text-align: left; /* texto alineado a la izquierda */
-        padding-left: 40px; /* SE VE BONITO pegado al área gris */
-      position: relative;
-      overflow: hidden;
-    }
-
-    .banner::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, rgba(0,0,0,0.7), rgba(0,0,0,0.2));
-    }
-
-    .banner-content {
-      text-align: left;
-      position: relative;
-      z-index: 1;
-    }
-
-    .banner h1 {
-      margin: 0;
-      font-size: 2.4rem;
-      color: var(--rojo);
-      letter-spacing: 2px;
-    }
-
-    .banner p {
-      margin: 4px 0 0;
-      font-size: 0.95rem;
-      opacity: 0.9;
-    }
-
-    .wrapper {
-      max-width: 1200px;
-      margin: 20px auto;
-      padding: 0 16px 40px;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-
-    .tab-btn {
-      border: none;
-      padding: 10px 16px;
-      border-radius: 999px;
-      background: var(--gris);
-      color: var(--texto);
-      cursor: pointer;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    .tab-btn.active {
-      background: var(--rojo);
-      transform: translateY(-1px);
-    }
-
-    .tab-btn:hover {
-      background: #444;
-    }
-
-    .card {
-      background: rgba(20, 20, 20, 0.96);
-      border-radius: 16px;
-      padding: 18px 18px 22px;
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
-      border: 1px solid #333;
-      margin-bottom: 20px;
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .card-title {
-      font-size: 1.05rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .pill {
-      padding: 2px 10px;
-      border-radius: 999px;
-      background: #2b2b2b;
-      font-size: 0.75rem;
-      opacity: 0.9;
-    }
-
-    form {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 10px 16px;
-      margin-bottom: 10px;
-    }
-
-    label {
-      font-size: 0.8rem;
-      opacity: 0.9;
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 7px 9px;
-      border-radius: 8px;
-      border: 1px solid #444;
-      background: #101010;
-      color: var(--texto);
-      font-size: 0.85rem;
-    }
-
-    input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(1);
-      opacity: 1;
-    }
-
-
-    input:focus, select:focus {
-      outline: 1px solid var(--rojo);
-      border-color: var(--rojo);
-    }
-
-    .btn {
-      border: none;
-      padding: 8px 14px;
-      border-radius: 10px;
-      background: var(--rojo);
-      color: var(--texto);
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-top: 4px;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    .btn.secondary {
-      background: #2b2b2b;
-    }
-
-    .btn:hover {
-      background: #ff3b30;
-      transform: translateY(-1px);
-    }
-
-    .btn.secondary:hover {
-      background: #3d3d3d;
-    }
-
-    
-    .btn-table {
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: none;
-      background: #2b2b2b;
-      color: #ffffff;
-      font-size: 0.75rem;
-      cursor: pointer;
-    }
-
-    .btn-table:hover {
-      background: #444444;
-    }
-
-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
-      font-size: 0.78rem;
-    }
-
-    th, td {
-      border-bottom: 1px solid #333;
-      padding: 6px 8px;
-      text-align: left;
-    }
-
-    th {
-      background: #181818;
-      font-weight: 600;
-    }
-
-    /* Zebra ONLY for data tables — NOT for the calendar */
-    #tablaMeses tbody tr:nth-child(even) td,
-    #tablaVehiculosDashboard tbody tr:nth-child(even) td,
-    #tablaFacturas tbody tr:nth-child(even) td,
-    #tablaClientes tbody tr:nth-child(even) td {
-  background: #111;
-}
-
-
-    .muted {
-      font-size: 0.78rem;
-      opacity: 0.8;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-    }
-
-    .kpi {
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #2b2b2b, #111);
-      border: 1px solid #333;
-    }
-
-    .kpi-label {
-      font-size: 0.75rem;
-      opacity: 0.8;
-    }
-
-    .kpi-value {
-      margin-top: 4px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #ffffff;
-    }
-
-    .kpi-sub {
-      font-size: 0.75rem;
-      opacity: 0.8;
-      margin-top: 2px;
-    }
-
-    .card-calendario {
-      flex: 1 1 260px;
-      min-width: 260px;
-      max-width: 320px;
-      border-radius: 14px;
-      border: 1px solid #333;
-      background: #101010;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .card-calendario-header {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-size:0.85rem;
-      margin-bottom:4px;
-    }
-    .card-calendario-nav {
-      display:flex;
-      align-items:center;
-      gap:6px;
-      transform: translateX(-12px); /* mueve un poquito a la izquierda */
-    }
-
-    .card-calendario-titulo {
-      font-weight:600;
-    }
-    .card-calendario-nav button {
-      background:transparent;
-      border:none;
-      color:#ccc;
-      cursor:pointer;
-      font-size:0.8rem;
-      padding:2px 6px;
-    }
-    .card-calendario-nav span {
-      font-size:0.8rem;
-    }
-    .mini-calendario {
-      width:100%;
-      font-size:0.7rem;
-      border-collapse:collapse;
-      margin-top:4px;
-    }
-    .mini-calendario th {
-      text-align:center;
-      padding:2px;
-      opacity:0.7;
-    }
-    .mini-calendario td {
-      width:14%;
-      text-align:center;
-      padding:3px 0;
-      border-radius:6px;
-    }
-    .dia-disponible {
-      background:#0a2b12;
-      color:#9cff9c;
-    }
-    .dia-rentado {
-      background:#3b0000;
-      color:#ffb3b3;
-    }
-    .dia-vacio {
-      opacity:0.25;
-    }
-    .lista-rentas {
-      margin-top:6px;
-      font-size:0.7rem;
-      max-height:80px;
-      overflow-y:auto;
-    }
-    .lista-rentas-item {
-      margin-bottom:3px;
-    }
-
-    .section {
-      display: none;
-    }
-
-    .section.active {
-      display: block;
-    }
-
-    /* === CARDS DE VEHÍCULOS === */
-    .veh-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 18px;
-    }
-
-    .veh-card {
-      background: #f7f7f7;
-      border-radius: 18px;
-      box-shadow: 0 12px 25px rgba(0,0,0,0.2);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      border: 1px solid #e5e5e5;
-    }
-
-    .veh-card-img-wrap {
-      background: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-    }
-
-    .veh-card-img-wrap img {
-      max-width: 100%;
-      height: 140px;
-      object-fit: contain;
-    }
-
-    .veh-card-img-placeholder {
-      background: linear-gradient(135deg, #2b2b2b, #111);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 140px;
-      font-size: 1.8rem;
-      font-weight: 600;
-    }
-
-    .veh-card-body {
-      padding: 14px 16px 16px;
-      text-align: center;
-    }
-
-    .veh-card-body h3 {
-      margin: 6px 0 2px;
-      font-size: 1rem;
-      color: #064420;
-    }
-
-    .veh-card-sub {
-      margin: 2px 0;
-      font-size: 0.8rem;
-      color: #444;
-    }
-
-    .veh-card-tag {
-      display: inline-block;
-      margin-top: 6px;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      background: #ddd;
-      color: #333;
-    }
-
-    .veh-card-tag.ok {
-      background: #d3f3dc;
-      color: #155724;
-    }
-
-    .veh-card-tag.warn {
-      background: #ffe8cc;
-      color: #8a4b00;
-    }
-
-    .veh-card-btn {
-      margin-top: 10px;
-      padding: 8px 16px;
-      border-radius: 999px;
-      border: none;
-      background: var(--rojo);
-      color: #fff;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-    }
-
-    .veh-card-btn:hover {
-      background: #ff3b30;
-      transform: translateY(-1px);
-    }
-
-    /* === MODAL DETALLES VEHÍCULO === */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 9998;
-    }
-
-    .modal {
-      background: #111;
-      border-radius: 16px;
-      padding: 18px 20px 22px;
-      max-width: 460px;
-      width: 90%;
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.8);
-      border: 1px solid #333;
-      color: #fff;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .modal-title {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .modal-close {
-      border: none;
-      background: transparent;
-      color: #aaa;
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-
-    .modal-close:hover {
-      color: #fff;
-    }
-
-    .modal-img {
-      width: 100%;
-      max-height: 200px;
-      object-fit: contain;
-      background: #000;
-      border-radius: 12px;
-      margin-bottom: 10px;
-    }
-
-    .modal-row {
-      font-size: 0.8rem;
-      margin: 4px 0;
-      opacity: 0.95;
-    }
-
-    .modal-row label {
-      display:block;
-      margin-bottom:2px;
-      font-size:0.75rem;
-      opacity:0.85;
-    }
-
-    .modal-input {
-      width:100%;
-      padding:6px 8px;
-      border-radius:8px;
-      border:1px solid #444;
-      background:#050505;
-      color:#fff;
-      font-size:0.8rem;
-    }
-
-    .modal-input:disabled {
-      opacity:0.75;
-      background:#050505;
-    }
-
-    .modal-actions {
-      margin-top:12px;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    .modal-btn {
-      border:none;
-      border-radius:999px;
-      padding:7px 12px;
-      font-size:0.8rem;
-      cursor:pointer;
-      font-weight:600;
-    }
-
-    .modal-btn.primary {
-      background:var(--rojo);
-      color:#fff;
-    }
-
-    .modal-btn.secondary {
-      background:#333;
-      color:#fff;
-    }
-
-    .modal-btn.danger {
-      background:#b00020;
-      color:#fff;
-    }
-
-    .modal-btn:hover {
-      filter:brightness(1.1);
-    }
-
-    @media (max-width: 768px) {
-      .banner {
-        height: 150px;
-      }
-      .banner h1 {
-        font-size: 1.7rem;
-      }
-    }
+    :root{
+      --rojo:#e10600;
+      --bg:#0b0b0b;
+      --panel:#121212;
+      --panel2:#161616;
+      --borde:#2a2a2a;
+      --texto:#fff;
+      --muted:#bfbfbf;
+      --ok:#27c26a;
+      --warn:#ffb020;
+      --bad:#ff4d4d;
+    }
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    body{margin:0;background:radial-gradient(circle at top left,#2b2b2b 0,#000 55%);color:var(--texto)}
+    .banner{height:160px;display:flex;align-items:center;justify-content:flex-start;padding:0 28px;border-bottom:4px solid var(--rojo);background:linear-gradient(90deg,rgba(0,0,0,.78),rgba(0,0,0,.2))}
+    .banner h1{margin:0;color:var(--rojo);font-size:2.3rem;letter-spacing:1px}
+    .banner p{margin:6px 0 0;color:#ddd;opacity:.9}
+    .wrapper{max-width:1200px;margin:18px auto;padding:0 16px 42px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+    .tab-btn{border:none;padding:10px 16px;border-radius:999px;background:#2b2b2b;color:#fff;cursor:pointer;font-size:.9rem}
+    .tab-btn.active{background:var(--rojo)}
+    .tab-btn:hover{background:#444}
+    .right{margin-left:auto}
+    .btn{border:none;padding:9px 14px;border-radius:10px;background:var(--rojo);color:#fff;cursor:pointer;font-weight:650}
+    .btn.secondary{background:#2b2b2b}
+    .btn.small{padding:6px 10px;border-radius:999px;font-size:.78rem}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .card{background:rgba(16,16,16,.95);border:1px solid #2b2b2b;border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.55);padding:18px 18px 22px;margin-bottom:16px}
+    .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .title{font-weight:700}
+    .pill{padding:2px 10px;border-radius:999px;background:#2b2b2b;font-size:.75rem;color:#ddd}
+    .section{display:none}
+    .section.active{display:block}
+    form{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 16px}
+    label{font-size:.8rem;color:#ddd;opacity:.9;display:block;margin-bottom:4px}
+    input,select{width:100%;padding:8px 10px;border-radius:9px;border:1px solid #444;background:#0f0f0f;color:#fff}
+    input:focus,select:focus{outline:1px solid var(--rojo);border-color:var(--rojo)}
+    input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1)}
+    table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.82rem}
+    th,td{border-bottom:1px solid #2c2c2c;padding:8px 10px;text-align:left}
+    th{background:#141414}
+    .muted{color:var(--muted);font-size:.82rem}
+    .grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+    .kpi{border:1px solid #2b2b2b;background:linear-gradient(135deg,#232323,#101010);border-radius:14px;padding:12px}
+    .kpi .lbl{font-size:.78rem;color:#cfcfcf;opacity:.85}
+    .kpi .val{margin-top:6px;font-size:1.25rem;font-weight:800}
+    .kpi .sub{margin-top:2px;font-size:.78rem;color:#bdbdbd;opacity:.85}
+    /* Cards vehiculos */
+    .veh-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+    .veh-card{background:#f7f7f7;border-radius:18px;overflow:hidden;border:1px solid #e3e3e3;box-shadow:0 12px 25px rgba(0,0,0,.2)}
+    .veh-img{background:#fff;display:flex;align-items:center;justify-content:center;padding:14px}
+    .veh-img img{max-width:100%;height:140px;object-fit:contain}
+    .veh-img .ph{height:140px;width:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2b2b2b,#111);color:#fff;font-weight:800;font-size:2rem}
+    .veh-body{text-align:center;padding:14px 16px 16px}
+    .veh-body h3{margin:6px 0 2px;color:#064420;font-size:1.02rem}
+    .veh-sub{margin:2px 0;color:#444;font-size:.82rem}
+    .tag{display:inline-block;margin-top:6px;padding:3px 10px;border-radius:999px;font-size:.78rem}
+    .tag.ok{background:#d3f3dc;color:#155724}
+    .tag.warn{background:#ffe8cc;color:#8a4b00}
+    .tag.bad{background:#ffd6d6;color:#7a0000}
+    /* Modal */
+    .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:9998}
+    .modal{width:min(520px,92vw);background:#101010;border:1px solid #333;border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.8);padding:16px 18px 18px}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .modal-title{font-weight:800}
+    .close{border:none;background:transparent;color:#aaa;font-size:1.2rem;cursor:pointer}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px}
+    .modal-img{width:100%;max-height:200px;object-fit:contain;background:#000;border-radius:12px;margin-bottom:10px;display:none}
+    /* Calendario */
+    .cal-wrap{display:flex;gap:14px;flex-wrap:wrap}
+    .cal-card{flex:1 1 270px;min-width:270px;max-width:340px;background:#101010;border:1px solid #333;border-radius:14px;padding:12px 14px}
+    .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .cal-title{font-weight:800;font-size:.9rem}
+    .cal-nav{display:flex;align-items:center;gap:8px}
+    .cal-nav button{background:transparent;border:none;color:#ccc;cursor:pointer;font-size:.85rem}
+    .mini{width:100%;border-collapse:collapse;font-size:.72rem}
+    .mini th{text-align:center;opacity:.75;padding:4px 0}
+    .mini td{text-align:center;padding:4px 0;border-radius:7px}
+    .d-empty{opacity:.25}
+    .d-free{background:#0a2b12;color:#9cff9c}
+    .d-booked{background:#3b0000;color:#ffb3b3}
+    .d-pend{background:#3a2a00;color:#ffe08a}
+    .rlist{margin-top:8px;max-height:84px;overflow:auto;font-size:.74rem}
+    .ritem{margin-bottom:4px}
+    /* Login */
+    #loginScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;z-index:9999}
+    .login-box{width:340px;background:#1a1a1a;border:1px solid #333;border-radius:14px;padding:24px;box-shadow:0 0 28px rgba(0,0,0,.6);text-align:center}
+    .login-box h2{margin:0;color:var(--rojo)}
+    .login-box p{margin:8px 0 16px;color:#bbb}
+    .login-box input{margin:6px 0}
+    .err{color:#ff4d4d;font-size:.85rem;display:none;margin-top:8px}
+    .note{font-size:.78rem;color:#bdbdbd;margin-top:10px}
   </style>
 </head>
 <body>
-  <!-- LOGIN SCREEN -->
-  <div id="loginScreen" style="position:fixed; inset:0; background:#000; display:flex; align-items:center; justify-content:center; z-index:9999;">
-    <div style="background:#1f1f1f; padding:30px; border-radius:12px; width:320px; text-align:center; border:1px solid #333; box-shadow:0 0 25px rgba(0,0,0,0.6);">
-      <h2 style="color:#e10600; margin-bottom:10px;">Arcy Rent Car</h2>
-      <p style="color:#bbb; margin-bottom:20px; font-size:0.9rem;">Iniciar sesión</p>
-      <input id="loginUser" placeholder="Usuario" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; border:1px solid #444; background:#101010; color:white;">
-      <input id="loginPass" type="password" placeholder="Contraseña" style="width:100%; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #444; background:#101010; color:white;">
-      <button onclick="login()" style="width:100%; padding:10px; background:#e10600; border:none; border-radius:8px; color:white; cursor:pointer; font-weight:600;">Entrar</button>
-      <p id="loginError" style="color:#ff4d4d; margin-top:10px; display:none;">Usuario o contraseña incorrectos</p>
+  <!-- LOGIN -->
+  <div id="loginScreen">
+    <div class="login-box">
+      <h2>Arcy Rent Car</h2>
+      <p>Iniciar sesión</p>
+      <input id="loginUser" placeholder="Usuario" autocomplete="username">
+      <input id="loginPass" type="password" placeholder="Contraseña" autocomplete="current-password">
+      <button class="btn" style="width:100%;margin-top:10px" id="btnLogin">Entrar</button>
+      <div class="err" id="loginErr">Usuario o contraseña incorrectos</div>
+      <div class="note">Acceso demo por defecto: <b>admin / 1234</b></div>
     </div>
   </div>
 
   <header class="banner">
-    <div class="banner-content">
+    <div>
       <h1>Arcy Rent Car</h1>
-      <p>Sistema web de facturación y control de rentas</p>
+      <p>Sistema online (Base de datos)</p>
     </div>
   </header>
 
@@ -609,189 +128,105 @@ table {
       <button class="tab-btn" data-tab="clientes">Clientes</button>
       <button class="tab-btn" data-tab="vehiculos">Vehículos</button>
       <button class="tab-btn" data-tab="disponibilidad">Disponibilidad</button>
-      <button class="tab-btn" data-tab="datos">Exportar / Importar</button>
-      <button class="tab-btn" data-tab="seguridad">Usuarios / Acceso</button>
-      <button class="btn secondary" id="btnLogout" style="margin-left:auto;">Cerrar sesión</button>
+
+      <button class="btn secondary right" id="btnLogout">Cerrar sesión</button>
     </div>
 
     <!-- DASHBOARD -->
     <section id="dashboard" class="section active">
       <div class="card">
         <div class="card-header">
-          <div class="card-title">Resumen general</div>
+          <div class="title">Resumen</div>
           <div class="pill">Vista rápida</div>
         </div>
         <div class="grid-2">
           <div class="kpi">
-            <div class="kpi-label">Total facturado (RD$)</div>
-            <div id="kpiTotalFacturado" class="kpi-value">0.00</div>
-            <div class="kpi-sub">Suma de todas las facturas</div>
+            <div class="lbl">Total facturado (RD$)</div>
+            <div class="val" id="kpiTotal">0.00</div>
+            <div class="sub">Suma de todas las facturas</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Cantidad de facturas</div>
-            <div id="kpiCantidadFacturas" class="kpi-value">0</div>
-            <div class="kpi-sub">Registradas en el sistema</div>
+            <div class="lbl">Cantidad de facturas</div>
+            <div class="val" id="kpiFacturas">0</div>
+            <div class="sub">Registradas en el sistema</div>
           </div>
-<div class="kpi">
-            <div class="kpi-label">Vehículo más rentable</div>
-            <div id="kpiTopVehiculo" class="kpi-value">N/A</div>
-            <div class="kpi-sub" id="kpiTopVehiculoMonto"></div>
+          <div class="kpi">
+            <div class="lbl">Vehículo más rentable</div>
+            <div class="val" id="kpiTopVeh">N/A</div>
+            <div class="sub" id="kpiTopVehMonto"></div>
+          </div>
+          <div class="kpi">
+            <div class="lbl">Flota en atención</div>
+            <div class="val" id="kpiAtencion">0</div>
+            <div class="sub">Rentado, mantenimiento o reserva pendiente</div>
           </div>
         </div>
       </div>
 
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Ingresos por mes</div>
-          </div>
-          <table id="tablaMeses">
-            <thead>
-              <tr>
-                <th>Mes</th>
-                <th>Total RD$</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Ingresos por vehículo</div>
-          </div>
-          <table id="tablaVehiculosDashboard">
-            <thead>
-              <tr>
-                <th>ID Vehículo</th>
-                <th>Descripción</th>
-                <th>Total RD$</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- NUEVA VISTA PREVIA DE VEHÍCULOS -->
       <div class="card">
         <div class="card-header">
-          <div class="card-title">Vehículos agregados recientemente</div>
-          <div class="pill">Vista previa</div>
+          <div class="title">Flota en atención</div>
+          <div class="pill">Rentado / Mantenimiento / Pendiente</div>
         </div>
-        <div id="vehiculosPreview" class="veh-grid"></div>
+        <div id="fleetAttention" class="veh-grid"></div>
+        <div class="muted" id="fleetEmpty" style="display:none;margin-top:6px">No hay vehículos rentados, en mantenimiento o con reservas pendientes.</div>
       </div>
     </section>
-
 
     <!-- REPORTES -->
     <section id="reportes" class="section">
       <div class="card">
         <div class="card-header">
-          <div class="card-title">Reportes</div>
-          <div class="pill">Por mes</div>
+          <div class="title">Reportes por mes</div>
+          <div class="pill">Profesional</div>
         </div>
 
-        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:10px;">
-          <div style="min-width:220px; flex:0 0 260px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:10px">
+          <div style="min-width:220px">
             <label>Mes</label>
             <select id="repMes"></select>
           </div>
-          <button class="btn" id="btnRepActualizar" type="button">Actualizar</button>
-          <button class="btn secondary" id="btnRepCSVVeh" type="button">Exportar CSV (Vehículos)</button>
-          <button class="btn secondary" id="btnRepCSVClientes" type="button">Exportar CSV (Clientes)</button>
-          <button class="btn" id="btnRepPDF" type="button">Exportar PDF (Pro)</button>
+          <button class="btn" id="btnRepActualizar">Actualizar</button>
+          <button class="btn secondary" id="btnRepPDF">Exportar PDF</button>
         </div>
 
         <div class="grid-2">
-          <div class="kpi">
-            <div class="kpi-label">Ingresos del mes (RD$)</div>
-            <div id="repKpiIngresos" class="kpi-value">0.00</div>
-            <div class="kpi-sub" id="repKpiMesLabel"></div>
+          <div class="kpi"><div class="lbl">Ingresos</div><div class="val" id="repIngresos">RD$ 0.00</div></div>
+          <div class="kpi"><div class="lbl">Rentas (facturas)</div><div class="val" id="repRentas">0</div></div>
+          <div class="kpi"><div class="lbl">Días rentados</div><div class="val" id="repDias">0</div></div>
+          <div class="kpi"><div class="lbl">Ticket promedio</div><div class="val" id="repTicket">RD$ 0.00</div></div>
+          <div class="kpi"><div class="lbl">Prom./día</div><div class="val" id="repPromDia">RD$ 0.00</div></div>
+          <div class="kpi"><div class="lbl">Top vehículo</div><div class="val" id="repTopVeh">N/A</div></div>
+        </div>
+
+        <div class="grid-2" style="margin-top:14px">
+          <div>
+            <div class="title" style="margin:8px 0">Ingresos por vehículo (Top)</div>
+            <table>
+              <thead><tr><th>Vehículo</th><th>Placa</th><th>Rentas</th><th>Días</th><th>Total</th></tr></thead>
+              <tbody id="repTblVeh"></tbody>
+            </table>
           </div>
-          <div class="kpi">
-            <div class="kpi-label">Cantidad de rentas (facturas)</div>
-            <div id="repKpiRentas" class="kpi-value">0</div>
-            <div class="kpi-sub">Facturas del mes</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-label">Días rentados</div>
-            <div id="repKpiDias" class="kpi-value">0</div>
-            <div class="kpi-sub">Suma de días (facturas)</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-label">Ticket promedio</div>
-            <div id="repKpiTicket" class="kpi-value">RD$ 0.00</div>
-            <div class="kpi-sub">Ingresos / rentas</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-label">Precio promedio por día</div>
-            <div id="repKpiPorDia" class="kpi-value">RD$ 0.00</div>
-            <div class="kpi-sub">Ingresos / días</div>
-          </div>
-          <div class="kpi">
-            <div class="kpi-label">Vehículo más rentable</div>
-            <div id="repKpiTopVeh" class="kpi-value">N/A</div>
-            <div class="kpi-sub" id="repKpiTopVehMonto"></div>
+          <div>
+            <div class="title" style="margin:8px 0">Ingresos por cliente (Top)</div>
+            <table>
+              <thead><tr><th>Cliente</th><th>Teléfono</th><th>Rentas</th><th>Total</th></tr></thead>
+              <tbody id="repTblCli"></tbody>
+            </table>
           </div>
         </div>
-      </div>
 
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Ingresos por vehículo (mes)</div>
+        <div style="margin-top:14px">
+          <div class="card-header" style="padding:0;margin:10px 0 6px">
+            <div class="title">Ocupación por vehículo (mes)</div>
+            <div class="pill">Basado en rentas</div>
           </div>
-          <table id="repTablaVehiculos">
-            <thead>
-              <tr>
-                <th>Vehículo</th>
-                <th>Placa</th>
-                <th>Rentas</th>
-                <th>Días</th>
-                <th>Total RD$</th>
-                <th>%</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
+          <table>
+            <thead><tr><th>Vehículo</th><th>Placa</th><th>Días ocupados</th><th>% Ocupación</th></tr></thead>
+            <tbody id="repTblOcc"></tbody>
           </table>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Ingresos por cliente (mes)</div>
-          </div>
-          <table id="repTablaClientes">
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Teléfono</th>
-                <th>Rentas</th>
-                <th>Total RD$</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Ocupación por vehículo (mes)</div>
-          <div class="pill">Basado en rentas</div>
-        </div>
-        <p class="muted">Calcula cuántos días estuvo ocupado cada vehículo en el mes seleccionado.</p>
-        <table id="repTablaOcupacion">
-          <thead>
-            <tr>
-              <th>Vehículo</th>
-              <th>Placa</th>
-              <th>Días ocupados</th>
-              <th>% Ocupación</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
       </div>
     </section>
 
@@ -799,71 +234,66 @@ table {
     <section id="factura" class="section">
       <div class="card">
         <div class="card-header">
-  <div class="card-title">Nueva factura de renta</div>
-</div>
-      <form id="formFactura">
-          <div>
-            <label>No. Factura</label>
-            <input type="text" id="facturaId" placeholder="Se genera automático si lo dejas vacío" />
-          </div>
+          <div class="title">Nueva factura de renta</div>
+          <div class="pill">Online</div>
+        </div>
+
+        <form id="formFactura">
           <div>
             <label>Fecha</label>
-            <input type="date" id="fechaFactura" required />
+            <input type="date" id="fFecha" required />
           </div>
-
           <div>
             <label>Cliente</label>
-            <select id="selectCliente" required></select>
+            <select id="fCliente" required></select>
           </div>
           <div>
             <label>Vehículo</label>
-            <select id="selectVehiculo" required></select>
+            <select id="fVehiculo" required></select>
           </div>
-
           <div>
             <label>Fecha inicio</label>
-            <input type="date" id="fechaInicio" required />
+            <input type="date" id="fInicio" required />
           </div>
           <div>
             <label>Fecha final</label>
-            <input type="date" id="fechaFinal" required />
+            <input type="date" id="fFin" required />
           </div>
-
           <div>
             <label>Días</label>
-            <input type="number" id="dias" readonly />
+            <input type="number" id="fDias" readonly />
           </div>
           <div>
             <label>Precio por día (RD$)</label>
-            <input type="number" id="precioDia" />
+            <input type="number" id="fPrecio" />
           </div>
           <div>
             <label>Total (RD$)</label>
-            <input type="number" id="total" readonly />
+            <input type="number" id="fTotal" readonly />
           </div>
         </form>
-        <button class="btn" id="btnCalcular">Calcular</button>
-        <button class="btn" id="btnGuardarFactura">Guardar factura y renta</button>
-        <p class="muted">Las facturas y rentas se guardan en tu navegador (localStorage). Puedes exportar los datos a Excel en la pestaña "Exportar / Importar".</p>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+          <button class="btn" id="btnCalcular">Calcular</button>
+          <button class="btn" id="btnGuardarFactura">Guardar factura y renta</button>
+        </div>
+        <div class="muted" style="margin-top:10px">
+          Nota: Eliminar/editar está restringido a admin (en el sistema) y puede estar protegido también por el backend.
+        </div>
       </div>
 
       <div class="card">
         <div class="card-header">
-          <div class="card-title">Listado de facturas</div>
+          <div class="title">Listado de facturas</div>
+          <div class="pill">PDF / Eliminar</div>
         </div>
-        <table id="tablaFacturas">
+        <table>
           <thead>
             <tr>
-              <th>No.</th>
-              <th>Fecha</th>
-              <th>Cliente</th>
-              <th>Vehículo</th>
-              <th>Días</th>
-              <th>Total RD$</th>
-              <th>Acciones</th>
+              <th>No.</th><th>Fecha</th><th>Cliente</th><th>Vehículo</th><th>Días</th><th>Total</th><th>Acciones</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody id="tblFacturas"></tbody>
         </table>
       </div>
     </section>
@@ -872,28 +302,17 @@ table {
     <section id="clientes" class="section">
       <div class="card">
         <div class="card-header">
-          <div class="card-title">Clientes</div>
+          <div class="title">Clientes</div>
+          <div class="pill">Online</div>
         </div>
         <form id="formCliente">
+          <div><label>Nombre</label><input id="cNombre" required></div>
+          <div><label>Teléfono</label><input id="cTelefono"></div>
+          <div><label>Cédula</label><input id="cCedula"></div>
+          <div><label>Nota</label><input id="cNota"></div>
           <div>
-            <label>Nombre</label>
-            <input type="text" id="clienteNombre" required />
-          </div>
-          <div>
-            <label>Teléfono</label>
-            <input type="text" id="clienteTelefono" />
-          </div>
-          <div>
-            <label>Cédula / ID</label>
-            <input type="text" id="clienteCedula" />
-          </div>
-          <div>
-            <label>Nota del cliente</label>
-            <input type="text" id="clienteNota" />
-          </div>
-          <div>
-            <label>Valoración (1-5 estrellas)</label>
-            <select id="clienteValoracion">
+            <label>Valoración</label>
+            <select id="cValor">
               <option value="5">★★★★★ (5)</option>
               <option value="4">★★★★☆ (4)</option>
               <option value="3">★★★☆☆ (3)</option>
@@ -903,30 +322,13 @@ table {
           </div>
         </form>
         <button class="btn" id="btnGuardarCliente">Guardar cliente</button>
-        <p class="muted">El ID del cliente se genera automáticamente.</p>
       </div>
 
       <div class="card">
-        <div class="card-header">
-          <div class="card-title">Listado de clientes</div>
-        </div>
-        <div style="margin-bottom:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between;">
-          <input type="text" id="clienteBuscar" placeholder="Buscar por ID, nombre, teléfono o cédula" style="flex:1; min-width:220px; max-width:320px; padding:7px 9px; border-radius:8px; border:1px solid #444; background:#101010; color:#ffffff; font-size:0.8rem;">
-          <span class="muted">Escribe para filtrar los clientes</span>
-        </div>
-        <table id="tablaClientes">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>Teléfono</th>
-              <th>Cédula</th>
-              <th>Nota del cliente</th>
-              <th>Valoración</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
+        <div class="card-header"><div class="title">Listado</div><div class="pill">Ver / Editar</div></div>
+        <table>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Cédula</th><th>Nota</th><th>Valoración</th><th>Acciones</th></tr></thead>
+          <tbody id="tblClientes"></tbody>
         </table>
       </div>
     </section>
@@ -934,2277 +336,1185 @@ table {
     <!-- VEHICULOS -->
     <section id="vehiculos" class="section">
       <div class="card">
-        <div class="card-header">
-          <div class="card-title">Vehículos</div>
-        </div>
+        <div class="card-header"><div class="title">Vehículos</div><div class="pill">Imágenes + Estado</div></div>
         <form id="formVehiculo">
-          <div>
-            <label>Marca</label>
-            <input type="text" id="vehMarca" required />
-          </div>
-          <div>
-            <label>Modelo</label>
-            <input type="text" id="vehModelo" required />
-          </div>
-          <div>
-            <label>Año</label>
-            <input type="number" id="vehAno" />
-          </div>
-          <div>
-            <label>Placa</label>
-            <input type="text" id="vehPlaca" />
-          </div>
+          <div><label>Marca</label><input id="vMarca" required></div>
+          <div><label>Modelo</label><input id="vModelo" required></div>
+          <div><label>Año</label><input id="vAno" type="number"></div>
+          <div><label>Placa</label><input id="vPlaca" required></div>
           <div>
             <label>Estado</label>
-            <select id="vehEstado">
+            <select id="vEstado">
               <option value="Disponible">Disponible</option>
               <option value="Rentado">Rentado</option>
               <option value="Mantenimiento">Mantenimiento</option>
             </select>
           </div>
-          <div>
-            <label>Precio por día (RD$)</label>
-            <input type="number" id="vehPrecioDia" required />
-          </div>
-          <div>
-            <label>URL de imagen (opcional)</label>
-            <input type="text" id="vehImagen" placeholder="https://... o ruta local" />
-          </div>
+          <div><label>Precio por día</label><input id="vPrecio" type="number" required></div>
+          <div><label>URL Imagen</label><input id="vImagen" placeholder="https://..."></div>
         </form>
         <button class="btn" id="btnGuardarVehiculo">Guardar vehículo</button>
-        <p class="muted">El ID del vehículo se genera automáticamente.</p>
       </div>
 
       <div class="card">
-        <div class="card-header">
-          <div class="card-title">Listado de vehículos (vista de cards)</div>
-        </div>
-        <div id="cardsVehiculos" class="veh-grid"></div>
+        <div class="card-header"><div class="title">Listado (cards)</div><div class="pill">Ver / Editar</div></div>
+        <div class="veh-grid" id="vehCards"></div>
       </div>
     </section>
-
 
     <!-- DISPONIBILIDAD -->
     <section id="disponibilidad" class="section">
       <div class="card">
-        <div class="card-header">
-          <div class="card-title">Disponibilidad de vehículos</div>
-        </div>
-        <p class="muted">
-          Visualiza el calendario de rentas por vehículo. Los días marcados en rojo indican que el vehículo está rentado.
-        </p>
-        <div style="display:flex; gap:16px; flex-wrap:wrap;" id="contenedorDisponibilidad"></div>
+        <div class="card-header"><div class="title">Disponibilidad</div><div class="pill">Calendario</div></div>
+        <div class="muted">Rojo: rentado (activo). Amarillo: reserva pendiente (a futuro).</div>
+        <div id="calendarios" class="cal-wrap" style="margin-top:12px"></div>
       </div>
     </section>
 
-    <!-- EXPORTAR / IMPORTAR -->
-    <section id="datos" class="section">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Exportar / Importar datos</div>
-        </div>
-        <p class="muted">Los datos se guardan en el navegador (localStorage). Puedes exportarlos como JSON para respaldo o para llevarlos a Excel.</p>
-        <button class="btn" id="btnExportar">Exportar todo a archivo .json</button>
-        <input type="file" id="inputImportar" accept="application/json" style="display:none" />
-        <button class="btn secondary" id="btnImportar">Importar desde .json</button>
-        <button class="btn secondary" id="btnBorrarTodo">Borrar todo (cuidado)</button>
-        <pre id="previewExport" class="muted" style="margin-top:10px; max-height:200px; overflow:auto; background:#050505; padding:8px; border-radius:8px;"></pre>
-      </div>
-    </section>
-
-    <!-- SEGURIDAD / USUARIOS -->
-    <section id="seguridad" class="section">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Usuarios y acceso al sistema</div>
-        </div>
-        <p class="muted">
-          Configura el usuario y la contraseña que se usarán para entrar al sistema.
-          Si no configuras nada, el acceso por defecto será: <strong>admin / 1234</strong>.
-        </p>
-        <form id="formSeguridad">
-          <div>
-            <label>Usuario de acceso</label>
-            <input type="text" id="segUsuario" placeholder="Ej: arcy_admin" />
-          </div>
-          <div>
-            <label>Contraseña de acceso</label>
-            <input type="password" id="segContrasena" placeholder="Escribe una contraseña segura" />
-          </div>
-        </form>
-        <button class="btn" id="btnGuardarSeguridad">Guardar usuario y contraseña</button>
-        <p class="muted">Estos datos se guardan solo en este navegador mediante localStorage.</p>
-      </div>
-    </section>
-    </section>
   </main>
 
-  
-  <!-- MODAL DETALLES CLIENTE -->
-  <div id="clienteModalBackdrop" class="modal-backdrop">
+  <!-- MODAL CLIENTE -->
+  <div class="backdrop" id="cliBack">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title" id="modalCliTitulo">Cliente</div>
-        <button class="modal-close" type="button" onclick="cerrarClienteModal()">&times;</button>
+        <div class="modal-title" id="cliTitle">Cliente</div>
+        <button class="close" id="cliClose">×</button>
       </div>
-      <div id="modalCliContenido"></div>
+      <div id="cliBody"></div>
       <div class="modal-actions">
-        <button type="button" class="modal-btn secondary" onclick="habilitarEdicionCliente()">Editar</button>
-        <button type="button" class="modal-btn primary" id="btnGuardarCambiosCliente" style="display:none;" onclick="guardarCambiosCliente()">Guardar cambios</button>
-        <button type="button" class="modal-btn danger" onclick="eliminarCliente()">Eliminar</button>
+        <button class="btn secondary" id="cliEdit">Editar</button>
+        <button class="btn" id="cliSave" style="display:none">Guardar</button>
+        <button class="btn secondary" id="cliDel">Eliminar</button>
       </div>
     </div>
   </div>
 
-<!-- MODAL DETALLES VEHÍCULO -->
-  <div id="vehiculoModalBackdrop" class="modal-backdrop">
+  <!-- MODAL VEHICULO -->
+  <div class="backdrop" id="vehBack">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title" id="modalVehTitulo">Vehículo</div>
-        <button class="modal-close" type="button" onclick="cerrarVehiculoModal()">&times;</button>
+        <div class="modal-title" id="vehTitle">Vehículo</div>
+        <button class="close" id="vehClose">×</button>
       </div>
-      <img id="modalVehImg" class="modal-img" src="" alt="" style="display:none;">
-      <div id="modalVehContenido"></div>
+      <img id="vehImg" class="modal-img" alt="">
+      <div id="vehBody"></div>
       <div class="modal-actions">
-        <button type="button" class="modal-btn secondary" onclick="habilitarEdicionVehiculo()">Editar</button>
-        <button type="button" class="modal-btn primary" id="btnGuardarCambiosVehiculo" style="display:none;" onclick="guardarCambiosVehiculo()">Guardar cambios</button>
-        <button type="button" class="modal-btn danger" onclick="eliminarVehiculo()">Eliminar</button>
+        <button class="btn secondary" id="vehEdit">Editar</button>
+        <button class="btn" id="vehSave" style="display:none">Guardar</button>
+        <button class="btn secondary" id="vehDel">Eliminar</button>
       </div>
     </div>
   </div>
 
   <script>
-const API_URL = "https://arcy-rentcar-backend.onrender.com";
-
-    
-
     // =========================
-    // API helpers (ONLINE)
+    // CONFIG
     // =========================
-    async function apiGet(path) {
-      const res = await fetch(API_URL + path);
-      if (!res.ok) throw new Error(await res.text());
-      return await res.json();
+    const API_URL = "https://arcy-rentcar-backend.onrender.com"; // tu backend
+    const DEFAULT_USER = "admin";
+    const DEFAULT_PASS = "1234";
+
+    // Session (local)
+    function isLogged(){ return localStorage.getItem("arcy_logged")==="1"; }
+    function isAdmin(){
+      const u = localStorage.getItem("arcy_user") || DEFAULT_USER;
+      return (u === (localStorage.getItem("arcy_user") || DEFAULT_USER)); // placeholder
     }
 
-    async function apiPost(path, body) {
-      const res = await fetch(API_URL + path, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = data.error || (typeof data === "string" ? data : "Error");
-        throw new Error(msg);
-      }
-      return data;
-    }
+    // Compare IDs string/number
+    const idEq = (a,b)=> String(a)===String(b);
 
-    
-    async function apiPut(path, body) {
-      const res = await fetch(API_URL + path, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || (typeof data === "string" ? data : "Error"));
-      return data;
-    }
-
-    async function apiDelete(path) {
-      const res = await fetch(API_URL + path, { method: "DELETE" });
-
-      // Algunos endpoints DELETE responden 204 (sin contenido) o no devuelven JSON.
-      let data = null;
-      const contentType = (res.headers.get("content-type") || "").toLowerCase();
-
-      if (contentType.includes("application/json")) {
-        data = await res.json().catch(() => null);
-      } else {
-        // consume el body si existe, pero no falles si viene vacío
-        await res.text().catch(() => "");
-      }
-
-      if (!res.ok) {
-        const msg = (data && data.error) ? data.error : `Error ${res.status}`;
-        throw new Error(msg);
-      }
-      return data;
-    }
-
-
-async function verificarDisponibilidadOnline(vehiculo_id, inicio, fin) {
-      const q = `?inicio=${encodeURIComponent(inicio)}&fin=${encodeURIComponent(fin)}`;
-      const data = await apiGet(`/disponibilidad/${vehiculo_id}${q}`);
-      return data && data.disponible === true;
-    }
-
-
-    // ----- NORMALIZACIÓN (BACKEND -> FRONT) -----
-    // El backend puede devolver campos en snake_case (ej: precio_dia). Aquí los convertimos al formato que usa la UI.
-
-    // Comparar IDs aunque vengan como number o string
-    function idEq(a, b) {
-      return String(a) === String(b);
-    }
-
-    // ===== Normalización de VEHÍCULOS =====
-    function normalizarVehiculo(v) {
-      return {
-        ...v,
-        precioDia: Number(v?.precioDia ?? v?.precio_dia ?? 0),
-        // soporta ano/anio/año
-        ano: v?.ano ?? v?.anio ?? v?.año ?? null,
-        imagen: v?.imagen ?? v?.imagen_url ?? v?.urlImagen ?? "",
-        estado: v?.estado ?? "Disponible",
-        placa: v?.placa ?? ""
-      };
-    }
-
-    function normalizarVehiculos(lista) {
-      return Array.isArray(lista) ? lista.map(normalizarVehiculo) : [];
-    }
-
-    // ===== Normalización de FACTURAS =====
-    function normalizarFactura(f) {
-      if (!f) return f;
-      const fechaStr = (f.fecha || "").toString().split("T")[0];
-      return {
-        ...f,
-        fecha: fechaStr,
-        cliente_nombre: f.cliente_nombre ?? f.clienteNombre ?? "",
-        cliente_telefono: f.cliente_telefono ?? f.clienteTelefono ?? "",
-        vehiculo: f.vehiculo ?? "",
-        placa: f.placa ?? "",
-        // snake_case de BD
-        precio_dia: Number(f.precio_dia ?? f.precioDia ?? 0),
-        // alias camel para UI
-        precioDia: Number(f.precioDia ?? f.precio_dia ?? 0),
-        dias: Number(f.dias ?? 0),
-        total: Number(f.total ?? 0)
-      };
-    }
-
-    function normalizarFacturas(lista) {
-      return Array.isArray(lista) ? lista.map(normalizarFactura) : [];
-    }
-
-    // ===== Normalización de RENTAS =====
-    function normalizarRenta(r) {
-      if (!r) return r;
-      return {
-        ...r,
-        vehiculo_id: r.vehiculo_id ?? r.idVehiculo ?? null,
-        fecha_inicio: r.fecha_inicio ?? r.fechaInicio ?? "",
-        fecha_fin: r.fecha_fin ?? r.fechaFinal ?? "",
-        factura_id: r.factura_id ?? r.idFactura ?? "",
-        // alias legacy para funciones existentes
-        idVehiculo: r.idVehiculo ?? r.vehiculo_id ?? null,
-        fechaInicio: r.fechaInicio ?? r.fecha_inicio ?? "",
-        fechaFinal: r.fechaFinal ?? r.fecha_fin ?? "",
-        idFactura: r.idFactura ?? r.factura_id ?? ""
-      };
-    }
-    function toDateOnlyString(d) {
-      if (!d) return "";
-      if (typeof d === "string") {
-        // ISO -> YYYY-MM-DD
-        if (d.includes("T")) return d.split("T")[0];
+    // Date helpers
+    const toISODate = (d)=>{
+      if(!d) return "";
+      if(typeof d === "string"){
+        if(d.includes("T")) return d.split("T")[0];
         return d;
       }
-      try {
-        return new Date(d).toISOString().slice(0, 10);
-      } catch {
-        return String(d);
-      }
-    }
-
-    function formatFechaUI(d) {
-      const s = toDateOnlyString(d);
-      if (!s) return "";
-      // s expected YYYY-MM-DD
-      const [y, m, day] = s.split("-");
-      if (!y || !m || !day) return s;
-      return `${day}/${m}/${y}`;
-    }
-
-
-
-    function normalizarRentas(lista) {
-      return Array.isArray(lista) ? lista.map(normalizarRenta) : [];
-    }
-
-async function cargarTodoOnline() {
-      // Cargar en paralelo
-      const [c, v, f] = await Promise.all([
-        apiGet("/clientes"),
-        apiGet("/vehiculos"),
-        apiGet("/facturas")
-      ]);
-      clientes = Array.isArray(c) ? c : [];
-      vehiculos = normalizarVehiculos(v);
-      facturas = normalizarFacturas(f);
-
-      // Intentar cargar rentas (si tu backend tiene GET /rentas; si no, queda vacío)
-      try {
-        rentas = normalizarRentas(await apiGet("/rentas"));
-      } catch (e) {
-        rentas = [];
-      }
-
-      // Pintar UI
-      try { renderClientes(); } catch(e) {}
-      try { renderVehiculos(); } catch(e) {}
-      try { renderFacturas(); } catch(e) {}
-      try { renderDisponibilidad(); } catch(e) {}
-      try { recalcularDashboard(); } catch(e) {}
-    }
-// ----- UTILIDADES DE STORAGE -----
-    let facturaEditando = null;
-    const STORAGE_KEYS = {
-      clientes: "arcy_clientes",
-      vehiculos: "arcy_vehiculos",
-      facturas: "arcy_facturas",
-      rentas: "arcy_rentas",
+      try{return new Date(d).toISOString().slice(0,10);}catch{return String(d);}
     };
+    const fmt = (d)=>{
+      const s = toISODate(d);
+      if(!s) return "";
+      const [y,m,dd]=s.split("-");
+      return (y&&m&&dd) ? `${dd}/${m}/${y}` : s;
+    };
+    const todayISO = ()=> new Date().toISOString().slice(0,10);
 
-    function loadArray(key) {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : [];
+    // =========================
+    // API
+    // =========================
+    async function apiGet(path){
+      const res = await fetch(API_URL+path);
+      if(!res.ok) throw new Error(await res.text());
+      return res.json();
+    }
+    async function apiPost(path, body){
+      const res = await fetch(API_URL+path,{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(()=> ({}));
+      if(!res.ok) throw new Error(data.error || "Error");
+      return data;
+    }
+    async function apiPut(path, body){
+      const res = await fetch(API_URL+path,{
+        method:"PUT",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(()=> ({}));
+      if(!res.ok) throw new Error(data.error || "Error");
+      return data;
+    }
+    async function apiDelete(path){
+      const res = await fetch(API_URL+path,{ method:"DELETE" });
+      let data=null;
+      const ct=(res.headers.get("content-type")||"").toLowerCase();
+      if(ct.includes("application/json")) data = await res.json().catch(()=>null);
+      else await res.text().catch(()=> "");
+      if(!res.ok) throw new Error((data&&data.error)||`Error ${res.status}`);
+      return data;
     }
 
-    function saveArray(key, value) {
-      localStorage.setItem(key, JSON.stringify(value));
+    // =========================
+    // STATE
+    // =========================
+    let clientes=[], vehiculos=[], facturas=[], rentas=[];
+    let cliModalId=null, vehModalId=null;
+    let adminSession = false; // se setea en login si coincide con admin/pass guardados
+
+    function normalizeVeh(v){
+      return {
+        ...v,
+        precioDia: Number(v.precio_dia ?? v.precioDia ?? 0),
+        ano: v.ano ?? v.anio ?? v.año ?? null
+      };
+    }
+    function normalizeFactura(f){
+      return {
+        ...f,
+        fecha: toISODate(f.fecha),
+        fecha_inicio: toISODate(f.fecha_inicio),
+        fecha_fin: toISODate(f.fecha_fin),
+        dias: Number(f.dias ?? 0),
+        total: Number(f.total ?? 0),
+        precio_dia: Number(f.precio_dia ?? 0),
+        cliente_id: f.cliente_id ?? null,
+        vehiculo_id: f.vehiculo_id ?? null
+      };
+    }
+    function normalizeRenta(r){
+      return {
+        ...r,
+        fecha_inicio: toISODate(r.fecha_inicio),
+        fecha_fin: toISODate(r.fecha_fin),
+        factura_id: r.factura_id
+      };
     }
 
-    let clientes = [];
-    let vehiculos = [];
-    let facturas = [];
-    let rentas = [];
-// ID del cliente abierto en el modal
-    let clienteModalId = null;
+    async function loadAll(){
+      const [c,v,f,r] = await Promise.all([
+        apiGet("/clientes").catch(()=>[]),
+        apiGet("/vehiculos").catch(()=>[]),
+        apiGet("/facturas").catch(()=>[]),
+        apiGet("/rentas").catch(()=>[])
+      ]);
+      clientes = Array.isArray(c)?c:[];
+      vehiculos = Array.isArray(v)? v.map(normalizeVeh):[];
+      facturas = Array.isArray(f)? f.map(normalizeFactura):[];
+      rentas = Array.isArray(r)? r.map(normalizeRenta):[];
+    }
 
-    // ID del vehículo abierto en el modal
-    let vehiculoModalId = null;
+    // =========================
+    // LOGIN
+    // =========================
+    function doLogin(){
+      const u = (document.getElementById("loginUser").value||"").trim();
+      const p = (document.getElementById("loginPass").value||"").trim();
+      const storedUser = localStorage.getItem("arcy_user") || DEFAULT_USER;
+      const storedPass = localStorage.getItem("arcy_pass") || DEFAULT_PASS;
+      if(u===storedUser && p===storedPass){
+        localStorage.setItem("arcy_logged","1");
+        adminSession = (u===DEFAULT_USER && p===DEFAULT_PASS) || (u===storedUser && p===storedPass && u===storedUser);
+        document.getElementById("loginScreen").style.display="none";
+        document.getElementById("loginErr").style.display="none";
+        init();
+      }else{
+        document.getElementById("loginErr").style.display="block";
+      }
+    }
+    function logout(){
+      localStorage.removeItem("arcy_logged");
+      document.getElementById("loginScreen").style.display="flex";
+    }
 
-    // ----- RENDERIZADO DE TABLAS / CARDS -----
-    
-    
-    function aplicarFiltroClientes() {
-      const input = document.getElementById("clienteBuscar");
-      const tbody = document.querySelector("#tablaClientes tbody");
-      if (!input || !tbody) return;
-      const texto = input.value.toLowerCase().trim();
-      const filas = tbody.querySelectorAll("tr");
-      filas.forEach((tr) => {
-        const celdas = tr.querySelectorAll("td");
-        if (celdas.length === 0) return;
-        const id = (celdas[0].textContent || "").toLowerCase();
-        const nombre = (celdas[1].textContent || "").toLowerCase();
-        const telefono = (celdas[2].textContent || "").toLowerCase();
-        const cedula = (celdas[3].textContent || "").toLowerCase();
-        const coincide =
-          !texto ||
-          id.includes(texto) ||
-          nombre.includes(texto) ||
-          telefono.includes(texto) ||
-          cedula.includes(texto);
-        tr.style.display = coincide ? "" : "none";
+    // =========================
+    // UI - tabs
+    // =========================
+    function setTab(name){
+      document.querySelectorAll(".tab-btn").forEach(b=>{
+        b.classList.toggle("active", b.dataset.tab===name);
+      });
+      document.querySelectorAll(".section").forEach(s=>{
+        s.classList.toggle("active", s.id===name);
+      });
+      if(name==="reportes") renderReportes();
+      if(name==="disponibilidad") renderCalendarios();
+    }
+
+    // =========================
+    // DASHBOARD - flota en atención
+    // =========================
+    function computeUpcomingByVeh(){
+      const t = todayISO();
+      const byVeh = new Map(); // veh_id -> {inicio,fin,factura}
+      for(const r of rentas){
+        if(!r.vehiculo_id) continue;
+        if(r.estado && r.estado !== "activa") continue;
+        const ini = r.fecha_inicio, fin = r.fecha_fin;
+        if(ini && ini > t){
+          const curr = byVeh.get(String(r.vehiculo_id));
+          if(!curr || ini < curr.inicio){
+            const f = facturas.find(x=> String(x.id)===String(r.factura_id));
+            byVeh.set(String(r.vehiculo_id), {inicio:ini, fin:fin, factura:f});
+          }
+        }
+      }
+      return byVeh;
+    }
+
+    function renderDashboard(){
+      const total = facturas.reduce((a,f)=>a+(Number(f.total)||0),0);
+      document.getElementById("kpiTotal").textContent = total.toFixed(2);
+      document.getElementById("kpiFacturas").textContent = String(facturas.length);
+
+      // top vehiculo por ingresos (por vehiculo_id en facturas)
+      const acc = {};
+      for(const f of facturas){
+        const vid = f.vehiculo_id ? String(f.vehiculo_id) : null;
+        if(!vid) continue;
+        acc[vid] = (acc[vid]||0) + (Number(f.total)||0);
+      }
+      let topId=null, topMonto=0;
+      Object.keys(acc).forEach(id=>{
+        if(acc[id]>topMonto){ topMonto=acc[id]; topId=id; }
+      });
+      if(topId){
+        const v = vehiculos.find(x=> idEq(x.id, topId));
+        document.getElementById("kpiTopVeh").textContent = v ? `${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}` : `ID ${topId}`;
+        document.getElementById("kpiTopVehMonto").textContent = `RD$ ${topMonto.toFixed(2)}`;
+      }else{
+        document.getElementById("kpiTopVeh").textContent = "N/A";
+        document.getElementById("kpiTopVehMonto").textContent = "";
+      }
+
+      // flota en atención = estado rentado/mantenimiento OR reserva pendiente
+      const pending = computeUpcomingByVeh();
+      const list = vehiculos.filter(v=>{
+        const st = (v.estado||"").toLowerCase();
+        return st==="rentado" || st==="mantenimiento" || pending.has(String(v.id));
+      });
+
+      document.getElementById("kpiAtencion").textContent = String(list.length);
+
+      const cont = document.getElementById("fleetAttention");
+      const empty = document.getElementById("fleetEmpty");
+      cont.innerHTML = "";
+      if(list.length===0){
+        empty.style.display="block";
+        return;
+      }
+      empty.style.display="none";
+
+      for(const v of list){
+        const pd = pending.get(String(v.id));
+        const initials = `${(v.marca||"V")[0]||"V"}${(v.modelo||"")[0]||""}`.toUpperCase();
+        const img = v.imagen ? `<img src="${v.imagen}" alt="">` : `<div class="ph">${initials}</div>`;
+        let badgeClass="ok", badgeText=(v.estado||"Disponible");
+        const st = (v.estado||"").toLowerCase();
+
+        if(pd){
+          badgeClass="warn";
+          const cli = pd.factura?.cliente_nombre || "";
+          badgeText = `Pendiente ${fmt(pd.inicio)} - ${fmt(pd.fin)}${cli?` (${cli})`:""}`;
+        }else if(st==="rentado"){
+          badgeClass="warn";
+          badgeText="Rentado";
+        }else if(st==="mantenimiento"){
+          badgeClass="bad";
+          badgeText="Mantenimiento";
+        }
+
+        const card = document.createElement("div");
+        card.className="veh-card";
+        card.innerHTML = `
+          <div class="veh-img">${img}</div>
+          <div class="veh-body">
+            <h3>${v.marca} ${v.modelo}</h3>
+            <div class="veh-sub">${v.ano?`Año ${v.ano}`:""}</div>
+            <div class="veh-sub">${v.placa?`Placa: ${v.placa}`:""}</div>
+            <div class="veh-sub">RD$ ${Number(v.precioDia||0).toFixed(2)} / día</div>
+            <span class="tag ${badgeClass}">${badgeText}</span>
+            <div style="margin-top:10px">
+              <button class="btn small" data-id="${v.id}">Ver detalles</button>
+            </div>
+          </div>
+        `;
+        card.querySelector("button").addEventListener("click", ()=> openVehModal(v.id));
+        cont.appendChild(card);
+      }
+    }
+
+    // =========================
+    // SELECTS / FACTURA
+    // =========================
+    function fillSelects(){
+      const sc = document.getElementById("fCliente");
+      sc.innerHTML = clientes.length? `<option value="">Selecciona cliente</option>` : `<option value="">Primero registra clientes</option>`;
+      clientes.forEach(c=>{
+        const o=document.createElement("option");
+        o.value=c.id;
+        o.textContent=`${c.id} - ${c.nombre}`;
+        sc.appendChild(o);
+      });
+
+      const sv = document.getElementById("fVehiculo");
+      sv.innerHTML = vehiculos.length? `<option value="">Selecciona vehículo</option>` : `<option value="">Primero registra vehículos</option>`;
+      vehiculos.forEach(v=>{
+        const o=document.createElement("option");
+        o.value=v.id;
+        o.textContent=`${v.id} - ${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}`;
+        sv.appendChild(o);
       });
     }
 
-    function seleccionarClienteParaFactura(idCliente) {
-      // Cambiar a la pestaña de factura
-      const tabFactura = document.querySelector('.tab-btn[data-tab="factura"]');
-      if (tabFactura) {
-        tabFactura.click();
+    function calcFactura(){
+      const vid = document.getElementById("fVehiculo").value;
+      const ini = document.getElementById("fInicio").value;
+      const fin = document.getElementById("fFin").value;
+      if(!vid || !ini || !fin) return;
+
+      const d1=new Date(ini), d2=new Date(fin);
+      if(d2<d1) return;
+
+      const dias = Math.round((d2-d1)/(1000*60*60*24))+1;
+      document.getElementById("fDias").value = dias;
+
+      const v = vehiculos.find(x=> idEq(x.id, vid));
+      const precioInput = document.getElementById("fPrecio");
+      let precio = Number(precioInput.value || 0);
+      if(!precio || precio<=0){
+        precio = Number(v?.precioDia || 0);
+        precioInput.value = precio ? precio.toFixed(2) : "";
       }
-      // Seleccionar el cliente en el select de factura
-      const selectCliente = document.getElementById("selectCliente");
-      if (selectCliente) {
-        selectCliente.value = String(idCliente);
-      }
-      // Hacer scroll al formulario de factura
-      const facturaSection = document.getElementById("factura");
-      if (facturaSection) {
-        facturaSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      const total = dias * (precio||0);
+      document.getElementById("fTotal").value = total.toFixed(2);
+    }
+
+    async function guardarFactura(){
+      const fecha = document.getElementById("fFecha").value;
+      const cliente_id = Number(document.getElementById("fCliente").value);
+      const vehiculo_id = Number(document.getElementById("fVehiculo").value);
+      const fecha_inicio = document.getElementById("fInicio").value;
+      const fecha_fin = document.getElementById("fFin").value;
+      const dias = Number(document.getElementById("fDias").value || 0);
+      const precio_dia = Number(document.getElementById("fPrecio").value || 0);
+      const total = Number(document.getElementById("fTotal").value || 0);
+
+      if(!fecha || !cliente_id || !vehiculo_id || !fecha_inicio || !fecha_fin) return alert("Completa fecha, cliente, vehículo y rango");
+      if(!dias || dias<=0) return alert("Días inválidos. Dale a Calcular.");
+      if(!total || total<=0) return alert("Total inválido. Dale a Calcular.");
+
+      try{
+        await apiPost("/facturas", { fecha, cliente_id, vehiculo_id, fecha_inicio, fecha_fin, dias, precio_dia, total });
+        await refreshUI();
+        alert("✅ Factura guardada (ONLINE)");
+      }catch(e){
+        console.error(e);
+        alert("❌ No se pudo guardar. " + (e.message||""));
       }
     }
 
-function renderClientes() {
-      const tbody = document.querySelector("#tablaClientes tbody");
-      if (!tbody) return;
-      tbody.innerHTML = "";
-      clientes.forEach((c) => {
+    // PDF (impresión pro)
+    function facturaHTML(f){
+      const v = vehiculos.find(x=> idEq(x.id, f.vehiculo_id));
+      const c = clientes.find(x=> idEq(x.id, f.cliente_id));
+      const vehTxt = v ? `${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}` : (f.vehiculo||"");
+      const placa = v?.placa || f.placa || "";
+      const tel = c?.telefono || f.cliente_telefono || "";
+      const nom = c?.nombre || f.cliente_nombre || "";
+
+      return `
+      <html><head><meta charset="utf-8">
+      <title>Factura ${f.id}</title>
+      <style>
+        body{font-family:Arial,sans-serif;margin:0;background:#f5f5f5}
+        .top{background:#e10600;color:#fff;padding:24px 28px;text-align:center}
+        .wrap{padding:22px 26px}
+        .row{display:flex;justify-content:space-between;gap:20px;margin-bottom:16px}
+        .box{background:#fff;border-radius:10px;padding:14px 16px;flex:1;border:1px solid #e9e9e9}
+        h3{margin:0 0 8px 0;font-size:13px;color:#333;letter-spacing:.4px}
+        .kv{font-size:13px;color:#111;margin:4px 0}
+        .total{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:14px;border-top:2px solid #e9e9e9}
+        .total strong{font-size:18px}
+        .muted{color:#666;font-size:12px;margin-top:18px;text-align:center}
+      </style></head><body>
+        <div class="top">
+          <div style="font-size:22px;font-weight:800">ARCY RENT CAR</div>
+          <div style="opacity:.95;margin-top:4px">Factura de Renta</div>
+        </div>
+        <div class="wrap">
+          <div class="row">
+            <div class="box">
+              <h3>FACTURA</h3>
+              <div class="kv"><b>No.:</b> ${f.id}</div>
+              <div class="kv"><b>Fecha:</b> ${fmt(f.fecha)}</div>
+            </div>
+            <div class="box">
+              <h3>RENTA</h3>
+              <div class="kv"><b>Inicio:</b> ${fmt(f.fecha_inicio)}</div>
+              <div class="kv"><b>Fin:</b> ${fmt(f.fecha_fin)}</div>
+              <div class="kv"><b>Días:</b> ${f.dias}</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="box">
+              <h3>CLIENTE</h3>
+              <div class="kv"><b>Nombre:</b> ${nom}</div>
+              <div class="kv"><b>Teléfono:</b> ${tel}</div>
+            </div>
+            <div class="box">
+              <h3>VEHÍCULO</h3>
+              <div class="kv"><b>Vehículo:</b> ${vehTxt}</div>
+              <div class="kv"><b>Placa:</b> ${placa}</div>
+              <div class="kv"><b>Precio/día:</b> RD$ ${Number(f.precio_dia||0).toFixed(2)}</div>
+            </div>
+          </div>
+
+          <div class="total">
+            <div><b>Total a pagar</b></div>
+            <strong style="color:#e10600">RD$ ${Number(f.total||0).toFixed(2)}</strong>
+          </div>
+
+          <div class="muted">Gracias por preferir Arcy Rent Car</div>
+        </div>
+        <script>window.onload=()=>{window.print();}<\/script>
+      </body></html>`;
+    }
+
+    function abrirPDF(id){
+      const f = facturas.find(x=> String(x.id)===String(id));
+      if(!f) return;
+      const w = window.open("", "_blank");
+      w.document.open();
+      w.document.write(facturaHTML(f));
+      w.document.close();
+    }
+
+    async function eliminarFactura(id){
+      if(!adminSession) return alert("Solo admin puede eliminar.");
+      if(!confirm(`¿Eliminar factura ${id}?`)) return;
+      try{
+        await apiDelete(`/facturas/${id}`);
+        await refreshUI();
+        alert("✅ Factura eliminada");
+      }catch(e){
+        console.error(e);
+        alert("❌ No se pudo eliminar. " + (e.message||""));
+      }
+    }
+
+    function renderFacturas(){
+      const tb = document.getElementById("tblFacturas");
+      tb.innerHTML="";
+      facturas.forEach(f=>{
+        const v = vehiculos.find(x=> idEq(x.id, f.vehiculo_id));
+        const c = clientes.find(x=> idEq(x.id, f.cliente_id));
+        const vehTxt = v ? `${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}` : (f.vehiculo||"");
+        const placa = v?.placa || f.placa || "";
         const tr = document.createElement("tr");
-        const nota = (c.nota !== undefined && c.nota !== null) ? c.nota : (c.email || "");
-        const valor = Number(c.valoracion || 0);
-        const estrellas = valor ? "★".repeat(valor) + "☆".repeat(5 - valor) : "";
+        tr.innerHTML = `
+          <td>${f.id}</td>
+          <td>${fmt(f.fecha)}</td>
+          <td>${c?.nombre || f.cliente_nombre || ""}</td>
+          <td>${vehTxt}${placa?` (${placa})`:""}</td>
+          <td>${f.dias}</td>
+          <td>RD$ ${Number(f.total||0).toFixed(2)}</td>
+          <td>
+            <button class="btn small secondary" data-act="pdf">PDF</button>
+            <button class="btn small secondary" data-act="del" ${adminSession?"" :"disabled"}>Eliminar</button>
+          </td>`;
+        tr.querySelector('[data-act="pdf"]').addEventListener("click",()=>abrirPDF(f.id));
+        tr.querySelector('[data-act="del"]').addEventListener("click",()=>eliminarFactura(f.id));
+        tb.appendChild(tr);
+      });
+    }
+
+    // =========================
+    // CLIENTES UI + MODAL (edit/delete admin)
+    // =========================
+    function renderClientes(){
+      const tb = document.getElementById("tblClientes");
+      tb.innerHTML="";
+      clientes.forEach(c=>{
+        const val = Number(c.valoracion||0);
+        const stars = val? "★".repeat(val)+"☆".repeat(5-val) : "-";
+        const tr=document.createElement("tr");
         tr.innerHTML = `
           <td>${c.id}</td>
           <td>${c.nombre}</td>
-          <td>${c.telefono || ""}</td>
-          <td>${c.cedula || ""}</td>
-          <td>${nota}</td>
-          <td>${estrellas || "-"}</td>
-          <td>
-            <button type="button" class="btn-table" data-id="${c.id}" data-action="editar">Ver / Editar</button>
-            <button type="button" class="btn-table" data-id="${c.id}" data-action="factura">Usar en factura</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      // Eventos para abrir modal de cliente o usar en factura
-      const botones = tbody.querySelectorAll(".btn-table");
-      botones.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const id = btn.getAttribute("data-id");
-          const action = btn.getAttribute("data-action") || "editar";
-          if (action === "factura") {
-            seleccionarClienteParaFactura(id);
-          } else {
-            abrirClienteModal(id);
-          }
-        });
-      });
-
-      const selectCliente = document.getElementById("selectCliente");
-      if (!selectCliente) return;
-      selectCliente.innerHTML = "";
-      if (clientes.length === 0) {
-        selectCliente.innerHTML = '<option value="">Primero registra clientes</option>';
-      } else {
-        selectCliente.innerHTML = '<option value="">Selecciona cliente</option>';
-        clientes.forEach((c) => {
-          const opt = document.createElement("option");
-          opt.value = c.id;
-          opt.textContent = `${c.id} - ${c.nombre}`;
-          selectCliente.appendChild(opt);
-        });
-      }
-
-      aplicarFiltroClientes();
-    }
-
-    function renderVehiculosPreview() {
-      const cont = document.getElementById("vehiculosPreview");
-      if (!cont) return;
-      cont.innerHTML = "";
-
-      // Mostrar SOLO vehículos en Rentado o Mantenimiento (estado)
-      const lista = (vehiculos || [])
-        .filter(v => {
-          const est = String(v.estado || "").trim().toLowerCase();
-          return est === "rentado" || est === "mantenimiento";
-        })
-        .sort((a,b) => Number(b.id||0) - Number(a.id||0)); // más recientes primero
-
-      if (lista.length === 0) {
-        cont.innerHTML = '<p class="muted">No hay vehículos en <strong>Rentado</strong> o <strong>Mantenimiento</strong> ahora mismo.</p>';
-        return;
-      }
-
-      lista.forEach((v) => {
-        const div = document.createElement("div");
-        div.className = "veh-card";
-
-        const iniciales =
-          (v.marca ? v.marca.charAt(0) : "") +
-          (v.modelo ? v.modelo.charAt(0) : "");
-
-        const imgHtml = v.imagen
-          ? `<div class="veh-card-img-wrap"><img src="${v.imagen}" alt="${v.marca} ${v.modelo}"></div>`
-          : `<div class="veh-card-img-placeholder">${iniciales || "AR"}</div>`;
-
-        const estadoClass =
-          String(v.estado || "").trim() === "Disponible" ? "ok" : (String(v.estado || "").trim() === "Rentado" ? "warn" : "");
-
-        div.innerHTML = `
-          ${imgHtml}
-          <div class="veh-card-body">
-            <h3>${v.marca} ${v.modelo}</h3>
-            <p class="veh-card-sub">${v.ano ? "Año " + v.ano : ""}</p>
-            <p class="veh-card-sub">RD$ ${Number(v.precioDia).toFixed(2)} / día</p>
-            <p class="veh-card-sub">${v.placa ? "Placa: " + v.placa : ""}</p>
-            <p class="veh-card-tag ${estadoClass}">${v.estado}</p>
-            <button class="veh-card-btn" type="button" data-id="${v.id}">Ver detalles</button>
-          </div>
-        `;
-        cont.appendChild(div);
-      });
-
-      cont.querySelectorAll(".veh-card-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const id = btn.getAttribute("data-id");
-          abrirVehiculoModal(id);
-        });
+          <td>${c.telefono||""}</td>
+          <td>${c.cedula||""}</td>
+          <td>${c.nota||""}</td>
+          <td>${stars}</td>
+          <td><button class="btn small secondary">Ver</button></td>`;
+        tr.querySelector("button").addEventListener("click",()=>openCliModal(c.id));
+        tb.appendChild(tr);
       });
     }
 
-function renderVehiculos() {
-      const cards = document.getElementById("cardsVehiculos");
-      if (cards) {
-        cards.innerHTML = "";
-        vehiculos.forEach((v) => {
-          const div = document.createElement("div");
-          div.className = "veh-card";
-
-          const iniciales =
-            (v.marca ? v.marca.charAt(0) : "") +
-            (v.modelo ? v.modelo.charAt(0) : "");
-
-          const imgHtml = v.imagen
-            ? `<div class="veh-card-img-wrap"><img src="${v.imagen}" alt="${v.marca} ${v.modelo}"></div>`
-            : `<div class="veh-card-img-placeholder">${iniciales || "AR"}</div>`;
-
-          const estadoClass =
-            v.estado === "Disponible" ? "ok" : v.estado === "Rentado" ? "warn" : "";
-
-          div.innerHTML = `
-            ${imgHtml}
-            <div class="veh-card-body">
-              <h3>${v.marca} ${v.modelo}</h3>
-              <p class="veh-card-sub">${v.ano ? "Año " + v.ano : ""}</p>
-              <p class="veh-card-sub">RD$ ${Number(v.precioDia).toFixed(2)} / día</p>
-              <p class="veh-card-sub">${v.placa ? "Placa: " + v.placa : ""}</p>
-              <p class="veh-card-tag ${estadoClass}">${v.estado}</p>
-              <button class="veh-card-btn" type="button" data-id="${v.id}">Ver detalles</button>
-            </div>
-          `;
-          cards.appendChild(div);
-        });
-
-        const botonesDetalles = cards.querySelectorAll(".veh-card-btn");
-        botonesDetalles.forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const id = btn.getAttribute("data-id");
-            abrirVehiculoModal(id);
-          });
-        });
+    async function guardarCliente(){
+      const body = {
+        nombre: document.getElementById("cNombre").value.trim(),
+        telefono: document.getElementById("cTelefono").value.trim(),
+        cedula: document.getElementById("cCedula").value.trim(),
+        nota: document.getElementById("cNota").value.trim(),
+        valoracion: Number(document.getElementById("cValor").value||5)
+      };
+      if(!body.nombre) return alert("Nombre requerido");
+      try{
+        await apiPost("/clientes", body);
+        document.getElementById("formCliente").reset();
+        await refreshUI();
+        alert("✅ Cliente guardado");
+      }catch(e){
+        console.error(e);
+        alert("❌ No se pudo guardar. " + (e.message||""));
       }
-
-      // Select de vehículos para facturas
-      const selectVehiculo = document.getElementById("selectVehiculo");
-      if (!selectVehiculo) return;
-      selectVehiculo.innerHTML = "";
-      if (vehiculos.length === 0) {
-        selectVehiculo.innerHTML = '<option value="">Primero registra vehículos</option>';
-      } else {
-        selectVehiculo.innerHTML = '<option value="">Selecciona vehículo</option>';
-        vehiculos.forEach((v) => {
-          const opt = document.createElement("option");
-          opt.value = v.id;
-          opt.textContent = `${v.id} - ${v.marca} ${v.modelo}${v.ano ? ' (' + v.ano + ')' : ''}`;
-          selectVehiculo.appendChild(opt);
-        });
-      }
-
-      // Actualizar vista previa en dashboard
-      renderVehiculosPreview();
     }
 
-    function renderFacturas() {
-      const tbody = document.querySelector("#tablaFacturas tbody");
-      if (!tbody) return;
-      tbody.innerHTML = "";
-
-      facturas.forEach((f) => {
-        const tr = document.createElement("tr");
-        const fecha = formatFechaUI(f.fecha);
-        const cliente = (f.cliente_nombre || "").toString();
-        const vehBase = (f.vehiculo || "").toString();
-        const placa = (f.placa || "").toString();
-        const vObj = vehiculos.find(v => String(v.placa || "") === String(placa));
-        const veh = vObj
-          ? `${(vObj.marca || "")} ${(vObj.modelo || "")}`.trim() + (vObj.ano ? ` (${vObj.ano})` : "")
-          : vehBase;
-        const dias = (f.dias ?? "").toString();
-        const total = Number(f.total ?? 0).toFixed(2);
-
-        tr.innerHTML = `
-          <td>${f.id || ""}</td>
-          <td>${fecha}</td>
-          <td>${cliente}</td>
-          <td>${veh}${placa ? " (" + placa + ")" : ""}</td>
-          <td>${dias}</td>
-          <td>RD$ ${total}</td>
-          <td>
-            <button class="btn-table btn-pdf" data-id="${f.id}">PDF</button>
-            <button class="btn-table btn-del" data-id="${f.id}">Eliminar</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      // PDF
-      tbody.querySelectorAll(".btn-pdf").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const id = btn.getAttribute("data-id");
-          if (id) exportarFacturaPDF(id);
-        });
-      });
-
-      // Eliminar (ONLINE)
-      tbody.querySelectorAll(".btn-del").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const id = btn.getAttribute("data-id");
-          if (!id) return;
-          if (!confirm(`¿Eliminar la factura ${id}?`)) return;
-
-          // 1) eliminar en BD
-          try {
-            await apiDelete(`/facturas/${id}`);
-          } catch (e) {
-            console.error(e);
-            alert("❌ No se pudo eliminar la factura en la base de datos.");
-            return;
-          }
-
-          // 2) refrescar datos (si falla, la factura igual se eliminó)
-          try {
-            await cargarTodoOnline();
-            renderFacturas();
-renderDisponibilidad();
-            recalcularDashboard();
-            alert("✅ Factura eliminada (ONLINE)");
-          } catch (e) {
-            console.error(e);
-            alert("✅ Factura eliminada, pero no se pudo refrescar la pantalla. Recarga la página.");
-          }
-        });
-      });
-    }
- 
-    // Legacy: ya no renderizamos una tabla separada de rentas aquí.
-    function renderRentas() { /* no-op */ }
-
-function obtenerRentasPorVehiculo(idVehiculo) {
-  const facturasValidas = new Set((facturas || []).map(f => String(f.id)));
-
-  return (rentas || []).filter((r) => {
-    const vehOk = idEq(r.idVehiculo ?? r.vehiculo_id, idVehiculo);
-    const fid = String(r.idFactura ?? r.factura_id ?? "");
-    const facturaOk = fid && facturasValidas.has(fid);
-    return vehOk && facturaOk;
-  });
-}
-
-    function construirCalendarioPara(mesBase, anioBase, rentasVehiculo) {
-      const primerDia = new Date(anioBase, mesBase, 1);
-      const diaSemanaInicio = primerDia.getDay(); // 0 domingo
-      const diasEnMes = new Date(anioBase, mesBase + 1, 0).getDate();
-
-      const dias = [];
-      // Ajustar para iniciar en lunes (L=1)
-      const offset = (diaSemanaInicio + 6) % 7;
-      for (let i = 0; i < offset; i++) {
-        dias.push(null);
-      }
-      for (let d = 1; d <= diasEnMes; d++) {
-        dias.push(d);
-      }
-
-      function estaRentado(dia) {
-        if (!dia) return false;
-        const fechaStr = (n) => n.toString().padStart(2, "0");
-        const diaStr = fechaStr(dia);
-        const mesStr = fechaStr(mesBase + 1);
-        const fecha = `${anioBase}-${mesStr}-${diaStr}`;
-        return rentasVehiculo.some((r) => {
-          return r.fechaInicio && r.fechaFinal && fecha >= r.fechaInicio && fecha <= r.fechaFinal;
-        });
-      }
-
-      function obtenerRentaParaDia(dia) {
-        if (!dia) return null;
-        const fechaStr = (n) => n.toString().padStart(2, "0");
-        const diaStr = fechaStr(dia);
-        const mesStr = fechaStr(mesBase + 1);
-        const fecha = `${anioBase}-${mesStr}-${diaStr}`;
-        return rentasVehiculo.find((r) => {
-          return r.fechaInicio && r.fechaFinal && fecha >= r.fechaInicio && fecha <= r.fechaFinal;
-        }) || null;
-      }
-
-      return { dias, estaRentado, obtenerRentaParaDia };
+    function openCliModal(id){
+      const c = clientes.find(x=> idEq(x.id,id));
+      if(!c) return;
+      cliModalId = String(c.id);
+      document.getElementById("cliTitle").textContent = c.nombre || `Cliente ${c.id}`;
+      document.getElementById("cliBody").innerHTML = `
+        <div class="modal-row"><label>Nombre</label><input id="mCliNombre" class="modal-input" value="${c.nombre||""}" disabled></div>
+        <div class="modal-row"><label>Teléfono</label><input id="mCliTel" class="modal-input" value="${c.telefono||""}" disabled></div>
+        <div class="modal-row"><label>Cédula</label><input id="mCliCed" class="modal-input" value="${c.cedula||""}" disabled></div>
+        <div class="modal-row"><label>Nota</label><input id="mCliNota" class="modal-input" value="${c.nota||""}" disabled></div>
+        <div class="modal-row"><label>Valoración</label>
+          <select id="mCliVal" class="modal-input" disabled>
+            <option value="5">★★★★★ (5)</option><option value="4">★★★★☆ (4)</option><option value="3">★★★☆☆ (3)</option><option value="2">★★☆☆☆ (2)</option><option value="1">★☆☆☆☆ (1)</option>
+          </select>
+        </div>
+        <div class="muted" style="margin-top:6px">ID: ${c.id}</div>
+      `;
+      document.getElementById("mCliVal").value = String(Number(c.valoracion||5));
+      document.getElementById("cliBack").style.display="flex";
+      lockCli(true);
+      toggleCliButtons(false);
     }
 
-    function renderDisponibilidad() {
-      const cont = document.getElementById("contenedorDisponibilidad");
-      if (!cont) return;
-      cont.innerHTML = "";
-      const hoy = new Date();
-      vehiculos.forEach((v) => {
+    function lockCli(lock){
+      document.querySelectorAll("#cliBody .modal-input").forEach(el=>el.disabled=lock);
+    }
+    function toggleCliButtons(editing){
+      document.getElementById("cliSave").style.display = editing ? "inline-block" : "none";
+    }
+    async function cliSave(){
+      if(!adminSession) return alert("Solo admin puede editar.");
+      const body = {
+        nombre: document.getElementById("mCliNombre").value.trim(),
+        telefono: document.getElementById("mCliTel").value.trim(),
+        cedula: document.getElementById("mCliCed").value.trim(),
+        nota: document.getElementById("mCliNota").value.trim(),
+        valoracion: Number(document.getElementById("mCliVal").value||5)
+      };
+      if(!body.nombre) return alert("Nombre requerido");
+      try{
+        await apiPut(`/clientes/${cliModalId}`, body);
+        await refreshUI();
+        alert("✅ Cliente actualizado");
+        closeCli();
+      }catch(e){
+        console.error(e);
+        alert("❌ No se pudo actualizar. " + (e.message||""));
+      }
+    }
+    async function cliDel(){
+      if(!adminSession) return alert("Solo admin puede eliminar.");
+      if(!confirm("¿Eliminar cliente?")) return;
+      try{
+        await apiDelete(`/clientes/${cliModalId}`);
+        await refreshUI();
+        alert("✅ Cliente eliminado");
+        closeCli();
+      }catch(e){
+        console.error(e);
+        alert("❌ No se pudo eliminar. " + (e.message||""));
+      }
+    }
+    function closeCli(){
+      document.getElementById("cliBack").style.display="none";
+      cliModalId=null;
+    }
+
+    // =========================
+    // VEHICULOS UI + MODAL
+    // =========================
+    async function guardarVehiculo(){
+      const body = {
+        marca: document.getElementById("vMarca").value.trim(),
+        modelo: document.getElementById("vModelo").value.trim(),
+        ano: Number(document.getElementById("vAno").value||0) || null,
+        placa: document.getElementById("vPlaca").value.trim(),
+        estado: document.getElementById("vEstado").value,
+        precio_dia: Number(document.getElementById("vPrecio").value||0),
+        imagen: document.getElementById("vImagen").value.trim()
+      };
+      if(!body.marca || !body.modelo || !body.placa) return alert("Marca/Modelo/Placa requeridos");
+      try{
+        await apiPost("/vehiculos", body);
+        document.getElementById("formVehiculo").reset();
+        await refreshUI();
+        alert("✅ Vehículo guardado");
+      }catch(e){
+        console.error(e);
+        alert("❌ No se pudo guardar. " + (e.message||""));
+      }
+    }
+
+    function renderVehiculos(){
+      const cont = document.getElementById("vehCards");
+      cont.innerHTML="";
+      vehiculos.forEach(v=>{
+        const initials = `${(v.marca||"V")[0]||"V"}${(v.modelo||"")[0]||""}`.toUpperCase();
+        const img = v.imagen ? `<img src="${v.imagen}" alt="">` : `<div class="ph">${initials}</div>`;
+        const st = (v.estado||"Disponible");
+        const cls = st==="Disponible" ? "ok" : (st==="Rentado" ? "warn" : "bad");
         const card = document.createElement("div");
-        card.className = "card-calendario";
-        let mes = hoy.getMonth();
-        let anio = hoy.getFullYear();
-
-        const rentasVehiculo = obtenerRentasPorVehiculo(v.id);
-
-        const header = document.createElement("div");
-        header.className = "card-calendario-header";
-
-        const titulo = document.createElement("div");
-        titulo.className = "card-calendario-titulo";
-        const descVehiculo = `${v.marca || ""} ${v.modelo || ""}${v.ano ? ' (' + v.ano + ')' : ''}`.trim() || `Vehículo ${v.id}`;
-        titulo.textContent = descVehiculo;
-
-        const nav = document.createElement("div");
-        nav.className = "card-calendario-nav";
-        const btnPrev = document.createElement("button");
-        btnPrev.textContent = "◀";
-        const btnNext = document.createElement("button");
-        btnNext.textContent = "▶";
-        const labelMes = document.createElement("span");
-        labelMes.style.margin = "0 4px";
-
-        nav.appendChild(btnPrev);
-        nav.appendChild(labelMes);
-        nav.appendChild(btnNext);
-
-        header.appendChild(titulo);
-        header.appendChild(nav);
-        card.appendChild(header);
-
-        const tabla = document.createElement("table");
-        tabla.className = "mini-calendario";
-        const thead = document.createElement("thead");
-        thead.innerHTML = "<tr><th>L</th><th>M</th><th>X</th><th>J</th><th>V</th><th>S</th><th>D</th></tr>";
-        tabla.appendChild(thead);
-        const tbody = document.createElement("tbody");
-        tabla.appendChild(tbody);
-        card.appendChild(tabla);
-
-        const listaRentas = document.createElement("div");
-        listaRentas.className = "lista-rentas";
-        card.appendChild(listaRentas);
-
-        function actualizar() {
-          const nombreMeses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-          labelMes.textContent = `${nombreMeses[mes]} ${anio}`;
-          tbody.innerHTML = "";
-          const { dias, estaRentado, obtenerRentaParaDia } = construirCalendarioPara(mes, anio, rentasVehiculo);
-
-          for (let i = 0; i < dias.length; i += 7) {
-            const tr = document.createElement("tr");
-            for (let j = 0; j < 7; j++) {
-              const dia = dias[i + j];
-              const td = document.createElement("td");
-              if (!dia) {
-                td.className = "dia-vacio";
-                td.textContent = "";
-              } else {
-                const rentaDia = obtenerRentaParaDia(dia);
-                if (estaRentado(dia) && rentaDia) {
-                  td.className = "dia-rentado";
-                  td.textContent = dia;
-                  let nombreCli = "";
-                  const facturaRel = facturas.find((f) => f.id === rentaDia.idFactura);
-                  if (facturaRel) {
-                    /* factura ya trae el nombre */ const cli = null;
-                    if (facturaRel && facturaRel.cliente_nombre) nombreCli = facturaRel.cliente_nombre;
-                  }
-                  td.title = nombreCli
-                    ? `${nombreCli} (${rentaDia.fechaInicio} a ${rentaDia.fechaFinal})`
-                    : `${rentaDia.fechaInicio} a ${rentaDia.fechaFinal}`;
-                } else {
-                  td.className = "dia-disponible";
-                  td.textContent = dia;
-                }
-              }
-              tr.appendChild(td);
-            }
-            tbody.appendChild(tr);
-          }
-
-          listaRentas.innerHTML = "";
-          if (rentasVehiculo.length === 0) {
-            const p = document.createElement("div");
-            p.className = "lista-rentas-item";
-            p.textContent = "Este vehículo no tiene rentas en este mes.";
-            listaRentas.appendChild(p);
-          } else {
-            rentasVehiculo.forEach((r) => {
-              let nombreCli = "";
-              const facturaRel = facturas.find((f) => f.id === r.idFactura);
-              if (facturaRel) {
-                /* factura ya trae el nombre */ const cli = null;
-                if (facturaRel && facturaRel.cliente_nombre) nombreCli = facturaRel.cliente_nombre;
-              }
-              const item = document.createElement("div");
-              item.className = "lista-rentas-item";
-              item.textContent = `🟥 ${formatFechaUI(r.fechaInicio)} a ${formatFechaUI(r.fechaFinal)} — Cliente: ${nombreCli}`;
-              listaRentas.appendChild(item);
-            });
-          }
-        }
-
-        btnPrev.addEventListener("click", () => {
-          mes--;
-          if (mes < 0) {
-            mes = 11;
-            anio--;
-          }
-          actualizar();
-        });
-
-        btnNext.addEventListener("click", () => {
-          mes++;
-          if (mes > 11) {
-            mes = 0;
-            anio++;
-          }
-          actualizar();
-        });
-
-        actualizar();
+        card.className="veh-card";
+        card.innerHTML = `
+          <div class="veh-img">${img}</div>
+          <div class="veh-body">
+            <h3>${v.marca} ${v.modelo}</h3>
+            <div class="veh-sub">${v.ano?`Año ${v.ano}`:""}</div>
+            <div class="veh-sub">RD$ ${Number(v.precioDia||0).toFixed(2)} / día</div>
+            <div class="veh-sub">${v.placa?`Placa: ${v.placa}`:""}</div>
+            <span class="tag ${cls}">${st}</span>
+            <div style="margin-top:10px"><button class="btn small" data-id="${v.id}">Ver detalles</button></div>
+          </div>`;
+        card.querySelector("button").addEventListener("click",()=>openVehModal(v.id));
         cont.appendChild(card);
       });
     }
 
-// ----- DASHBOARD -----
-    function recalcularDashboard() {
-      // KPIs base
-      const totalFacturado = facturas.reduce((acc, f) => acc + Number(f.total || 0), 0);
-      const elTotal = document.getElementById("kpiTotalFacturado");
-      if (elTotal) elTotal.textContent = totalFacturado.toFixed(2);
-
-      const elCantFact = document.getElementById("kpiCantidadFacturas");
-      if (elCantFact) elCantFact.textContent = facturas.length;
-// ===== Ingresos por MES (desde facturas) =====
-      const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-      const porMes = Array(12).fill(0);
-      facturas.forEach((f) => {
-        if (!f.fecha) return;
-        const d = new Date(f.fecha);
-        if (!isNaN(d)) porMes[d.getMonth()] += Number(f.total || 0);
-      });
-
-      const tbodyMeses = document.querySelector("#tablaMeses tbody");
-      if (tbodyMeses) {
-        tbodyMeses.innerHTML = "";
-        meses.forEach((m, idx) => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${m}</td><td>${porMes[idx].toFixed(2)}</td>`;
-          tbodyMeses.appendChild(tr);
-        });
+    function openVehModal(id){
+      const v = vehiculos.find(x=> idEq(x.id,id));
+      if(!v) return;
+      vehModalId = String(v.id);
+      document.getElementById("vehTitle").textContent = `${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}`;
+      const imgEl = document.getElementById("vehImg");
+      if(v.imagen){
+        imgEl.src = v.imagen;
+        imgEl.style.display="block";
+      }else{
+        imgEl.style.display="none";
       }
-
-      // ===== Ingresos por VEHÍCULO (desde facturas) =====
-      // Map por placa -> vehiculo
-      const mapVehByPlaca = {};
-      vehiculos.forEach((v) => {
-        const p = (v.placa || "").toString().trim().toLowerCase();
-        if (p) mapVehByPlaca[p] = v;
-      });
-
-      const porVehiculo = {}; // idVehiculo -> monto
-      facturas.forEach((f) => {
-        const placa = (f.placa || "").toString().trim().toLowerCase();
-        const v = placa ? mapVehByPlaca[placa] : null;
-        const idVeh = v ? String(v.id) : null;
-        if (!idVeh) return; // si la factura no tiene placa o no coincide, la omitimos aquí
-        porVehiculo[idVeh] = (porVehiculo[idVeh] || 0) + Number(f.total || 0);
-      });
-
-      const tbodyVehDash = document.querySelector("#tablaVehiculosDashboard tbody");
-      let topId = null;
-      let topMonto = 0;
-
-      if (tbodyVehDash) {
-        tbodyVehDash.innerHTML = "";
-        Object.keys(porVehiculo)
-          .sort((a,b) => porVehiculo[b] - porVehiculo[a])
-          .forEach((id) => {
-            const monto = porVehiculo[id] || 0;
-            const v = vehiculos.find((x) => idEq(x.id, id));
-            const desc = v ? `${v.marca || ""} ${v.modelo || ""}${v.ano ? ' (' + v.ano + ')' : ''}`.trim() : "";
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${id}</td><td>${desc}</td><td>${monto.toFixed(2)}</td>`;
-            tbodyVehDash.appendChild(tr);
-            if (monto > topMonto) { topMonto = monto; topId = id; }
-          });
-      }
-
-      const topVehiculoLabel = document.getElementById("kpiTopVehiculo");
-      const topVehiculoMonto = document.getElementById("kpiTopVehiculoMonto");
-      if (topId) {
-        const vTop = vehiculos.find((v) => idEq(v.id, topId));
-        if (topVehiculoLabel) topVehiculoLabel.textContent = vTop ? `${vTop.marca || ""} ${vTop.modelo || ""}${vTop.ano ? ' (' + vTop.ano + ')' : ''}`.trim() : `ID ${topId}`;
-        if (topVehiculoMonto) topVehiculoMonto.textContent = `RD$ ${topMonto.toFixed(2)}`;
-      } else {
-        if (topVehiculoLabel) topVehiculoLabel.textContent = "N/A";
-        if (topVehiculoMonto) topVehiculoMonto.textContent = "";
-      }
-
-      // Preview (si existe)
-            // Preview (solo rentado / mantenimiento)
-      try {
-        renderVehiculosPreview();
-      } catch (e) {}
-    }
-
-    // ----- FACTURA Y RENTA -----
-    
-// ---------------- VALIDACIÓN DE FECHAS CRUZADAS ----------------
-function fechasSeCruzan(inicio1, fin1, inicio2, fin2) {
-    return (inicio1 <= fin2) && (inicio2 <= fin1);
-}
-function calcularFactura() {
-      const idVehiculo = Number(document.getElementById("selectVehiculo").value);
-      const v = vehiculos.find((x) => x.id === idVehiculo);
-
-      const fechaInicio = document.getElementById("fechaInicio").value;
-      const fechaFinal = document.getElementById("fechaFinal").value;
-
-      // VALIDAR FECHAS DISPONIBLES
-      const reservas = rentas.filter((r) => idEq(r.idVehiculo ?? r.vehiculo_id, idVehiculo));
-      for (let r of reservas) {
-        if (fechasSeCruzan(fechaInicio, fechaFinal, r.fechaInicio, r.fechaFinal)) {
-          alert(`🚫 El vehículo NO está disponible. Ya está rentado del ${r.fechaInicio} al ${r.fechaFinal}`);
-          return null;
-        }
-      }
-
-      if (!fechaInicio || !fechaFinal || !v) {
-        alert("Selecciona vehículo y fechas de renta");
-        return null;
-      }
-
-      const d1 = new Date(fechaInicio);
-      const d2 = new Date(fechaFinal);
-      if (d2 < d1) {
-        alert("La fecha final no puede ser menor que la fecha inicio");
-        return null;
-      }
-
-      const diffMs = d2 - d1;
-      const dias = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1;
-
-      const precioInput = document.getElementById("precioDia");
-      let precioDia = Number(precioInput ? precioInput.value : 0);
-
-      // Si está vacío o inválido, usar el precio base del vehículo
-      if (!precioDia || precioDia <= 0) {
-        precioDia = Number(v.precioDia || 0);
-        if (precioInput) precioInput.value = precioDia.toFixed(2);
-      }
-
-      const total = dias * precioDia;
-
-      document.getElementById("dias").value = dias;
-      document.getElementById("total").value = total.toFixed(2);
-
-      return { dias, precioDia, total };
-    }
-
-    function login() {
-      const userInput = document.getElementById("loginUser");
-      const passInput = document.getElementById("loginPass");
-      const user = userInput ? userInput.value.trim() : "";
-      const pass = passInput ? passInput.value.trim() : "";
-
-      const storedUser = localStorage.getItem("arcy_user") || "admin";
-      const storedPass = localStorage.getItem("arcy_pass") || "1234";
-
-      if (user === storedUser && pass === storedPass) {
-        const screen = document.getElementById("loginScreen");
-        if (screen) screen.style.display = "none";
-        localStorage.setItem("arcy_logged", "1");
-        const err = document.getElementById("loginError");
-        if (err) err.style.display = "none";
-      } else {
-        const err = document.getElementById("loginError");
-        if (err) err.style.display = "block";
-      }
-    }
-
-// --- MODAL CLIENTE ---
-    function abrirClienteModal(id) {
-      const c = clientes.find((x) => idEq(x.id, id));
-      if (!c) return;
-      clienteModalId = String(c.id);
-
-      const backdrop = document.getElementById("clienteModalBackdrop");
-      const titulo = document.getElementById("modalCliTitulo");
-      const cont = document.getElementById("modalCliContenido");
-      const btnGuardar = document.getElementById("btnGuardarCambiosCliente");
-
-      if (titulo) {
-        titulo.textContent = c.nombre || `Cliente ${c.id}`;
-      }
-
-      if (cont) {
-        const nota = (c.nota !== undefined && c.nota !== null) ? c.nota : (c.email || "");
-        const valoracion = Number(c.valoracion || 5);
-        cont.innerHTML = `
-          <div class="modal-row">
-            <label>Nombre</label>
-            <input id="modalCliNombre" class="modal-input modal-cli-input" value="${c.nombre || ""}" disabled>
-          </div>
-          <div class="modal-row">
-            <label>Teléfono</label>
-            <input id="modalCliTelefono" class="modal-input modal-cli-input" value="${c.telefono || ""}" disabled>
-          </div>
-          <div class="modal-row">
-            <label>Cédula / ID</label>
-            <input id="modalCliCedula" class="modal-input modal-cli-input" value="${c.cedula || ""}" disabled>
-          </div>
-          <div class="modal-row">
-            <label>Nota del cliente</label>
-            <input id="modalCliNota" class="modal-input modal-cli-input" value="${nota}" disabled>
-          </div>
-          <div class="modal-row">
-            <label>Valoración (1-5 estrellas)</label>
-            <select id="modalCliValoracion" class="modal-input modal-cli-input" disabled>
-              <option value="5">★★★★★ (5)</option>
-              <option value="4">★★★★☆ (4)</option>
-              <option value="3">★★★☆☆ (3)</option>
-              <option value="2">★★☆☆☆ (2)</option>
-              <option value="1">★☆☆☆☆ (1)</option>
-            </select>
-          </div>
-          <div class="modal-row">
-            <strong>ID interno:</strong> ${c.id}
-          </div>
-        `;
-        const selVal = document.getElementById("modalCliValoracion");
-        if (selVal) selVal.value = String(valoracion || 5);
-      }
-      document.querySelectorAll(".modal-cli-input").forEach((el) => (el.disabled = true));
-      if (btnGuardar) btnGuardar.style.display = "none";
-
-      if (backdrop) backdrop.style.display = "flex";
-    }
-
-    function cerrarClienteModal() {
-      const backdrop = document.getElementById("clienteModalBackdrop");
-      if (backdrop) backdrop.style.display = "none";
-      clienteModalId = null;
-    }
-
-    function habilitarEdicionCliente() {
-      document.querySelectorAll(".modal-cli-input").forEach((el) => (el.disabled = false));
-      const btnGuardar = document.getElementById("btnGuardarCambiosCliente");
-      if (btnGuardar) btnGuardar.style.display = "inline-block";
-    }
-
-    async function guardarCambiosCliente() {
-  if (clienteModalId == null) return;
-
-  const nombre = document.getElementById("modalCliNombre").value.trim();
-  const telefono = document.getElementById("modalCliTelefono").value.trim();
-  const cedula = document.getElementById("modalCliCedula").value.trim();
-  const nota = document.getElementById("modalCliNota").value.trim();
-  const valoracion = Number(document.getElementById("modalCliValoracion").value || 5);
-
-  if (!nombre) {
-    alert("El nombre es obligatorio");
-    return;
-  }
-
-  try {
-    await apiPut(`/clientes/${clienteModalId}`, { nombre, telefono, cedula, nota, valoracion });
-  } catch (e) {
-    console.error(e);
-    alert("❌ No se pudo guardar el cliente en la base de datos.");
-    return;
-  }
-
-  try {
-    await cargarTodoOnline(); // refresca clientes y facturas (nombres)
-    renderClientes();
-    renderFacturas();
-    recalcularDashboard();
-    alert("✅ Cliente actualizado (ONLINE)");
-    cerrarClienteModal();
-  } catch (e) {
-    console.error(e);
-    alert("✅ Cliente actualizado, pero no se pudo refrescar la pantalla. Recarga la página.");
-    cerrarClienteModal();
-  }
-}
-
-    async function eliminarCliente() {
-      if (clienteModalId == null) return;
-
-      const c = clientes.find((x) => idEq(x.id, clienteModalId));
-      const nombre = c ? c.nombre : `ID ${clienteModalId}`;
-      if (!confirm(`¿Seguro que deseas eliminar el cliente ${nombre}?`)) return;
-
-      
-      // 1) eliminar en BD
-      try {
-        await apiDelete(`/clientes/${clienteModalId}`);
-      } catch (e) {
-        console.error(e);
-        alert("❌ No se pudo eliminar el cliente en la base de datos.");
-        return;
-      }
-
-      // 2) refrescar datos (si falla, no significa que el delete falló)
-      try {
-        await cargarTodoOnline();
-        renderClientes();
-        renderFacturas();
-renderDisponibilidad();
-        recalcularDashboard();
-        cerrarClienteModal();
-        alert("✅ Cliente eliminado (ONLINE)");
-      } catch (e) {
-        console.error(e);
-        cerrarClienteModal();
-        alert("✅ Cliente eliminado, pero no se pudo refrescar la pantalla. Recarga la página.");
-      }
-    }
-
-// --- MODAL VEHÍCULO ---
-    function abrirVehiculoModal(id) {
-      const v = vehiculos.find((x) => idEq(x.id, id));
-      if (!v) return;
-      vehiculoModalId = String(v.id);
-
-      const backdrop = document.getElementById("vehiculoModalBackdrop");
-      const titulo = document.getElementById("modalVehTitulo");
-      const img = document.getElementById("modalVehImg");
-      const cont = document.getElementById("modalVehContenido");
-      const btnGuardar = document.getElementById("btnGuardarCambiosVehiculo");
-
-      titulo.textContent = `${v.marca} ${v.modelo}`;
-
-      if (v.imagen) {
-        img.src = v.imagen;
-        img.alt = `${v.marca} ${v.modelo}`;
-        img.style.display = "block";
-      } else {
-        img.style.display = "none";
-      }
-
-      cont.innerHTML = `
-        <div class="modal-row">
-          <label>Marca</label>
-          <input id="modalVehMarca" class="modal-input" value="${v.marca || ""}" disabled>
-        </div>
-        <div class="modal-row">
-          <label>Modelo</label>
-          <input id="modalVehModelo" class="modal-input" value="${v.modelo || ""}" disabled>
-        </div>
-        <div class="modal-row">
-          <label>Año</label>
-          <input id="modalVehAno" class="modal-input" value="${v.ano || ""}" disabled>
-        </div>
-        <div class="modal-row">
-          <label>Placa</label>
-          <input id="modalVehPlaca" class="modal-input" value="${v.placa || ""}" disabled>
-        </div>
-        <div class="modal-row">
-          <label>Estado</label>
-          <select id="modalVehEstado" class="modal-input" disabled>
+      document.getElementById("vehBody").innerHTML = `
+        <div class="modal-row"><label>Marca</label><input id="mVMarca" class="modal-input" value="${v.marca||""}" disabled></div>
+        <div class="modal-row"><label>Modelo</label><input id="mVModelo" class="modal-input" value="${v.modelo||""}" disabled></div>
+        <div class="modal-row"><label>Año</label><input id="mVAno" class="modal-input" value="${v.ano||""}" disabled></div>
+        <div class="modal-row"><label>Placa</label><input id="mVPlaca" class="modal-input" value="${v.placa||""}" disabled></div>
+        <div class="modal-row"><label>Estado</label>
+          <select id="mVEstado" class="modal-input" disabled>
             <option value="Disponible">Disponible</option>
             <option value="Rentado">Rentado</option>
             <option value="Mantenimiento">Mantenimiento</option>
           </select>
         </div>
-        <div class="modal-row">
-          <label>Precio por día (RD$)</label>
-          <input id="modalVehPrecioDia" class="modal-input" value="${v.precioDia || ""}" disabled>
-        </div>
-        <div class="modal-row">
-          <label>URL Imagen</label>
-          <input id="modalVehImagenUrl" class="modal-input" value="${v.imagen || ""}" disabled>
-        </div>
-        <div class="modal-row">
-          <strong>ID interno:</strong> ${v.id}
-        </div>
+        <div class="modal-row"><label>Precio/día</label><input id="mVPrecio" class="modal-input" value="${Number(v.precioDia||0)}" disabled></div>
+        <div class="modal-row"><label>URL Imagen</label><input id="mVImg" class="modal-input" value="${v.imagen||""}" disabled></div>
+        <div class="muted" style="margin-top:6px">ID: ${v.id}</div>
       `;
-
-      // set estado select value
-      const selectEstado = document.getElementById("modalVehEstado");
-      if (selectEstado) {
-        selectEstado.value = v.estado || "Disponible";
-      }
-
-      // desactivar edición por defecto
-      document.querySelectorAll(".modal-input").forEach(el => el.disabled = true);
-      if (btnGuardar) btnGuardar.style.display = "none";
-
-      backdrop.style.display = "flex";
+      document.getElementById("mVEstado").value = v.estado || "Disponible";
+      document.getElementById("vehBack").style.display="flex";
+      lockVeh(true);
+      document.getElementById("vehSave").style.display="none";
     }
-
-    function cerrarVehiculoModal() {
-      const backdrop = document.getElementById("vehiculoModalBackdrop");
-      if (backdrop) backdrop.style.display = "none";
-      vehiculoModalId = null;
-    }
-
-    function habilitarEdicionVehiculo() {
-      document.querySelectorAll(".modal-input").forEach(el => el.disabled = false);
-      const btnGuardar = document.getElementById("btnGuardarCambiosVehiculo");
-      if (btnGuardar) btnGuardar.style.display = "inline-block";
-    }
-
-    async function guardarCambiosVehiculo() {
-  if (vehiculoModalId == null) return;
-
-  const marca = document.getElementById("modalVehMarca").value.trim();
-  const modelo = document.getElementById("modalVehModelo").value.trim();
-  const ano = document.getElementById("modalVehAno").value.trim();
-  const placa = document.getElementById("modalVehPlaca").value.trim();
-  const estado = document.getElementById("modalVehEstado").value;
-  const precioDia = Number(document.getElementById("modalVehPrecioDia").value || 0);
-  const imagen = document.getElementById("modalVehImagenUrl").value.trim();
-
-  if (!marca || !modelo || !precioDia) {
-    alert("Marca, modelo y precio por día son obligatorios");
-    return;
-  }
-
-  try {
-    await apiPut(`/vehiculos/${vehiculoModalId}`, {
-      marca,
-      modelo,
-      ano: ano ? Number(ano) : null,
-      placa,
-      estado,
-      precio_dia: precioDia,
-      imagen
-    });
-  } catch (e) {
-    console.error(e);
-    alert("❌ No se pudo guardar el vehículo en la base de datos.");
-    return;
-  }
-
-  try {
-    await cargarTodoOnline(); // refresca vehiculos + rentas + facturas
-    renderVehiculos();
-    renderFacturas();
-renderDisponibilidad();
-    recalcularDashboard();
-    alert("✅ Vehículo actualizado (ONLINE)");
-    cerrarVehiculoModal();
-  } catch (e) {
-    console.error(e);
-    alert("✅ Vehículo actualizado, pero no se pudo refrescar la pantalla. Recarga la página.");
-    cerrarVehiculoModal();
-  }
-}
-
-    async function eliminarVehiculo() {
-      if (vehiculoModalId == null) return;
-
-      const v = vehiculos.find((x) => idEq(x.id, vehiculoModalId));
-      const desc = v ? `${v.marca} ${v.modelo}` : `ID ${vehiculoModalId}`;
-      if (!confirm(`¿Seguro que deseas eliminar el vehículo ${desc}?`)) return;
-
-      
-      // 1) eliminar en BD
-      try {
-        await apiDelete(`/vehiculos/${vehiculoModalId}`);
-      } catch (e) {
-        console.error(e);
-        alert("❌ No se pudo eliminar el vehículo en la base de datos.");
-        return;
-      }
-
-      // 2) refrescar datos
-      try {
-        await cargarTodoOnline();
-        renderVehiculos();
-        renderFacturas();
-renderDisponibilidad();
-        recalcularDashboard();
-        cerrarVehiculoModal();
-        alert("✅ Vehículo eliminado (ONLINE)");
-      } catch (e) {
-        console.error(e);
-        cerrarVehiculoModal();
-        alert("✅ Vehículo eliminado, pero no se pudo refrescar la pantalla. Recarga la página.");
-      }
-    }
-
-    document.addEventListener("click", (e) => {
-      const backdrop = document.getElementById("vehiculoModalBackdrop");
-      const modal = document.querySelector(".modal");
-      if (!backdrop || !modal) return;
-      if (backdrop.style.display === "flex" && e.target === backdrop) {
-        cerrarVehiculoModal();
-      }
-    });
-    document.addEventListener("click", (e) => {
-      const backdropCli = document.getElementById("clienteModalBackdrop");
-      const modalCli = document.querySelector("#clienteModalBackdrop .modal");
-      if (!backdropCli || !modalCli) return;
-      if (backdropCli.style.display === "flex" && e.target === backdropCli) {
-        cerrarClienteModal();
-      }
-    });
-
-
-    // ----- INICIALIZACIÓN -----
-    
-    function cargarCredencialesSeguridad() {
-      const user = localStorage.getItem("arcy_user") || "admin";
-      const pass = localStorage.getItem("arcy_pass") || "1234";
-      const inputUser = document.getElementById("segUsuario");
-      const inputPass = document.getElementById("segContrasena");
-      if (inputUser) inputUser.value = user;
-      if (inputPass) inputPass.value = pass;
-    }
-
-    function guardarCredencialesSeguridad() {
-      const inputUser = document.getElementById("segUsuario");
-      const inputPass = document.getElementById("segContrasena");
-      if (!inputUser || !inputPass) return;
-      const user = inputUser.value.trim();
-      const pass = inputPass.value.trim();
-      if (!user || !pass) {
-        alert("Debes escribir usuario y contraseña.");
-        return;
-      }
-      localStorage.setItem("arcy_user", user);
-      localStorage.setItem("arcy_pass", pass);
-      alert("Usuario y contraseña guardados. Se usarán en el próximo inicio de sesión.");
-    }
-
-    function logout() {
-      localStorage.removeItem("arcy_logged");
-      const screen = document.getElementById("loginScreen");
-      if (screen) {
-        screen.style.display = "flex";
-      }
-    }
-
-
-   function exportarFacturaPDF(idFactura) {
-  const { jsPDF } = window.jspdf;
-
-  const doc = new jsPDF({
-    orientation: "p",
-    unit: "mm",
-    format: "letter"
-  });
-
-  const factura = facturas.find(f => f.id === idFactura);
-  if (!factura) {
-    alert("Factura no encontrada");
-    return;
-  }
-
-  const clienteNombre = factura.cliente_nombre ?? factura.clienteNombre ?? "";
-  const clienteTelefono = factura.cliente_telefono ?? factura.clienteTelefono ?? "";
-  const vehiculoTexto = factura.vehiculo ?? "";
-  const placaTexto = factura.placa ?? "";
-  const precioDia = factura.precio_dia ?? factura.precioDia ?? "";
-  const fechaTxt = formatFechaUI(factura.fecha);
-
-  const ROJO = [193, 18, 31];
-  const GRIS = [240, 240, 240];
-  const NEGRO = [0, 0, 0];
-
-  let y = 20;
-  const X = 20;
-  const W = 170;
-
-  /* ===== HEADER ===== */
-  doc.setFillColor(...ROJO);
-  doc.rect(0, 0, 216, 22, "F");
-
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(15);
-  doc.text("ARCY RENT CAR", 108, 14, { align: "center" });
-
-  doc.setFontSize(10);
-  doc.text("Factura de Renta", 108, 19, { align: "center" });
-
-  /* ===== INFO FACTURA ===== */
-  doc.setTextColor(...NEGRO);
-  y = 35;
-  doc.setFontSize(10);
-  doc.text(`Factura No: ${factura.id}`, X, y);
-  doc.text(`Fecha: ${fechaTxt}`, X + W, y, { align: "right" });
-
-  /* ===== CLIENTE ===== */
-  y += 8;
-  doc.setFillColor(...GRIS);
-  doc.rect(X, y, W, 18, "F");
-
-  doc.setFontSize(11);
-  doc.text("DATOS DEL CLIENTE", X + 2, y + 6);
-
-  doc.setFontSize(10);
-  doc.text(`Nombre: ${clienteNombre}`, X + 2, y + 13);
-  doc.text(`Teléfono: ${clienteTelefono}`, X + 100, y + 13);
-
-  /* ===== VEHICULO ===== */
-  y += 26;
-  doc.setFillColor(...GRIS);
-  doc.rect(X, y, W, 22, "F");
-
-  doc.setFontSize(11);
-  doc.text("DATOS DEL VEHÍCULO", X + 2, y + 6);
-
-  doc.setFontSize(10);
-  doc.text(
-    `Vehículo: ${vehiculoTexto}`,
-    X + 2,
-    y + 13
-  );
-  doc.text(`Placa: ${placaTexto}`, X + 2, y + 19);
-  doc.text(
-    `Precio por día: RD$ ${precioDia}`,
-    X + 100,
-    y + 13
-  );
-
-  /* ===== DETALLE ===== */
-  y += 32;
-  doc.setFontSize(11);
-  doc.text("DETALLE DE LA RENTA", X, y);
-
-  y += 8;
-  doc.setFontSize(10);
-  doc.text("Días rentados:", X, y);
-  doc.text(String(factura.dias), X + W, y, { align: "right" });
-
-  y += 6;
-  doc.text("Precio por día:", X, y);
-  doc.text(`RD$ ${precioDia}`, X + W, y, { align: "right" });
-
-  /* ===== TOTAL ===== */
-  y += 12;
-  doc.setDrawColor(200);
-  doc.line(X, y, X + W, y);
-
-  y += 10;
-  doc.setFontSize(13);
-  doc.setTextColor(...ROJO);
-  doc.text("TOTAL A PAGAR", X, y);
-  doc.text(`RD$ ${factura.total}`, X + W, y, { align: "right" });
-
-  /* ===== FOOTER ===== */
-  y += 15;
-  doc.setFontSize(9);
-  doc.setTextColor(120);
-  doc.text(
-    "Gracias por preferir Arcy Rent Car",
-    108,
-    y,
-    { align: "center" }
-  );
-  y += 5;
-  doc.text(
-    "809-752-8739 | María del Carmen #5, Bonao, R.D.",
-    108,
-    y,
-    { align: "center" }
-  );
-
-  doc.save(`Factura_${factura.id}.pdf`);
-}
-
-
-    // =========================
-    // REPORTES (POR MES)
-    // =========================
-    function pad2(n){ return String(n).padStart(2,"0"); }
-    function monthKeyFromDateStr(s){
-      const d = new Date(s);
-      if (isNaN(d)) return "";
-      return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
-    }
-    function monthLabelFromKey(key){
-      const [y,m] = key.split("-");
-      const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-      const mi = Number(m)-1;
-      return (mi>=0 && mi<12) ? `${meses[mi]} ${y}` : key;
-    }
-    function currencyRD(n){
-      const x = Number(n||0);
-      return `RD$ ${x.toFixed(2)}`;
-    }
-    function daysInMonth(year, month1to12){
-      return new Date(year, month1to12, 0).getDate();
-    }
-    function clampDateStr(s){
-      return toDateOnlyString(s);
-    }
-    function overlapDays(inicioA, finA, inicioB, finB){
-      const a1 = new Date(inicioA); const a2 = new Date(finA);
-      const b1 = new Date(inicioB); const b2 = new Date(finB);
-      if ([a1,a2,b1,b2].some(d=>isNaN(d))) return 0;
-      const start = new Date(Math.max(a1.getTime(), b1.getTime()));
-      const end = new Date(Math.min(a2.getTime(), b2.getTime()));
-      if (end < start) return 0;
-      // +1 para incluir ambos días como en tu cálculo de factura
-      return Math.floor((end - start)/(1000*60*60*24)) + 1;
-    }
-
-    function getVehiculoByPlaca(placa){
-      const p = String(placa||"").trim().toLowerCase();
-      if (!p) return null;
-      return vehiculos.find(v => String(v.placa||"").trim().toLowerCase() === p) || null;
-    }
-
-    function buildMesOptionsFromData(){
-      // meses presentes en facturas; si no hay, usa últimos 12 meses
-      const set = new Set();
-      (facturas||[]).forEach(f=>{
-        const key = monthKeyFromDateStr(f.fecha);
-        if (key) set.add(key);
-      });
-      let keys = Array.from(set);
-      keys.sort(); // asc
-      if (keys.length === 0){
-        const now = new Date();
-        for(let i=0;i<12;i++){
-          const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-          keys.push(`${d.getFullYear()}-${pad2(d.getMonth()+1)}`);
-        }
-      }
-      // mostrar más reciente primero
-      keys = keys.sort((a,b)=> b.localeCompare(a));
-      return keys;
-    }
-
-    
-    // =========================
-    // Reportes (PDF Pro)
-    // =========================
-    function exportarReportePDF(key){
-      const { jsPDF } = window.jspdf || {};
-      if (!jsPDF) { alert("jsPDF no está cargado"); return; }
-
-      const data = computeReportesMes(key);
-      const doc = new jsPDF({ orientation:"p", unit:"mm", format:"letter" });
-
-      const ROJO = [225, 6, 0];
-      const GRIS = [240, 240, 240];
-      const NEGRO = [0, 0, 0];
-
-      const pageW = doc.internal.pageSize.getWidth();
-      const marginX = 14;
-      let y = 12;
-
-      // Header
-      doc.setFillColor(...ROJO);
-      doc.rect(0, 0, pageW, 22, "F");
-      doc.setTextColor(255,255,255);
-      doc.setFontSize(16);
-      doc.text("ARCY RENT CAR", pageW/2, 13, {align:"center"});
-      doc.setFontSize(10);
-      doc.text(`Reporte mensual — ${data.label}`, pageW/2, 19, {align:"center"});
-
-      // Meta
-      doc.setTextColor(...NEGRO);
-      y = 30;
-      doc.setFontSize(9);
-      const hoy = new Date();
-      const stamp = `${String(hoy.getDate()).padStart(2,"0")}/${String(hoy.getMonth()+1).padStart(2,"0")}/${hoy.getFullYear()}`;
-      doc.text(`Generado: ${stamp}`, marginX, y);
-
-      // KPI Cards
-      y += 8;
-      const kpis = [
-        ["Ingresos", `RD$ ${Number(data.ingresos||0).toFixed(2)}`],
-        ["Rentas", `${data.cant||0}`],
-        ["Días", `${data.dias||0}`],
-        ["Ticket prom.", `RD$ ${Number(data.ticket||0).toFixed(2)}`],
-        ["Prom./día", `RD$ ${Number(data.porDia||0).toFixed(2)}`],
-        ["Top vehículo", `${data.topVehDesc||"N/A"}`],
-      ];
-      const cardW = (pageW - marginX*2 - 6)/2;
-      const cardH = 14;
-      let col = 0;
-      kpis.forEach((k, i)=>{
-        const x = marginX + (col*(cardW+6));
-        doc.setFillColor(...GRIS);
-        doc.roundedRect(x, y, cardW, cardH, 2, 2, "F");
-        doc.setTextColor(...NEGRO);
-        doc.setFontSize(8);
-        doc.text(k[0], x+3, y+5);
-        doc.setFontSize(9);
-        doc.text(String(k[1]).slice(0, 46), x+3, y+11);
-        col++;
-        if (col === 2){ col = 0; y += (cardH+4); }
-      });
-      if (col !== 0) y += (cardH+4);
-
-      // Simple table drawer
-      function drawTable(title, headers, rows){
-        if (y > 250){ doc.addPage(); y = 16; }
-        doc.setFontSize(11);
-        doc.setTextColor(...NEGRO);
-        doc.text(title, marginX, y);
-        y += 5;
-
-        doc.setFillColor(24,24,24);
-        doc.setTextColor(255,255,255);
-        doc.rect(marginX, y, pageW - marginX*2, 7, "F");
-        doc.setFontSize(8);
-
-        const colWs = headers.map(h=>h.w);
-        let x = marginX + 2;
-        headers.forEach((h, idxH)=>{
-          doc.text(h.t, x, y+5);
-          x += colWs[idxH];
-        });
-
-        y += 8;
-        doc.setTextColor(...NEGRO);
-        doc.setFontSize(8);
-
-        const maxRows = 12; // pro: top 12 para que no se vea pesado
-        rows.slice(0, maxRows).forEach((r, ri)=>{
-          if (y > 262){ doc.addPage(); y = 16; }
-          let xx = marginX + 2;
-          r.forEach((cell, ci)=>{
-            const txt = String(cell ?? "").slice(0, 40);
-            doc.text(txt, xx, y);
-            xx += colWs[ci];
-          });
-          y += 6;
-        });
-
-        if (rows.length > maxRows){
-          doc.setFontSize(8);
-          doc.setTextColor(90);
-          doc.text(`Mostrando ${maxRows} de ${rows.length}.`, marginX, y);
-          doc.setTextColor(...NEGRO);
-          y += 7;
-        } else {
-          y += 4;
-        }
-      }
-
-      // Tables
-      drawTable(
-        "Ingresos por vehículo (Top)",
-        [{t:"Vehículo", w:78},{t:"Placa", w:24},{t:"Rentas", w:18},{t:"Días", w:16},{t:"Total", w:26}],
-        (data.vehRows||[]).map(r=>[r.desc, r.placa, r.rentas, r.dias, `RD$ ${r.total.toFixed(2)}`])
-      );
-
-      drawTable(
-        "Ingresos por cliente (Top)",
-        [{t:"Cliente", w:78},{t:"Teléfono", w:30},{t:"Rentas", w:18},{t:"Total", w:36}],
-        (data.cliRows||[]).map(r=>[r.nombre, r.telefono, r.rentas, `RD$ ${r.total.toFixed(2)}`])
-      );
-
-      drawTable(
-        "Ocupación por vehículo (Top)",
-        [{t:"Vehículo", w:78},{t:"Placa", w:24},{t:"Días", w:18},{t:"Ocupación", w:30}],
-        ((data.ocRows||data.occRows)||[]).map(r=>[r.desc, r.placa, r.dias, `${r.pct.toFixed(0)}%`])
-      );
-
-      // Footer
-      const pages = doc.getNumberOfPages();
-      for (let i=1; i<=pages; i++){
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(120);
-        doc.text(`Página ${i} de ${pages}`, pageW - marginX, 279, {align:"right"});
-      }
-
-      doc.save(`reporte_${data.key}.pdf`);
-    }
-function setSelectMesOptions(){
-      const sel = document.getElementById("repMes");
-      if (!sel) return;
-      const keys = buildMesOptionsFromData();
-      sel.innerHTML = "";
-      keys.forEach(k=>{
-        const opt = document.createElement("option");
-        opt.value = k;
-        opt.textContent = monthLabelFromKey(k);
-        sel.appendChild(opt);
-      });
-      // default: mes actual si existe; si no, el primero
-      const nowKey = `${new Date().getFullYear()}-${pad2(new Date().getMonth()+1)}`;
-      if (keys.includes(nowKey)) sel.value = nowKey;
-      else sel.value = keys[0] || nowKey;
-    }
-
-    function computeReportesMes(key){
-      const label = monthLabelFromKey(key);
-      const factMes = (facturas||[]).filter(f => monthKeyFromDateStr(f.fecha) === key);
-
-      const ingresos = factMes.reduce((a,f)=> a + Number(f.total||0), 0);
-      const cant = factMes.length;
-      const dias = factMes.reduce((a,f)=> a + Number(f.dias||0), 0);
-      const ticket = cant ? ingresos/cant : 0;
-      const porDia = dias ? ingresos/dias : 0;
-
-      // ingresos por vehículo (por placa)
-      const mapVeh = new Map(); // placa -> {placa, desc, rentas, dias, total}
-      factMes.forEach(f=>{
-        const placa = String(f.placa||"").trim();
-        const diasF = Number(f.dias||0);
-        const totalF = Number(f.total||0);
-        const v = getVehiculoByPlaca(placa);
-        const desc = v ? `${(v.marca||"")} ${(v.modelo||"")}${v.ano?` (${v.ano})`:""}`.trim() : (f.vehiculo||"");
-        const keyP = placa || desc || "Sin placa";
-        const cur = mapVeh.get(keyP) || { placa: placa || "", desc: desc || "Vehículo", rentas:0, dias:0, total:0 };
-        cur.rentas += 1;
-        cur.dias += diasF;
-        cur.total += totalF;
-        mapVeh.set(keyP, cur);
-      });
-      const vehRows = Array.from(mapVeh.values()).sort((a,b)=> b.total - a.total);
-
-      const topVeh = vehRows[0] || null;
-      const topVehDesc = topVeh ? `${topVeh.desc} — RD$ ${Number(topVeh.total||0).toFixed(2)}` : "N/A";
-
-      // ingresos por cliente
-      const mapCli = new Map(); // nombre -> {nombre, telefono, rentas, total}
-      factMes.forEach(f=>{
-        const nombre = String(f.cliente_nombre||"").trim() || "Sin nombre";
-        const tel = String(f.cliente_telefono||"").trim();
-        const totalF = Number(f.total||0);
-        const cur = mapCli.get(nombre) || { nombre, telefono: tel, rentas:0, total:0 };
-        cur.rentas += 1;
-        // si no tenía teléfono y ahora sí, lo ponemos
-        if (!cur.telefono && tel) cur.telefono = tel;
-        cur.total += totalF;
-        mapCli.set(nombre, cur);
-      });
-      const cliRows = Array.from(mapCli.values()).sort((a,b)=> b.total - a.total);
-
-      // ocupación por vehículo (rentas) en el mes seleccionado
-      const [yStr,mStr] = key.split("-");
-      const y = Number(yStr); const m = Number(mStr);
-      const mesStart = `${yStr}-${mStr}-01`;
-      const mesEnd = `${yStr}-${mStr}-${pad2(daysInMonth(y,m))}`;
-
-      const mapOcc = new Map(); // vehiculo_id -> dias
-      (function(){
-        const facturaIds = new Set((facturas||[]).map(f=>String(f.id)));
-        const rentasValidas = (rentas||[]).filter(r=>{
-          const fid = String(r.factura_id ?? r.idFactura ?? "");
-          // si la renta no tiene factura_id, la dejamos; si tiene, debe existir
-          return !fid || facturaIds.has(fid);
-        });
-        rentasValidas.forEach(r=>{
-        const vid = r.vehiculo_id ?? r.idVehiculo;
-        if (vid == null) return;
-        const ini = clampDateStr(r.fecha_inicio ?? r.fechaInicio);
-        const fin = clampDateStr(r.fecha_fin ?? r.fechaFinal);
-        if (!ini || !fin) return;
-        const d = overlapDays(ini, fin, mesStart, mesEnd);
-        if (!d) return;
-        const cur = mapOcc.get(String(vid)) || 0;
-        mapOcc.set(String(vid), cur + d);
-      });
-      })();
-
-      const occRows = vehiculos.map(v=>{
-        const diasO = mapOcc.get(String(v.id)) || 0;
-        const totalDiasMes = daysInMonth(y,m);
-        const pct = totalDiasMes ? (diasO/totalDiasMes)*100 : 0;
-        return {
-          desc: `${(v.marca||"")} ${(v.modelo||"")}${v.ano?` (${v.ano})`:""}`.trim(),
-          placa: v.placa || "",
-          dias: diasO,
-          pct
-        };
-      }).sort((a,b)=> b.dias - a.dias);
-
-      return { key, label, ingresos, cant, dias, ticket, porDia, vehRows, cliRows, topVeh, topVehDesc, occRows, ocRows: occRows };
-    }
-
-    function downloadCSV(filename, rows){
-      const escape = (v)=> {
-        const s = String(v ?? "");
-        if (s.includes('"') || s.includes(",") || s.includes("\n")) return `"${s.replace(/"/g,'""')}"`;
-        return s;
+    function lockVeh(lock){ document.querySelectorAll("#vehBody .modal-input").forEach(el=>el.disabled=lock); }
+
+    async function vehSave(){
+      if(!adminSession) return alert("Solo admin puede editar.");
+      const body = {
+        marca: document.getElementById("mVMarca").value.trim(),
+        modelo: document.getElementById("mVModelo").value.trim(),
+        ano: Number(document.getElementById("mVAno").value||0) || null,
+        placa: document.getElementById("mVPlaca").value.trim(),
+        estado: document.getElementById("mVEstado").value,
+        precio_dia: Number(document.getElementById("mVPrecio").value||0),
+        imagen: document.getElementById("mVImg").value.trim()
       };
-      const csv = rows.map(r => r.map(escape).join(",")).join("\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      if(!body.marca || !body.modelo || !body.placa) return alert("Marca/Modelo/Placa requeridos");
+      try{
+        await apiPut(`/vehiculos/${vehModalId}`, body);
+        await refreshUI();
+        alert("✅ Vehículo actualizado");
+        closeVeh();
+      }catch(e){
+        console.error(e);
+        alert("❌ No se pudo actualizar. " + (e.message||""));
+      }
     }
+    async function vehDel(){
+      if(!adminSession) return alert("Solo admin puede eliminar.");
+      if(!confirm("¿Eliminar vehículo?")) return;
+      try{
+        await apiDelete(`/vehiculos/${vehModalId}`);
+        await refreshUI();
+        alert("✅ Vehículo eliminado");
+        closeVeh();
+      }catch(e){
+        console.error(e);
+        alert("❌ No se pudo eliminar. " + (e.message||""));
+      }
+    }
+    function closeVeh(){
+      document.getElementById("vehBack").style.display="none";
+      vehModalId=null;
+    }
+
+    // =========================
+    // CALENDARIOS (Disponibilidad)
+    // =========================
+    function rentasVehiculo(id){
+      // Solo rentas con factura existente (evita fantasmas)
+      const factSet = new Set(facturas.map(f=> String(f.id)));
+      return rentas.filter(r=> idEq(r.vehiculo_id, id) && (!r.factura_id || factSet.has(String(r.factura_id))));
+    }
+
+    function buildMonth(m,y){
+      const first = new Date(y,m,1);
+      const dow = (first.getDay()+6)%7; // monday=0
+      const daysInMonth = new Date(y,m+1,0).getDate();
+      const arr=[];
+      for(let i=0;i<dow;i++) arr.push(null);
+      for(let d=1;d<=daysInMonth;d++) arr.push(d);
+      return {arr,daysInMonth};
+    }
+
+    function dayISO(y,m,d){
+      const mm=String(m+1).padStart(2,"0");
+      const dd=String(d).padStart(2,"0");
+      return `${y}-${mm}-${dd}`;
+    }
+
+    function renderCalendarios(){
+      const cont = document.getElementById("calendarios");
+      cont.innerHTML="";
+      const now=new Date();
+      vehiculos.forEach(v=>{
+        let m=now.getMonth(), y=now.getFullYear();
+        const rv = rentasVehiculo(v.id);
+
+        const card=document.createElement("div");
+        card.className="cal-card";
+
+        const head=document.createElement("div");
+        head.className="cal-head";
+
+        const title=document.createElement("div");
+        title.className="cal-title";
+        title.textContent = `${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}`;
+
+        const nav=document.createElement("div");
+        nav.className="cal-nav";
+
+        const bPrev=document.createElement("button"); bPrev.textContent="◀";
+        const bNext=document.createElement("button"); bNext.textContent="▶";
+        const lab=document.createElement("div"); lab.style.minWidth="90px"; lab.style.textAlign="center"; lab.style.fontSize=".85rem";
+
+        nav.appendChild(bPrev); nav.appendChild(lab); nav.appendChild(bNext);
+        head.appendChild(title); head.appendChild(nav);
+        card.appendChild(head);
+
+        const table=document.createElement("table");
+        table.className="mini";
+        table.innerHTML = `<thead><tr><th>L</th><th>M</th><th>X</th><th>J</th><th>V</th><th>S</th><th>D</th></tr></thead><tbody></tbody>`;
+        const tb=table.querySelector("tbody");
+        card.appendChild(table);
+
+        const list=document.createElement("div");
+        list.className="rlist";
+        card.appendChild(list);
+
+        function stateForDate(iso){
+          // activo si hoy dentro del rango; pendiente si inicio > hoy
+          const t=todayISO();
+          for(const r of rv){
+            if(!r.fecha_inicio || !r.fecha_fin) continue;
+            if(iso>=r.fecha_inicio && iso<=r.fecha_fin){
+              const pending = r.fecha_inicio > t;
+              return pending ? "pend" : "booked";
+            }
+          }
+          return "free";
+        }
+
+        function rentaForDate(iso){
+          for(const r of rv){
+            if(!r.fecha_inicio || !r.fecha_fin) continue;
+            if(iso>=r.fecha_inicio && iso<=r.fecha_fin) return r;
+          }
+          return null;
+        }
+
+        function update(){
+          const months=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+          lab.textContent = `${months[m]} ${y}`;
+          tb.innerHTML="";
+          const {arr} = buildMonth(m,y);
+
+          for(let i=0;i<arr.length;i+=7){
+            const tr=document.createElement("tr");
+            for(let j=0;j<7;j++){
+              const d = arr[i+j];
+              const td=document.createElement("td");
+              if(!d){ td.className="d-empty"; td.textContent=""; }
+              else{
+                const iso=dayISO(y,m,d);
+                const st=stateForDate(iso);
+                td.className = st==="booked" ? "d-booked" : (st==="pend" ? "d-pend" : "d-free");
+                td.textContent = d;
+                const r = rentaForDate(iso);
+                if(r){
+                  const f = facturas.find(x=> String(x.id)===String(r.factura_id));
+                  const cli = f?.cliente_nombre || "";
+                  td.title = `${fmt(r.fecha_inicio)} a ${fmt(r.fecha_fin)}${cli?` — Cliente: ${cli}`:""}`;
+                }
+              }
+              tr.appendChild(td);
+            }
+            tb.appendChild(tr);
+          }
+
+          list.innerHTML="";
+          if(rv.length===0){
+            list.innerHTML = `<div class="ritem">Este vehículo no tiene rentas este mes.</div>`;
+          }else{
+            // show only those intersecting this month
+            const startM = dayISO(y,m,1);
+            const endM = dayISO(y,m,new Date(y,m+1,0).getDate());
+            rv.filter(r=> r.fecha_inicio<=endM && r.fecha_fin>=startM)
+              .sort((a,b)=> (a.fecha_inicio||"").localeCompare(b.fecha_inicio||""))
+              .forEach(r=>{
+                const f = facturas.find(x=> String(x.id)===String(r.factura_id));
+                const cli = f?.cliente_nombre || "";
+                const pend = r.fecha_inicio > todayISO();
+                const icon = pend ? "🟨" : "🟥";
+                const item=document.createElement("div");
+                item.className="ritem";
+                item.textContent = `${icon} ${fmt(r.fecha_inicio)} a ${fmt(r.fecha_fin)} — Cliente: ${cli||"(sin nombre)"}`;
+                list.appendChild(item);
+              });
+          }
+        }
+
+        bPrev.addEventListener("click",()=>{ m--; if(m<0){m=11;y--;} update(); });
+        bNext.addEventListener("click",()=>{ m++; if(m>11){m=0;y++;} update(); });
+
+        update();
+        cont.appendChild(card);
+      });
+    }
+
+    // =========================
+    // REPORTES
+    // =========================
+    function initMeses(){
+      const sel=document.getElementById("repMes");
+      sel.innerHTML="";
+      const now=new Date();
+      // 24 meses (12 atrás, 12 adelante)
+      for(let i=-12;i<=12;i++){
+        const d=new Date(now.getFullYear(), now.getMonth()+i, 1);
+        const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+        const lab=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"][d.getMonth()] + " " + d.getFullYear();
+        const opt=document.createElement("option");
+        opt.value=val; opt.textContent=lab;
+        if(i===0) opt.selected=true;
+        sel.appendChild(opt);
+      }
+    }
+
+    function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
 
     function renderReportes(){
-      setSelectMesOptions();
-      const sel = document.getElementById("repMes");
-      const key = sel ? sel.value : "";
-      if (!key) return;
+      const val=document.getElementById("repMes").value;
+      const [yy,mm]=val.split("-").map(Number);
+      const m=mm-1, y=yy;
+      const start=`${y}-${String(mm).padStart(2,"0")}-01`;
+      const end=`${y}-${String(mm).padStart(2,"0")}-${String(daysInMonth(y,m)).padStart(2,"0")}`;
 
-      const data = computeReportesMes(key);
+      // facturas del mes (por fecha)
+      const facMes = facturas.filter(f=> f.fecha>=start && f.fecha<=end);
 
-      const elIngresos = document.getElementById("repKpiIngresos");
-      const elRentas = document.getElementById("repKpiRentas");
-      const elDias = document.getElementById("repKpiDias");
-      const elTicket = document.getElementById("repKpiTicket");
-      const elPorDia = document.getElementById("repKpiPorDia");
-      const elMesLabel = document.getElementById("repKpiMesLabel");
-      const elTopVeh = document.getElementById("repKpiTopVeh");
-      const elTopVehMonto = document.getElementById("repKpiTopVehMonto");
+      const ingresos = facMes.reduce((a,f)=>a+(Number(f.total)||0),0);
+      const dias = facMes.reduce((a,f)=>a+(Number(f.dias)||0),0);
+      const count = facMes.length;
+      const ticket = count? ingresos/count : 0;
+      const promDia = dias? ingresos/dias : 0;
 
-      if (elIngresos) elIngresos.textContent = Number(data.ingresos).toFixed(2);
-      if (elRentas) elRentas.textContent = String(data.cant);
-      if (elDias) elDias.textContent = String(data.dias);
-      if (elTicket) elTicket.textContent = currencyRD(data.ticket);
-      if (elPorDia) elPorDia.textContent = currencyRD(data.porDia);
-      if (elMesLabel) elMesLabel.textContent = data.label;
+      document.getElementById("repIngresos").textContent = `RD$ ${ingresos.toFixed(2)}`;
+      document.getElementById("repRentas").textContent = String(count);
+      document.getElementById("repDias").textContent = String(dias);
+      document.getElementById("repTicket").textContent = `RD$ ${ticket.toFixed(2)}`;
+      document.getElementById("repPromDia").textContent = `RD$ ${promDia.toFixed(2)}`;
 
-      if (data.topVeh){
-        if (elTopVeh) elTopVeh.textContent = data.topVeh.desc || "Vehículo";
-        if (elTopVehMonto) elTopVehMonto.textContent = currencyRD(data.topVeh.total);
-      } else {
-        if (elTopVeh) elTopVeh.textContent = "N/A";
-        if (elTopVehMonto) elTopVehMonto.textContent = "";
-      }
-
-      // Tabla vehículos
-      const tbV = document.querySelector("#repTablaVehiculos tbody");
-      if (tbV){
-        tbV.innerHTML = "";
-        const total = data.ingresos || 0;
-        data.vehRows.forEach(r=>{
-          const pct = total ? (r.total/total)*100 : 0;
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.desc}</td>
-            <td>${r.placa}</td>
-            <td>${r.rentas}</td>
-            <td>${r.dias}</td>
-            <td>${currencyRD(r.total)}</td>
-            <td>${pct.toFixed(1)}%</td>
-          `;
-          tbV.appendChild(tr);
-        });
-        if (data.vehRows.length===0){
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td colspan="6" class="muted">No hay facturas en este mes.</td>`;
-          tbV.appendChild(tr);
-        }
-      }
-
-      // Tabla clientes
-      const tbC = document.querySelector("#repTablaClientes tbody");
-      if (tbC){
-        tbC.innerHTML = "";
-        data.cliRows.forEach(r=>{
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.nombre}</td>
-            <td>${r.telefono}</td>
-            <td>${r.rentas}</td>
-            <td>${currencyRD(r.total)}</td>
-          `;
-          tbC.appendChild(tr);
-        });
-        if (data.cliRows.length===0){
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td colspan="4" class="muted">No hay facturas en este mes.</td>`;
-          tbC.appendChild(tr);
-        }
-      }
-
-      // Ocupación
-      const tbO = document.querySelector("#repTablaOcupacion tbody");
-      if (tbO){
-        tbO.innerHTML = "";
-        data.occRows.forEach(r=>{
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.desc}</td>
-            <td>${r.placa}</td>
-            <td>${r.dias}</td>
-            <td>${r.pct.toFixed(1)}%</td>
-          `;
-          tbO.appendChild(tr);
-        });
-        if (data.occRows.length===0){
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td colspan="4" class="muted">No hay datos de rentas para este mes.</td>`;
-          tbO.appendChild(tr);
-        }
-      }
-
-      // Botones export
-      const btnVeh = document.getElementById("btnRepCSVVeh");
-      if (btnVeh && !btnVeh.dataset.bound){
-        btnVeh.dataset.bound = "1";
-        btnVeh.addEventListener("click", ()=>{
-          const rows = [["Vehículo","Placa","Rentas","Días","Total RD$","%"]];
-          const total = data.ingresos || 0;
-          data.vehRows.forEach(r=>{
-            const pct = total ? (r.total/total)*100 : 0;
-            rows.push([r.desc, r.placa, r.rentas, r.dias, r.total.toFixed(2), pct.toFixed(1)]);
-          });
-          downloadCSV(`reporte_vehiculos_${data.key}.csv`, rows);
-        });
-      }
-      const btnCli = document.getElementById("btnRepCSVClientes");
-      const btnPDF = document.getElementById("btnRepPDF");
-      if (btnCli && !btnCli.dataset.bound){
-        btnCli.dataset.bound = "1";
-        btnCli.addEventListener("click", ()=>{
-          const rows = [["Cliente","Teléfono","Rentas","Total RD$"]];
-          data.cliRows.forEach(r=>{
-            rows.push([r.nombre, r.telefono, r.rentas, r.total.toFixed(2)]);
-          });
-          downloadCSV(`reporte_clientes_${data.key}.csv`, rows);
-        });
-      }
-      if (btnPDF && !btnPDF.dataset.bound){
-        btnPDF.dataset.bound = "1";
-        btnPDF.addEventListener("click", ()=>{
-          const sel = document.getElementById("repMes");
-          const key = sel ? sel.value : "";
-          if (!key) return;
-          exportarReportePDF(key);
-        });
-      }
-
-      const btnAct = document.getElementById("btnRepActualizar");
-      if (btnAct && !btnAct.dataset.bound){
-        btnAct.dataset.bound = "1";
-        btnAct.addEventListener("click", ()=>{
-          renderReportes();
-        });
-      }
-
-      if (sel && !sel.dataset.bound){
-        sel.dataset.bound = "1";
-        sel.addEventListener("change", ()=> renderReportes());
-      }
-    }
-
-
-document.addEventListener("DOMContentLoaded", () => {
-      
-  cargarTodoOnline();
-// Tabs
-      document.querySelectorAll(".tab-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-          document.querySelectorAll(".section").forEach((s) => s.classList.remove("active"));
-          btn.classList.add("active");
-          document.getElementById(btn.dataset.tab).classList.add("active");
-        
-          if (btn.dataset.tab === "reportes") { try { renderReportes(); } catch(e) {} }
-});
+      // ingresos por vehiculo_id
+      const mapVeh = {};
+      facMes.forEach(f=>{
+        const vid=String(f.vehiculo_id||"");
+        if(!vid) return;
+        mapVeh[vid] = mapVeh[vid] || {vid, total:0, dias:0, rentas:0};
+        mapVeh[vid].total += Number(f.total||0);
+        mapVeh[vid].dias += Number(f.dias||0);
+        mapVeh[vid].rentas += 1;
       });
 
+      const rowsVeh = Object.values(mapVeh)
+        .map(r=>{
+          const v = vehiculos.find(x=> idEq(x.id,r.vid));
+          return {
+            ...r,
+            placa: v?.placa || "",
+            desc: v ? `${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}` : `ID ${r.vid}`
+          };
+        })
+        .sort((a,b)=> b.total-a.total);
 
+      document.getElementById("repTopVeh").textContent = rowsVeh[0] ? `${rowsVeh[0].desc} — RD$ ${rowsVeh[0].total.toFixed(2)}` : "N/A";
+
+      const tbVeh=document.getElementById("repTblVeh");
+      tbVeh.innerHTML="";
+      rowsVeh.slice(0,8).forEach(r=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML = `<td>${r.desc}</td><td>${r.placa}</td><td>${r.rentas}</td><td>${r.dias}</td><td>RD$ ${r.total.toFixed(2)}</td>`;
+        tbVeh.appendChild(tr);
+      });
+      if(rowsVeh.length===0) tbVeh.innerHTML = `<tr><td colspan="5" class="muted">Sin datos en este mes.</td></tr>`;
+
+      // ingresos por cliente_id
+      const mapCli = {};
+      facMes.forEach(f=>{
+        const cid=String(f.cliente_id||"");
+        if(!cid) return;
+        mapCli[cid] = mapCli[cid] || {cid,total:0,rentas:0,telefono:""};
+        mapCli[cid].total += Number(f.total||0);
+        mapCli[cid].rentas += 1;
+      });
+      const rowsCli = Object.values(mapCli).map(r=>{
+        const c = clientes.find(x=> idEq(x.id,r.cid));
+        return { ...r, nombre: c?.nombre || (facMes.find(x=> String(x.cliente_id)===String(r.cid))?.cliente_nombre||`ID ${r.cid}`), telefono: c?.telefono || "" };
+      }).sort((a,b)=>b.total-a.total);
+
+      const tbCli=document.getElementById("repTblCli");
+      tbCli.innerHTML="";
+      rowsCli.slice(0,8).forEach(r=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML = `<td>${r.nombre}</td><td>${r.telefono}</td><td>${r.rentas}</td><td>RD$ ${r.total.toFixed(2)}</td>`;
+        tbCli.appendChild(tr);
+      });
+      if(rowsCli.length===0) tbCli.innerHTML = `<tr><td colspan="4" class="muted">Sin datos en este mes.</td></tr>`;
+
+      // Ocupación (rentas) del mes: días ocupados / días del mes
+      const dim = daysInMonth(y,m);
+      const occMap = {}; // veh_id -> dias
+      rentas.forEach(r=>{
+        if(!r.vehiculo_id || !r.fecha_inicio || !r.fecha_fin) return;
+        // solo rentas con factura existente
+        if(r.factura_id && !facturas.some(f=> String(f.id)===String(r.factura_id))) return;
+
+        const ini = r.fecha_inicio, fin = r.fecha_fin;
+        // intersección con mes
+        const s = (ini<start)? start : ini;
+        const e = (fin>end)? end : fin;
+        if(s>e) return;
+        // contar días incluyentes
+        const ds = (new Date(s) - new Date(s))/1; // noop
+        const days = Math.round((new Date(e) - new Date(s))/(1000*60*60*24)) + 1;
+        const vid = String(r.vehiculo_id);
+        occMap[vid] = (occMap[vid]||0) + Math.max(0,days);
+      });
+
+      const occRows = vehiculos.map(v=>{
+        const d = occMap[String(v.id)] || 0;
+        const pct = dim? (d/dim*100) : 0;
+        return { desc:`${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}`, placa:v.placa||"", dias:d, pct };
+      }).sort((a,b)=>b.dias-a.dias);
+
+      const tbOcc=document.getElementById("repTblOcc");
+      tbOcc.innerHTML="";
+      occRows.forEach(r=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML = `<td>${r.desc}</td><td>${r.placa}</td><td>${r.dias}</td><td>${r.pct.toFixed(1)}%</td>`;
+        tbOcc.appendChild(tr);
+      });
+    }
+
+    function exportReportPDF(){
+      const val=document.getElementById("repMes").value;
+      const [yy,mm]=val.split("-").map(Number);
+      const m=mm-1, y=yy;
+      const months=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+      const mesLabel = `${months[m]} ${y}`;
+
+      // construir html printable
+      const ingresos = document.getElementById("repIngresos").textContent;
+      const rentas = document.getElementById("repRentas").textContent;
+      const dias = document.getElementById("repDias").textContent;
+      const ticket = document.getElementById("repTicket").textContent;
+      const promDia = document.getElementById("repPromDia").textContent;
+      const topVeh = document.getElementById("repTopVeh").textContent;
+
+      const tblVeh = document.getElementById("repTblVeh").innerHTML;
+      const tblCli = document.getElementById("repTblCli").innerHTML;
+      const tblOcc = document.getElementById("repTblOcc").innerHTML;
+
+      const html = `
+      <html><head><meta charset="utf-8"><title>Reporte ${mesLabel}</title>
+      <style>
+        body{font-family:Arial,sans-serif;margin:0;background:#fff;color:#111}
+        .top{background:#e10600;color:#fff;padding:22px 26px;text-align:center}
+        .wrap{padding:18px 24px}
+        .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+        .k{background:#f3f3f3;border:1px solid #e6e6e6;border-radius:10px;padding:10px 12px}
+        .k .l{font-size:12px;color:#444}
+        .k .v{font-size:16px;font-weight:800;margin-top:4px}
+        h3{margin:14px 0 8px;font-size:13px}
+        table{width:100%;border-collapse:collapse;font-size:12px}
+        th,td{border-bottom:1px solid #ddd;padding:7px 8px;text-align:left}
+        th{background:#111;color:#fff}
+        .muted{color:#666;font-size:12px;margin-top:10px}
+      </style></head><body>
+        <div class="top">
+          <div style="font-size:22px;font-weight:900">ARCY RENT CAR</div>
+          <div style="opacity:.95;margin-top:4px">Reporte mensual — ${mesLabel}</div>
+        </div>
+        <div class="wrap">
+          <div class="muted">Generado: ${fmt(todayISO())}</div>
+
+          <div class="kpis">
+            <div class="k"><div class="l">Ingresos</div><div class="v">${ingresos}</div></div>
+            <div class="k"><div class="l">Rentas</div><div class="v">${rentas}</div></div>
+            <div class="k"><div class="l">Días</div><div class="v">${dias}</div></div>
+            <div class="k"><div class="l">Ticket prom.</div><div class="v">${ticket}</div></div>
+            <div class="k"><div class="l">Prom./día</div><div class="v">${promDia}</div></div>
+            <div class="k"><div class="l">Top vehículo</div><div class="v">${topVeh}</div></div>
+          </div>
+
+          <h3>Ingresos por vehículo (Top)</h3>
+          <table><thead><tr><th>Vehículo</th><th>Placa</th><th>Rentas</th><th>Días</th><th>Total</th></tr></thead><tbody>${tblVeh}</tbody></table>
+
+          <h3>Ingresos por cliente (Top)</h3>
+          <table><thead><tr><th>Cliente</th><th>Teléfono</th><th>Rentas</th><th>Total</th></tr></thead><tbody>${tblCli}</tbody></table>
+
+          <h3>Ocupación por vehículo (Top)</h3>
+          <table><thead><tr><th>Vehículo</th><th>Placa</th><th>Días</th><th>Ocupación</th></tr></thead><tbody>${tblOcc}</tbody></table>
+
+          <div class="muted" style="text-align:center;margin-top:16px">Arcy Rent Car — Reporte generado automáticamente</div>
+        </div>
+        <script>window.onload=()=>{window.print();}<\/script>
+      </body></html>`;
+
+      const w = window.open("", "_blank");
+      w.document.open(); w.document.write(html); w.document.close();
+    }
+
+    // =========================
+    // Refresh and init
+    // =========================
+    async function refreshUI(){
+      await loadAll();
+      fillSelects();
+      renderDashboard();
       renderClientes();
       renderVehiculos();
       renderFacturas();
-      recalcularDashboard();
-      renderDisponibilidad();
-
-      // Seguridad: cargar usuario/contraseña actuales
-      cargarCredencialesSeguridad();
-      const btnGuardarSeg = document.getElementById("btnGuardarSeguridad");
-      if (btnGuardarSeg) {
-        btnGuardarSeg.addEventListener("click", guardarCredencialesSeguridad);
-      }
-
-      const btnLogout = document.getElementById("btnLogout");
-      if (btnLogout) {
-        btnLogout.addEventListener("click", logout);
-      }
-
-      const inputBuscarCliente = document.getElementById("clienteBuscar");
-      if (inputBuscarCliente) {
-        inputBuscarCliente.addEventListener("input", aplicarFiltroClientes);
-      }
-
-      // Ocultar login si ya inició antes
-      // if (localStorage.getItem("arcy_logged") === "1") {
-        // const screen = document.getElementById("loginScreen");
-        // if (screen) screen.style.display = "none";
-      // } 
-
-      // Guardar cliente (ONLINE)
-      const btnGuardarCliente = document.getElementById("btnGuardarCliente");
-      if (btnGuardarCliente) {
-        btnGuardarCliente.addEventListener("click", async () => {
-          try {
-            const nombre = document.getElementById("clienteNombre").value.trim();
-            if (!nombre) {
-              alert("Escribe el nombre del cliente");
-              return;
-            }
-            const telefono = document.getElementById("clienteTelefono").value.trim();
-            const cedula = document.getElementById("clienteCedula").value.trim();
-            const nota = document.getElementById("clienteNota").value.trim();
-            const valoracion = Number(document.getElementById("clienteValoracion").value || 5);
-
-            await apiPost("/clientes", { nombre, telefono, cedula, nota, valoracion });
-
-            document.getElementById("formCliente").reset();
-            clientes = await apiGet("/clientes");
-            renderClientes();
-            alert("✅ Cliente guardado (ONLINE)");
-          } catch (e) {
-            console.error(e);
-            alert("❌ No se pudo guardar el cliente en la base de datos.");
-          }
-        });
-      }// Guardar vehículo (ONLINE)
-      const btnGuardarVehiculo = document.getElementById("btnGuardarVehiculo");
-      if (btnGuardarVehiculo) {
-        btnGuardarVehiculo.addEventListener("click", async () => {
-          try {
-            const marca = document.getElementById("vehMarca").value.trim();
-            const modelo = document.getElementById("vehModelo").value.trim();
-            if (!marca || !modelo) {
-              alert("Marca y modelo son obligatorios");
-              return;
-            }
-            const ano = document.getElementById("vehAno").value;
-            const placa = document.getElementById("vehPlaca").value;
-            const estado = document.getElementById("vehEstado").value;
-            const precioDia = Number(document.getElementById("vehPrecioDia").value || 0);
-            const imagen = document.getElementById("vehImagen").value.trim();
-            if (!precioDia) {
-              alert("Precio por día es obligatorio");
-              return;
-            }
-
-            // Backend guarda marca/modelo/placa/precio_dia. Enviamos extras por si luego amplías la tabla.
-            await apiPost("/vehiculos", { marca, modelo, placa, precio_dia: precioDia, ano: ano ? Number(ano) : null, estado, imagen });
-
-            document.getElementById("formVehiculo").reset();
-            vehiculos = await apiGet("/vehiculos");
-            vehiculos = normalizarVehiculos(vehiculos);
-            renderVehiculos();
-            recalcularDashboard();
-            alert("✅ Vehículo guardado (ONLINE)");
-          } catch (e) {
-            console.error(e);
-            alert("❌ No se pudo guardar el vehículo en la base de datos.");
-          }
-        });
-      }// Calcular factura
-      const btnCalcular = document.getElementById("btnCalcular");
-      if (btnCalcular) {
-        btnCalcular.addEventListener("click", () => {
-          calcularFactura();
-        });
-      }
-      /* PRECIO DIA: actualizar al seleccionar vehículo + recalcular */
-      const selVeh = document.getElementById("selectVehiculo");
-      const precioDiaInput = document.getElementById("precioDia");
-      if (selVeh && precioDiaInput) {
-        selVeh.addEventListener("change", () => {
-          const idVeh = Number(selVeh.value);
-          const v = vehiculos.find((x) => x.id === idVeh);
-          if (v) {
-            precioDiaInput.value = Number(v.precioDia || 0).toFixed(2);
-            // Si ya hay fechas seleccionadas, recalcular sin necesidad de tocar el botón
-            const fi = document.getElementById("fechaInicio").value;
-            const ff = document.getElementById("fechaFinal").value;
-            if (fi && ff) calcularFactura();
-          }
-        });
-
-        precioDiaInput.addEventListener("input", () => {
-          const fi = document.getElementById("fechaInicio").value;
-          const ff = document.getElementById("fechaFinal").value;
-          if (fi && ff && selVeh.value) {
-            // Recalcular al cambiar precio manualmente
-            calcularFactura();
-          }
-        });
-      }
-      // número de factura automático
-  function generarNumeroFactura() {
-  const rnd = Math.floor(Math.random() * 100000).toString().padStart(5, "0");
-  const ymd = new Date().toISOString().slice(0,10).replaceAll("-","");
-  return `FAC-${ymd}-${rnd}`;
-}
-// Guardar factura + renta
-     document.getElementById("btnGuardarFactura").addEventListener("click", async () => {
-  try {
-    const idCliente = String(selectCliente.value || "");
-    const idVehiculo = String(selectVehiculo.value || "");
-    const fechaInicio = document.getElementById("fechaInicio").value;
-    const fechaFinal = document.getElementById("fechaFinal").value;
-
-    if (!idCliente || !idVehiculo || !fechaInicio || !fechaFinal) {
-      alert("Completa cliente, vehículo y fechas.");
-      return;
+      // reportes/disponibilidad se renderizan cuando entras, pero si estás ahí, se refrescan:
+      if(document.getElementById("reportes").classList.contains("active")) renderReportes();
+      if(document.getElementById("disponibilidad").classList.contains("active")) renderCalendarios();
     }
 
-    // Validar disponibilidad ONLINE (evita doble renta entre dispositivos)
-    const disponible = await verificarDisponibilidadOnline(idVehiculo, fechaInicio, fechaFinal);
-    if (!disponible) {
-      alert(`🚫 El vehículo NO está disponible. Ya está rentado en ese rango de fechas.`);
-      return;
+    async function init(){
+      initMeses();
+      await refreshUI();
     }
 
-    const calculo = calcularFactura();
-    if (!calculo) return;
-
-    const cli = clientes.find(c => String(c.id) === String(idCliente)) || {};
-    const veh = vehiculos.find(v => String(v.id) === String(idVehiculo)) || {};
-
-    const facturaIdManual = (document.getElementById("facturaId").value || "").trim();
-    const facturaId = facturaIdManual || generarNumeroFactura();
-
-    // Guardar factura ONLINE
-    await apiPost("/facturas", {
-      id: facturaId,
-      fecha: new Date().toISOString().split("T")[0],
-      cliente_nombre: cli.nombre || "",
-      cliente_telefono: cli.telefono || "",
-      vehiculo: `${veh.marca || ""} ${veh.modelo || ""}`.trim(),
-      placa: veh.placa || "",
-      dias: calculo.dias,
-      precio_dia: calculo.precioDia,
-      total: calculo.total
-    });
-
-    // Guardar renta ONLINE
-    await apiPost("/rentas", {
-      vehiculo_id: Number(idVehiculo),
-      fecha_inicio: fechaInicio,
-      fecha_fin: fechaFinal,
-      factura_id: facturaId
-    });
-
-    // Recargar desde BD
-    facturas = normalizarFacturas(await apiGet("/facturas"));
-    try { rentas = normalizarRentas(await apiGet("/rentas")); } catch {}
-    renderFacturas();
-    renderDisponibilidad();
-    recalcularDashboard();
-
-    alert("✅ Factura y renta guardadas (ONLINE)");
-  } catch (e) {
-    console.error(e);
-    alert("❌ No se pudo guardar la factura/renta en la base de datos.");
-  }
-});// EXPORTAR / IMPORTAR
-const btnExportar = document.getElementById("btnExportar");
-      if (btnExportar) {
-        btnExportar.addEventListener("click", () => {
-          const data = { clientes, vehiculos, facturas, rentas };
-          const json = JSON.stringify(data, null, 2);
-          const preview = document.getElementById("previewExport");
-          if (preview) preview.textContent = json;
-          const blob = new Blob([json], { type: "application/json" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "arcy_rent_car_backup.json";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        });
+    // =========================
+    // Wire events
+    // =========================
+    document.addEventListener("DOMContentLoaded", ()=>{
+      // login check
+      if(isLogged()){
+        document.getElementById("loginScreen").style.display="none";
+        adminSession = true; // sesión activa: admin local (como antes)
+        init();
       }
 
-      const btnImportar = document.getElementById("btnImportar");
-      const inputImportar = document.getElementById("inputImportar");
-      if (btnImportar && inputImportar) {
-        btnImportar.addEventListener("click", () => {
-          inputImportar.click();
-        });
+      document.getElementById("btnLogin").addEventListener("click", doLogin);
+      document.getElementById("loginPass").addEventListener("keydown",(e)=>{ if(e.key==="Enter") doLogin(); });
 
-        inputImportar.addEventListener("change", (e) => {
-          const file = e.target.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            try {
-              const data = JSON.parse(ev.target.result);
-              clientes = data.clientes || [];
-              vehiculos = data.vehiculos || [];
-              facturas = data.facturas || [];
-              rentas = data.rentas || [];
-              // (ONLINE) clientes se guardan en BD
-              // (ONLINE) vehiculos se guardan en BD
-              // (ONLINE) facturas se guardan en BD
-              // (ONLINE) rentas se guardan en BD
-              renderClientes();
-              renderVehiculos();
-              renderFacturas();
-              recalcularDashboard();
-              alert("Datos importados correctamente");
-            } catch (err) {
-              alert("Archivo inválido");
-            }
-          };
-          reader.readAsText(file);
-        });
-      }
+      document.getElementById("btnLogout").addEventListener("click", ()=>{ logout(); });
 
-      const btnBorrarTodo = document.getElementById("btnBorrarTodo");
-      if (btnBorrarTodo) {
-        btnBorrarTodo.addEventListener("click", () => {
-          if (!confirm("¿Seguro que quieres borrar todo?")) return;
-          clientes = [];
-          vehiculos = [];
-          facturas = [];
-          rentas = [];
-          // (ONLINE) clientes se guardan en BD
-          // (ONLINE) vehiculos se guardan en BD
-          // (ONLINE) facturas se guardan en BD
-          // (ONLINE) rentas se guardan en BD
-          renderClientes();
-          renderVehiculos();
-          renderFacturas();
-          recalcularDashboard();
-          const preview = document.getElementById("previewExport");
-          if (preview) preview.textContent = "";
+      document.querySelectorAll(".tab-btn").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          setTab(btn.dataset.tab);
         });
-      }
+      });
+
+      // Factura
+      document.getElementById("btnCalcular").addEventListener("click", calcFactura);
+      document.getElementById("btnGuardarFactura").addEventListener("click", guardarFactura);
+      ["fVehiculo","fInicio","fFin","fPrecio"].forEach(id=> document.getElementById(id).addEventListener("input", calcFactura));
+      document.getElementById("fVehiculo").addEventListener("change", calcFactura);
+
+      // Clientes/Vehiculos
+      document.getElementById("btnGuardarCliente").addEventListener("click", guardarCliente);
+      document.getElementById("btnGuardarVehiculo").addEventListener("click", guardarVehiculo);
+
+      // Modals close
+      document.getElementById("cliClose").addEventListener("click", closeCli);
+      document.getElementById("vehClose").addEventListener("click", closeVeh);
+      document.getElementById("cliBack").addEventListener("click", (e)=>{ if(e.target.id==="cliBack") closeCli(); });
+      document.getElementById("vehBack").addEventListener("click", (e)=>{ if(e.target.id==="vehBack") closeVeh(); });
+
+      // Modal actions
+      document.getElementById("cliEdit").addEventListener("click", ()=>{
+        if(!adminSession) return alert("Solo admin puede editar.");
+        lockCli(false); toggleCliButtons(true);
+      });
+      document.getElementById("cliSave").addEventListener("click", cliSave);
+      document.getElementById("cliDel").addEventListener("click", cliDel);
+
+      document.getElementById("vehEdit").addEventListener("click", ()=>{
+        if(!adminSession) return alert("Solo admin puede editar.");
+        lockVeh(false); document.getElementById("vehSave").style.display="inline-block";
+      });
+      document.getElementById("vehSave").addEventListener("click", vehSave);
+      document.getElementById("vehDel").addEventListener("click", vehDel);
+
+      // Reportes
+      document.getElementById("btnRepActualizar").addEventListener("click", renderReportes);
+      document.getElementById("btnRepPDF").addEventListener("click", exportReportPDF);
+      document.getElementById("repMes").addEventListener("change", renderReportes);
     });
-    async function guardarFacturaEnBD(factura) {
-  try {
-    const res = await fetch(API_URL + "/facturas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: factura.id,
-        fecha: factura.fecha,
-        cliente_nombre: factura.nombreCliente,
-        cliente_telefono: factura.telefono || "",
-        vehiculo: factura.vehiculo,
-        placa: factura.placa || "",
-        dias: factura.dias,
-        precio_dia: factura.precioDia,
-        total: factura.total
-      })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      console.error("Error backend:", data);
-      alert("❌ Error al guardar la factura");
-      return;
-    }
-
-    console.log("✅ Factura guardada en BD:", data);
-    // 🔕 ya NO mostramos error si se guardó bien
-
-  } catch (err) {
-    console.error("Error de conexión:", err);
-    // (removed duplicate error alert)
-  }
-}
-  
-
-</script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
-        crossorigin="anonymous"></script>
+  </script>
 </body>
 </html>
 
