@@ -17,19 +17,41 @@
       --warn:#ffb020;
       --bad:#ff4d4d;
     }
-  .inicio-logo {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin: 25px 0 35px 0;
-}
+  .banner {
+      background: var(--gris) url("logo VEHICULO PAPI2.jpg") center/cover no-repeat;
+      border-bottom: 4px solid var(--rojo);
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start; /* mover contenido a la izquierda */
+        text-align: left; /* texto alineado a la izquierda */
+        padding-left: 40px; /* SE VE BONITO pegado al área gris */
+      position: relative;
+      overflow: hidden;
+    }
+    .banner::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(0,0,0,0.7), rgba(0,0,0,0.2));
+    }
+    .banner-content {
+      text-align: left;
+      position: relative;
+      z-index: 1;
+    }
+    .banner h1 {
+      margin: 0;
+      font-size: 2.4rem;
+      color: var(--rojo);
+      letter-spacing: 2px;
+    }
 
-.inicio-logo img {
-  max-width: 900px;
-  width: 100%;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
-}
+    .banner p {
+      margin: 4px 0 0;
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
     *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     body{margin:0;background:radial-gradient(circle at top left,#2b2b2b 0,#000 55%);color:var(--texto)}
     .banner{height:160px;display:flex;align-items:center;justify-content:flex-start;padding:0 28px;border-bottom:4px solid var(--rojo);background:linear-gradient(90deg,rgba(0,0,0,.78),rgba(0,0,0,.2))}
