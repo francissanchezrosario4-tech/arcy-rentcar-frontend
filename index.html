@@ -509,7 +509,13 @@
       return {
         ...v,
         precioDia: Number(v.precio_dia ?? v.precioDia ?? 0),
-        ano: v.ano ?? v.anio ?? v.año ?? null
+        ano: v.ano ?? v.anio ?? v.año ?? null,
+        estado_calculado: v.estado_calculado ?? null,
+        renta_inicio: v.renta_inicio ? toISODate(v.renta_inicio) : null,
+        renta_fin: v.renta_fin ? toISODate(v.renta_fin) : null,
+        renta_cliente: v.renta_cliente ?? "",
+        renta_factura_id: v.renta_factura_id ?? "",
+        renta_tipo: v.renta_tipo ?? null
       };
     }
     function normalizeFactura(f){
@@ -587,40 +593,32 @@
     // =========================
     // DASHBOARD - flota en atención
     // =========================
-    function computeUpcomingByVeh(){
-      const t = todayISO();
-      const byVeh = new Map(); // veh_id -> {inicio,fin,factura}
-      for(const r of rentas){
-        if(!r.vehiculo_id) continue;
-        if(r.estado && r.estado !== "activa") continue;
-        const ini = r.fecha_inicio, fin = r.fecha_fin;
-        if(ini && ini > t){
-          const curr = byVeh.get(String(r.vehiculo_id));
-          if(!curr || ini < curr.inicio){
-            const f = facturas.find(x=> String(x.id)===String(r.factura_id));
-            byVeh.set(String(r.vehiculo_id), {inicio:ini, fin:fin, factura:f});
-          }
-        }
-      }
-      return byVeh;
-    }
-
     function renderDashboard(){
       const total = facturas.reduce((a,f)=>a+(Number(f.total)||0),0);
       document.getElementById("kpiTotal").textContent = total.toFixed(2);
       document.getElementById("kpiFacturas").textContent = String(facturas.length);
 
-      // top vehiculo por ingresos (por vehiculo_id en facturas)
+      // Top vehículo por ingresos (usa vehiculo_id si existe; fallback por placa)
       const acc = {};
-      for(const f of facturas){
+      facturas.forEach(f=>{
         const vid = f.vehiculo_id ? String(f.vehiculo_id) : null;
-        if(!vid) continue;
-        acc[vid] = (acc[vid]||0) + (Number(f.total)||0);
-      }
+        if(vid){
+          acc[vid] = (acc[vid]||0) + (Number(f.total)||0);
+          return;
+        }
+        const placa = (f.placa||"").toString().trim().toLowerCase();
+        if(!placa) return;
+        const v = vehiculos.find(x=> (x.placa||"").toString().trim().toLowerCase()===placa);
+        if(!v) return;
+        const id = String(v.id);
+        acc[id] = (acc[id]||0) + (Number(f.total)||0);
+      });
+
       let topId=null, topMonto=0;
       Object.keys(acc).forEach(id=>{
         if(acc[id]>topMonto){ topMonto=acc[id]; topId=id; }
       });
+
       if(topId){
         const v = vehiculos.find(x=> idEq(x.id, topId));
         document.getElementById("kpiTopVeh").textContent = v ? `${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}` : `ID ${topId}`;
@@ -630,17 +628,14 @@
         document.getElementById("kpiTopVehMonto").textContent = "";
       }
 
-      // flota en atención = estado rentado/mantenimiento OR reserva pendiente
-      const pending = computeUpcomingByVeh();
+      // Flota en atención basada en estado calculado desde backend
       const list = vehiculos.filter(v=>{
-        const st = (v.estado||"").toLowerCase();
-        return st==="rentado" || st==="mantenimiento" || pending.has(String(v.id));
+        const st = (v.estado_calculado || v.estado || "Disponible").toString();
+        return ["Rentado","Pendiente","Mantenimiento"].includes(st);
       });
-
       document.getElementById("kpiAtencion").textContent = String(list.length);
 
-
-      // Ingresos por mes (tabla)
+      // Ingresos por mes
       const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
       const porMes = Array(12).fill(0);
       facturas.forEach(f=>{
@@ -660,33 +655,35 @@
 
       const cont = document.getElementById("fleetAttention");
       const empty = document.getElementById("fleetEmpty");
-      cont.innerHTML = "";
+      cont.innerHTML="";
       if(list.length===0){
         empty.style.display="block";
         return;
       }
       empty.style.display="none";
 
-      for(const v of list){
-        const pd = pending.get(String(v.id));
+      list.forEach(v=>{
         const initials = `${(v.marca||"V")[0]||"V"}${(v.modelo||"")[0]||""}`.toUpperCase();
         const img = v.imagen ? `<img src="${v.imagen}" alt="">` : `<div class="ph">${initials}</div>`;
-        let badgeClass="ok", badgeText=(v.estado||"Disponible");
-        const st = (v.estado||"").toLowerCase();
 
-        if(pd){
+        const st = (v.estado_calculado || v.estado || "Disponible").toString();
+        let badgeClass="ok";
+        let badgeText=st;
+
+        if(st==="Pendiente"){
           badgeClass="warn";
-          const cli = pd.factura?.cliente_nombre || "";
-          badgeText = `Pendiente ${fmt(pd.inicio)} - ${fmt(pd.fin)}${cli?` (${cli})`:""}`;
-        }else if(st==="rentado"){
+          const cli = v.renta_cliente || "";
+          badgeText = `Pendiente ${fmt(v.renta_inicio)} - ${fmt(v.renta_fin)}${cli?` (${cli})`:""}`;
+        }else if(st==="Rentado"){
           badgeClass="warn";
-          badgeText="Rentado";
-        }else if(st==="mantenimiento"){
+          const cli = v.renta_cliente || "";
+          badgeText = `Rentado ${fmt(v.renta_inicio)} - ${fmt(v.renta_fin)}${cli?` (${cli})`:""}`;
+        }else if(st==="Mantenimiento"){
           badgeClass="bad";
           badgeText="Mantenimiento";
         }
 
-        const card = document.createElement("div");
+        const card=document.createElement("div");
         card.className="veh-card";
         card.innerHTML = `
           <div class="veh-img">${img}</div>
@@ -696,14 +693,12 @@
             <div class="veh-sub">${v.placa?`Placa: ${v.placa}`:""}</div>
             <div class="veh-sub">US$ ${Number(v.precioDia||0).toFixed(2)} / día</div>
             <span class="tag ${badgeClass}">${badgeText}</span>
-            <div style="margin-top:10px">
-              <button class="btn small" data-id="${v.id}">Ver detalles</button>
-            </div>
+            <div style="margin-top:10px"><button class="btn small" data-id="${v.id}">Ver detalles</button></div>
           </div>
         `;
-        card.querySelector("button").addEventListener("click", ()=> openVehModal(v.id));
+        card.querySelector("button").addEventListener("click",()=> openVehModal(v.id));
         cont.appendChild(card);
-      }
+      });
     }
 
     // =========================
@@ -1101,6 +1096,7 @@
       if(!v) return;
       vehModalId = String(v.id);
       document.getElementById("vehTitle").textContent = `${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}`;
+
       const imgEl = document.getElementById("vehImg");
       if(v.imagen){
         imgEl.src = v.imagen;
@@ -1108,23 +1104,36 @@
       }else{
         imgEl.style.display="none";
       }
+
+      const estadoReal = (v.estado_calculado || v.estado || "Disponible");
+
       document.getElementById("vehBody").innerHTML = `
+        <div class="modal-row"><label>Estado real (automático)</label>
+          <input id="mVEstadoReal" class="modal-input" value="${estadoReal}" disabled>
+          <div class="muted" style="margin-top:4px">Rentado/Pendiente se calculan desde rentas. Solo mantenimiento es manual.</div>
+        </div>
+
         <div class="modal-row"><label>Marca</label><input id="mVMarca" class="modal-input" value="${v.marca||""}" disabled></div>
         <div class="modal-row"><label>Modelo</label><input id="mVModelo" class="modal-input" value="${v.modelo||""}" disabled></div>
         <div class="modal-row"><label>Año</label><input id="mVAno" class="modal-input" value="${v.ano||""}" disabled></div>
         <div class="modal-row"><label>Placa</label><input id="mVPlaca" class="modal-input" value="${v.placa||""}" disabled></div>
-        <div class="modal-row"><label>Estado</label>
+
+        <div class="modal-row"><label>Estado (manual: solo mantenimiento)</label>
           <select id="mVEstado" class="modal-input" disabled>
             <option value="Disponible">Disponible</option>
-            <option value="Rentado">Rentado</option>
             <option value="Mantenimiento">Mantenimiento</option>
           </select>
         </div>
+
         <div class="modal-row"><label>Precio/día</label><input id="mVPrecio" class="modal-input" value="${Number(v.precioDia||0)}" disabled></div>
         <div class="modal-row"><label>URL Imagen</label><input id="mVImg" class="modal-input" value="${v.imagen||""}" disabled></div>
         <div class="muted" style="margin-top:6px">ID: ${v.id}</div>
       `;
-      document.getElementById("mVEstado").value = v.estado || "Disponible";
+
+      // Estado manual actual: si el estado guardado es Mantenimiento, mantenerlo; si no, Disponible
+      const manual = (String(v.estado||"") === "Mantenimiento") ? "Mantenimiento" : "Disponible";
+      document.getElementById("mVEstado").value = manual;
+
       document.getElementById("vehBack").style.display="flex";
       lockVeh(true);
       document.getElementById("vehSave").style.display="none";
