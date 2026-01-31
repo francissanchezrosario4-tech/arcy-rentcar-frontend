@@ -159,7 +159,7 @@
             <div class="sub" id="kpiTopVehMonto"></div>
           </div>
           <div class="kpi">
-            <div class="lbl">Flota en atención</div>
+            <div class="lbl">Vehiculo en Servicio</div>
             <div class="val" id="kpiAtencion">0</div>
             <div class="sub">Rentado, mantenimiento o reserva pendiente</div>
           </div>
@@ -168,7 +168,7 @@
 
       <div class="card">
         <div class="card-header">
-          <div class="title">Flota en atención</div>
+          <div class="title">Vehiculo en Servicio</div>
           <div class="pill">Rentado / Mantenimiento / Pendiente</div>
         </div>
         <div id="fleetAttention" class="veh-grid"></div>
@@ -1072,8 +1072,29 @@
       vehiculos.forEach(v=>{
         const initials = `${(v.marca||"V")[0]||"V"}${(v.modelo||"")[0]||""}`.toUpperCase();
         const img = v.imagen ? `<img src="${v.imagen}" alt="">` : `<div class="ph">${initials}</div>`;
-        const st = (v.estado||"Disponible");
-        const cls = st==="Disponible" ? "ok" : (st==="Rentado" ? "warn" : "bad");
+
+        // Estado REAL (backend): Rentado / Pendiente / Mantenimiento / Disponible
+        const stReal = (v.estado_calculado || v.estado || "Disponible").toString();
+        let cls = "ok";
+        let tagText = stReal;
+        let extra = "";
+
+        if(stReal === "Rentado"){
+          cls = "warn";
+          tagText = "Rentado";
+          extra = (v.renta_inicio && v.renta_fin) ? `<div class="veh-sub">${fmt(v.renta_inicio)} - ${fmt(v.renta_fin)}${v.renta_cliente?` (${v.renta_cliente})`:""}</div>` : "";
+        } else if(stReal === "Pendiente"){
+          cls = "warn";
+          tagText = "Pendiente";
+          extra = (v.renta_inicio && v.renta_fin) ? `<div class="veh-sub">${fmt(v.renta_inicio)} - ${fmt(v.renta_fin)}${v.renta_cliente?` (${v.renta_cliente})`:""}</div>` : "";
+        } else if(stReal === "Mantenimiento"){
+          cls = "bad";
+          tagText = "Mantenimiento";
+        } else {
+          cls = "ok";
+          tagText = "Disponible";
+        }
+
         const card = document.createElement("div");
         card.className="veh-card";
         card.innerHTML = `
@@ -1083,13 +1104,19 @@
             <div class="veh-sub">${v.ano?`Año ${v.ano}`:""}</div>
             <div class="veh-sub">US$ ${Number(v.precioDia||0).toFixed(2)} / día</div>
             <div class="veh-sub">${v.placa?`Placa: ${v.placa}`:""}</div>
-            <span class="tag ${cls}">${st}</span>
-            <div style="margin-top:10px"><button class="btn small" data-id="${v.id}">Ver detalles</button></div>
-          </div>`;
-        card.querySelector("button").addEventListener("click",()=>openVehModal(v.id));
+            ${extra}
+            <span class="tag ${cls}">${tagText}</span>
+            <div style="margin-top:10px">
+              <button class="btn small" data-id="${v.id}">Ver detalles</button>
+            </div>
+          </div>
+        `;
+        card.querySelector("button").addEventListener("click",()=> openVehModal(v.id));
         cont.appendChild(card);
       });
     }
+
+    
 
     function openVehModal(id){
       const v = vehiculos.find(x=> idEq(x.id,id));
