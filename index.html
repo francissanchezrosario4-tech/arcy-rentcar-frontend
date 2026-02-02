@@ -274,11 +274,15 @@
           </div>
           <div>
             <label>Días</label>
-            <input type="number" id="fDias" readonly />
+            <input type="number" id="fDias" min="1" step="1" />
           </div>
           <div>
             <label>Precio por día (US$)</label>
             <input type="number" id="fPrecio" />
+          </div>
+          <div>
+            <label>Servicios extras (US$)</label>
+            <input type="number" id="fExtras" value="0" min="0" step="0.01" />
           </div>
           <div>
             <label>Total (US$)</label>
@@ -517,19 +521,24 @@
         renta_tipo: v.renta_tipo ?? null
       };
     }
+    
     function normalizeFactura(f){
+      const fi = f.fecha_inicio ?? f.inicio ?? f.fechaInicio ?? f.start_date ?? f.startDate ?? null;
+      const ff = f.fecha_fin ?? f.fin ?? f.fechaFin ?? f.end_date ?? f.endDate ?? null;
       return {
         ...f,
-        fecha: toISODate(f.fecha),
-        fecha_inicio: toISODate(f.fecha_inicio),
-        fecha_fin: toISODate(f.fecha_fin),
-        dias: Number(f.dias ?? 0),
+        fecha: toISODate(f.fecha ?? f.created_at ?? f.createdAt),
+        fecha_inicio: toISODate(fi),
+        fecha_fin: toISODate(ff),
+        dias: Number(f.dias ?? f.dias_renta ?? 0),
         total: Number(f.total ?? 0),
-        precio_dia: Number(f.precio_dia ?? 0),
+        precio_dia: Number(f.precio_dia ?? f.precioDia ?? 0),
+        extras: Number(f.extras ?? f.servicios_extras ?? f.extra_servicios ?? 0),
         cliente_id: f.cliente_id ?? null,
         vehiculo_id: f.vehiculo_id ?? null
       };
     }
+
     function normalizeRenta(r){
       return {
         ...r,
@@ -723,29 +732,53 @@
       });
     }
 
+    
+    function recalcFacturaTotal(){
+      const dias = Number(document.getElementById("fDias").value || 0);
+      const precio = Number(document.getElementById("fPrecio").value || 0);
+      const extras = Number(document.getElementById("fExtras")?.value || 0);
+      const total = (Math.max(0,dias) * Math.max(0,precio)) + Math.max(0,extras);
+      document.getElementById("fTotal").value = total.toFixed(2);
+    }
+
     function calcFactura(){
       const vid = document.getElementById("fVehiculo").value;
       const ini = document.getElementById("fInicio").value;
       const fin = document.getElementById("fFin").value;
-      if(!vid || !ini || !fin) return;
 
-      const d1=new Date(ini), d2=new Date(fin);
-      if(d2<d1) return;
-
-      const dias = Math.round((d2-d1)/(1000*60*60*24))+1;
-      document.getElementById("fDias").value = dias;
-
-      const v = vehiculos.find(x=> idEq(x.id, vid));
-      const precioInput = document.getElementById("fPrecio");
-      let precio = Number(precioInput.value || 0);
-      if(!precio || precio<=0){
-        precio = Number(v?.precioDia || 0);
-        precioInput.value = precio ? precio.toFixed(2) : "";
+      // Si hay rango de fechas válido, sugerimos los días automáticamente
+      if(ini && fin){
+        const d1=new Date(ini), d2=new Date(fin);
+        if(!isNaN(d1) && !isNaN(d2) && d2>=d1){
+          const diasAuto = Math.round((d2-d1)/(1000*60*60*24))+1;
+          // Solo auto-llenar si está vacío o si coincide con el auto anterior
+          const diasInput = document.getElementById("fDias");
+          const cur = Number(diasInput.value || 0);
+          if(!cur || cur<=0){
+            diasInput.value = diasAuto;
+          }
+        }
       }
-      const total = dias * (precio||0);
-      document.getElementById("fTotal").value = total.toFixed(2);
+
+      // Auto precio desde vehículo si está vacío/0
+      if(vid){
+        const v = vehiculos.find(x=> idEq(x.id, vid));
+        const precioInput = document.getElementById("fPrecio");
+        let precio = Number(precioInput.value || 0);
+        if(!precio || precio<=0){
+          precio = Number(v?.precioDia || 0);
+          precioInput.value = precio ? precio.toFixed(2) : "";
+        }
+      }
+
+      // Extras default 0
+      const exEl = document.getElementById("fExtras");
+      if(exEl && (exEl.value==="" || exEl.value==null)) exEl.value = "0";
+
+      recalcFacturaTotal();
     }
 
+    
     async function guardarFactura(){
       const fecha = document.getElementById("fFecha").value;
       const cliente_id = Number(document.getElementById("fCliente").value);
@@ -754,22 +787,35 @@
       const fecha_fin = document.getElementById("fFin").value;
       const dias = Number(document.getElementById("fDias").value || 0);
       const precio_dia = Number(document.getElementById("fPrecio").value || 0);
+      const extras = Number(document.getElementById("fExtras")?.value || 0);
       const total = Number(document.getElementById("fTotal").value || 0);
 
       if(!fecha || !cliente_id || !vehiculo_id || !fecha_inicio || !fecha_fin) return alert("Completa fecha, cliente, vehículo y rango");
-      if(!dias || dias<=0) return alert("Días inválidos. Dale a Calcular.");
+      if(!dias || dias<=0) return alert("Días inválidos.");
+      if(precio_dia<0) return alert("Precio/día inválido.");
+      if(extras<0) return alert("Extras inválidos.");
       if(!total || total<=0) return alert("Total inválido. Dale a Calcular.");
 
       try{
         const id = `FAC-${Date.now()}`;
-        await apiPost("/facturas", { id, fecha, cliente_id, vehiculo_id, fecha_inicio, fecha_fin, dias, precio_dia, total });
+        await apiPost("/facturas", { id, fecha, cliente_id, vehiculo_id, fecha_inicio, fecha_fin, dias, precio_dia, extras, total });
         await refreshUI();
         alert("✅ Factura guardada (ONLINE)");
       }catch(e){
         console.error(e);
-        alert("❌ No se pudo guardar. " + (e.message||""));
+        // Si el backend no soporta 'extras', reintenta sin ese campo
+        try{
+          const id = `FAC-${Date.now()}`;
+          await apiPost("/facturas", { id, fecha, cliente_id, vehiculo_id, fecha_inicio, fecha_fin, dias, precio_dia, total });
+          await refreshUI();
+          alert("✅ Factura guardada (ONLINE) (sin guardar extras en BD)");
+        }catch(e2){
+          console.error(e2);
+          alert("❌ No se pudo guardar. " + (e2.message||e.message||""));
+        }
       }
     }
+
 
     // PDF (impresión pro)
     function facturaHTML(f){
@@ -824,9 +870,10 @@
             </div>
             <div class="box">
               <h3>RENTA</h3>
-              <div class="kv"><b>Inicio:</b> ${fmt(f.fecha_inicio)}</div>
-              <div class="kv"><b>Fin:</b> ${fmt(f.fecha_fin)}</div>
+              <div class="kv"><b>Inicio:</b> ${fmt(f.fecha_inicio || f.inicio || f.fechaInicio || f.start_date || f.startDate)}</div>
+              <div class="kv"><b>Fin:</b> ${fmt(f.fecha_fin || f.fin || f.fechaFin || f.end_date || f.endDate)}</div>
               <div class="kv"><b>Días:</b> ${f.dias}</div>
+              <div class="kv"><b>Extras:</b> US$ ${Number(f.extras||0).toFixed(2)}</div>
             </div>
           </div>
 
@@ -1454,9 +1501,6 @@
       const occMap = {}; // veh_id -> dias
       rentas.forEach(r=>{
         if(!r.vehiculo_id || !r.fecha_inicio || !r.fecha_fin) return;
-        // solo rentas con factura existente
-        if(r.factura_id && !facturas.some(f=> String(f.id)===String(r.factura_id))) return;
-
         const ini = r.fecha_inicio, fin = r.fecha_fin;
         // intersección con mes
         const s = (ini<start)? start : ini;
@@ -1598,7 +1642,7 @@
       // Factura
       document.getElementById("btnCalcular").addEventListener("click", calcFactura);
       document.getElementById("btnGuardarFactura").addEventListener("click", guardarFactura);
-      ["fVehiculo","fInicio","fFin","fPrecio"].forEach(id=> document.getElementById(id).addEventListener("input", calcFactura));
+      ["fVehiculo","fInicio","fFin","fPrecio","fDias","fExtras"].forEach(id=> document.getElementById(id).addEventListener("input", calcFactura));
       document.getElementById("fVehiculo").addEventListener("change", calcFactura);
 
       // Clientes/Vehiculos
