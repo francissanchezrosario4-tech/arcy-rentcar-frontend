@@ -1,3 +1,15 @@
+function parseISODateLocal(s){
+      if(!s) return null;
+      const str = String(s);
+      const m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if(m){
+        const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+        return new Date(y, mo-1, d); // fecha local (evita desfase por zona horaria)
+      }
+      const dt = new Date(str);
+      return isNaN(dt) ? null : dt;
+    }
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -648,7 +660,7 @@
       const porMes = Array(12).fill(0);
       facturas.forEach(f=>{
         if(!f.fecha) return;
-        const d = new Date(f.fecha);
+        const d = parseISODateLocal(f.fecha);
         if(!isNaN(d)) porMes[d.getMonth()] += Number(f.total||0);
       });
       const tbMes = document.getElementById("tblMeses");
@@ -748,14 +760,28 @@
 
       // Si hay rango de fechas válido, sugerimos los días automáticamente
       if(ini && fin){
-        const d1=new Date(ini), d2=new Date(fin);
-        if(!isNaN(d1) && !isNaN(d2) && d2>=d1){
-          const diasAuto = Math.round((d2-d1)/(1000*60*60*24))+1;
-          // Solo auto-llenar si está vacío o si coincide con el auto anterior
+        const d1=parseISODateLocal(ini), d2=parseISODateLocal(fin);
+        if(d1 && d2 && d2<d1){
+          alert("La fecha final no puede ser menor que la fecha inicio.");
           const diasInput = document.getElementById("fDias");
-          const cur = Number(diasInput.value || 0);
-          if(!cur || cur<=0){
+          diasInput.value = "";
+          diasInput.dataset.lastAuto = "";
+          diasInput.dataset.manual = "0";
+          document.getElementById("fTotal").value = "0.00";
+          return;
+        }
+        if(d1 && d2 && d2>=d1){
+          const diasAuto = Math.round((d2-d1)/(1000*60*60*24))+1;
+          const diasInput = document.getElementById("fDias");
+          // Auto-actualizar días cuando cambian las fechas, pero respetar si el usuario lo cambió manualmente.
+          const curStr = (diasInput.value ?? "").toString().trim();
+          const lastAuto = (diasInput.dataset.lastAuto ?? "").toString();
+          const isManual = diasInput.dataset.manual === "1";
+          // Si está vacío, o sigue igual al último autocalculado, o nunca se marcó manual => actualizamos
+          if(!curStr || curStr === lastAuto || !isManual){
             diasInput.value = diasAuto;
+            diasInput.dataset.lastAuto = String(diasAuto);
+            diasInput.dataset.manual = "0";
           }
         }
       }
@@ -1642,7 +1668,14 @@
       // Factura
       document.getElementById("btnCalcular").addEventListener("click", calcFactura);
       document.getElementById("btnGuardarFactura").addEventListener("click", guardarFactura);
-      ["fVehiculo","fInicio","fFin","fPrecio","fDias","fExtras"].forEach(id=> document.getElementById(id).addEventListener("input", calcFactura));
+      ["fVehiculo","fInicio","fFin","fPrecio","fDias","fExtras"].forEach(id=>{
+        const el = document.getElementById(id);
+        if(!el) return;
+        el.addEventListener("input", ()=>{
+          if(id==="fDias") el.dataset.manual = "1";
+          calcFactura();
+        });
+      });
       document.getElementById("fVehiculo").addEventListener("change", calcFactura);
 
       // Clientes/Vehiculos
