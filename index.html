@@ -659,10 +659,13 @@
       // Ingresos por mes
       const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
       const porMes = Array(12).fill(0);
+      // Regla: el ingreso cuenta para el mes en que INICIA la renta (fecha_inicio). Si no existe, usa la fecha de la factura.
       facturas.forEach(f=>{
-        if(!f.fecha) return;
-        const d = parseISODateLocal(f.fecha);
-        if(!isNaN(d)) porMes[d.getMonth()] += Number(f.total||0);
+        const base = f.fecha_inicio || f.fecha || "";
+        if(!base) return;
+        const d = parseISODateLocal(base);
+        if(!d || isNaN(d)) return;
+        porMes[d.getMonth()] += Number(f.total||0);
       });
       const tbMes = document.getElementById("tblMeses");
       if(tbMes){
@@ -1453,7 +1456,10 @@
       const end=`${y}-${String(mm).padStart(2,"0")}-${String(daysInMonth(y,m)).padStart(2,"0")}`;
 
       // facturas del mes (por fecha)
-      const facMes = facturas.filter(f=> f.fecha>=start && f.fecha<=end);
+      const facMes = facturas.filter(f=> {
+        const base = f.fecha_inicio || f.fecha;
+        return base && base>=start && base<=end;
+      });
 
       const ingresos = facMes.reduce((a,f)=>a+(Number(f.total)||0),0);
       const dias = facMes.reduce((a,f)=>a+(Number(f.dias)||0),0);
@@ -1523,24 +1529,34 @@
       });
       if(rowsCli.length===0) tbCli.innerHTML = `<tr><td colspan="4" class="muted">Sin datos en este mes.</td></tr>`;
 
-      // Ocupación (rentas) del mes: días ocupados / días del mes
+      // Ocupación (rentas) del mes: días ocupados / días del mes (sin desfase por zona horaria)
       const dim = daysInMonth(y,m);
+      const startD = new Date(y, m, 1);
+      const endD = new Date(y, m, dim);
       const occMap = {}; // veh_id -> dias
+
       rentas.forEach(r=>{
         if(!r.vehiculo_id || !r.fecha_inicio || !r.fecha_fin) return;
-        const ini = r.fecha_inicio, fin = r.fecha_fin;
-        // intersección con mes
-        const s = (ini<start)? start : ini;
-        const e = (fin>end)? end : fin;
-        if(s>e) return;
-        // contar días incluyentes
-        const ds = (new Date(s) - new Date(s))/1; // noop
-        const days = Math.round((new Date(e) - new Date(s))/(1000*60*60*24)) + 1;
-        const vid = String(r.vehiculo_id);
-        occMap[vid] = (occMap[vid]||0) + Math.max(0,days);
-      });
 
-      const occRows = vehiculos.map(v=>{
+        const ini = parseISODateLocal(r.fecha_inicio);
+        const fin = parseISODateLocal(r.fecha_fin);
+        if(!ini || !fin || isNaN(ini) || isNaN(fin)) return;
+
+        // normaliza por si acaso vinieran invertidas
+        const iniN = (ini <= fin) ? ini : fin;
+        const finN = (ini <= fin) ? fin : ini;
+
+        // Intersección con el mes seleccionado
+        const s = (iniN < startD) ? startD : iniN;
+        const e = (finN > endD) ? endD : finN;
+        if(s > e) return;
+
+        // contar días incluyentes
+        const days = Math.floor((e - s) / (1000*60*60*24)) + 1;
+        const vid = String(r.vehiculo_id);
+        occMap[vid] = (occMap[vid]||0) + Math.max(0, days);
+      });
+const occRows = vehiculos.map(v=>{
         const d = occMap[String(v.id)] || 0;
         const pct = dim? (d/dim*100) : 0;
         return { desc:`${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}`, placa:v.placa||"", dias:d, pct };
@@ -1714,3 +1730,4 @@
   </script>
 </body>
 </html>
+
