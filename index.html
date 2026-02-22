@@ -1362,7 +1362,7 @@
         let cls = "ok";
         let tagText = stReal;
         let extra = "";
-        const seg = seguroBadge(v.seguro_vence);
+        const seg = seguroBadge(v.seguro_vencimiento);
 
         if(stReal === "Rentado"){
           cls = "warn";
@@ -1442,8 +1442,8 @@
 
         <div class="modal-row"><label>Precio/día</label><input id="mVPrecio" class="modal-input" value="${Number(v.precioDia||0)}" disabled></div>
         <div class="modal-row"><label>URL Imagen</label><input id="mVImg" class="modal-input" value="${v.imagen||""}" disabled></div>
-        <div class="modal-row"><label>Vence seguro</label><input id="mVSeguro" type="date" class="modal-input" value="${(v.seguro_vence||"")}" disabled></div>
-        <div class="muted" style="margin-top:6px"><span class="badge-mini ${seguroBadge(v.seguro_vence).cls}">${seguroBadge(v.seguro_vence).text}</span></div>
+        <div class="modal-row"><label>Vence seguro</label><input id="mVSeguro" type="date" class="modal-input" value="${(v.seguro_vencimiento||"")}" disabled></div>
+        <div class="muted" style="margin-top:6px"><span class="badge-mini ${seguroBadge(v.seguro_vencimiento).cls}">${seguroBadge(v.seguro_vencimiento).text}</span></div>
         <div class="muted" style="margin-top:6px">ID: ${v.id}</div>
       `;
 
@@ -1688,7 +1688,7 @@
           }
         }
 
-        const seg = seguroBadge(v.seguro_vence);
+        const seg = seguroBadge(v.seguro_vencimiento);
 
         const card=document.createElement("div");
         card.className="veh-modern-card";
@@ -2249,15 +2249,15 @@ function renderInsuranceAttention(){
   if(!kpi || !cont) return;
 
   const items = vehiculos
-    .map(v=>({v, badge: seguroBadge(v.seguro_vence)}))
+    .map(v=>({v, badge: seguroBadge(v.seguro_vencimiento)}))
     .filter(x=> x.badge.cls==="warn" || x.badge.cls==="bad")
     .sort((a,b)=>{
       // vencidos primero, luego por fecha más próxima
       const aBad = a.badge.cls==="bad" ? 0 : 1;
       const bBad = b.badge.cls==="bad" ? 0 : 1;
       if(aBad!==bBad) return aBad-bBad;
-      const da = (a.v.seguro_vence||"9999-12-31");
-      const db = (b.v.seguro_vence||"9999-12-31");
+      const da = (a.v.seguro_vencimiento||"9999-12-31");
+      const db = (b.v.seguro_vencimiento||"9999-12-31");
       return da.localeCompare(db);
     });
 
