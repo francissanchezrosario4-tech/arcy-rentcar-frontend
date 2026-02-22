@@ -668,27 +668,6 @@
     // STATE
     // =========================
     let clientes=[], vehiculos=[], facturas=[], rentas=[];
-    // =========================
-    // SEGURO (recordatorio local por vehículo)
-    // =========================
-    const INSURANCE_KEY = "arcy_insurance_expiry_v1";
-    function loadInsuranceMap(){
-      try{ return JSON.parse(localStorage.getItem(INSURANCE_KEY) || "{}") || {}; }catch{ return {}; }
-    }
-    function saveInsuranceMap(map){
-      localStorage.setItem(INSURANCE_KEY, JSON.stringify(map||{}));
-    }
-    let insuranceMap = loadInsuranceMap();
-
-    function getSeguroVence(vehId){
-      return insuranceMap[String(vehId)] || "";
-    }
-    function setSeguroVence(vehId, isoDate){
-      const id = String(vehId);
-      if(!isoDate){ delete insuranceMap[id]; saveInsuranceMap(insuranceMap); return; }
-      insuranceMap[id] = isoDate;
-      saveInsuranceMap(insuranceMap);
-    }
     function diffDays(fromISO, toISO){
       const a=parseISODateLocal(fromISO), b=parseISODateLocal(toISO);
       if(!a || !b) return null;
@@ -719,7 +698,7 @@
         renta_cliente: v.renta_cliente ?? "",
         renta_factura_id: v.renta_factura_id ?? "",
         renta_tipo: v.renta_tipo ?? null,
-        seguro_vence: getSeguroVence(v.id) || v.seguro_vence || null
+        seguro_vencimiento: v.seguro_vencimiento ?? null
       };
     }
     
@@ -1356,12 +1335,12 @@
         const resp = await apiPost("/vehiculos", body);
         // Guardar seguro en localStorage (por ID). Si backend no devuelve id, hacemos fallback por placa.
         const savedId = resp?.id ?? resp?.vehiculo_id ?? null;
-        if(savedId) setSeguroVence(savedId, seguroVence);
+        if(savedId) (savedId, seguroVence);
         document.getElementById("formVehiculo").reset();
         await refreshUI();
         if(!savedId && seguroVence){
           const vMatch = vehiculos.find(v=> (v.placa||"").toString().trim().toLowerCase()===body.placa.toLowerCase());
-          if(vMatch) setSeguroVence(vMatch.id, seguroVence);
+          if(vMatch) (vMatch.id, seguroVence);
           await refreshUI();
         }
         alert("✅ Vehículo guardado");
@@ -1493,7 +1472,7 @@
       if(!body.marca || !body.modelo || !body.placa) return alert("Marca/Modelo/Placa requeridos");
       try{
         await apiPut(`/vehiculos/${vehModalId}`, body);
-        setSeguroVence(vehModalId, seguroVence);
+        (vehModalId, seguroVence);
         await refreshUI();
         alert("✅ Vehículo actualizado");
         closeVeh();
