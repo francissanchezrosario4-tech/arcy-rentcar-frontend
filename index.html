@@ -1327,7 +1327,7 @@
         estado: document.getElementById("vEstado").value,
         precio_dia: Number(document.getElementById("vPrecio").value||0),
         imagen: document.getElementById("vImagen").value.trim(),
-        seguro_vencimiento: document.getElementById("mSeguro").value || null
+        seguro_vencimiento: document.getElementById("vSeguro").value || null
       };
       const seguro_vencimiento = (document.getElementById("vSeguro")?.value || "").trim();
 
@@ -1468,7 +1468,7 @@
         estado: document.getElementById("mVEstado").value,
         precio_dia: Number(document.getElementById("mVPrecio").value||0),
         imagen: document.getElementById("mVImg").value.trim(),
-        seguro_vencimiento: document.getElementById("mSeguro").value || null
+        seguro_vencimiento: document.getElementById("mVSeguro").value || null
       };
       const seguro_vencimiento = (document.getElementById("mVSeguro")?.value || "").trim();
       if(!body.marca || !body.modelo || !body.placa) return alert("Marca/Modelo/Placa requeridos");
