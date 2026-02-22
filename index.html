@@ -1326,7 +1326,8 @@
         placa: document.getElementById("vPlaca").value.trim(),
         estado: document.getElementById("vEstado").value,
         precio_dia: Number(document.getElementById("vPrecio").value||0),
-        imagen: document.getElementById("vImagen").value.trim()
+        imagen: document.getElementById("vImagen").value.trim(),
+        seguro_vencimiento: document.getElementById("mSeguro").value || null
       };
       const seguro_vencimiento = (document.getElementById("vSeguro")?.value || "").trim();
 
