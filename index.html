@@ -1328,19 +1328,19 @@
         precio_dia: Number(document.getElementById("vPrecio").value||0),
         imagen: document.getElementById("vImagen").value.trim()
       };
-      const seguroVence = (document.getElementById("vSeguro")?.value || "").trim();
+      const seguro_vencimiento = (document.getElementById("vSeguro")?.value || "").trim();
 
       if(!body.marca || !body.modelo || !body.placa) return alert("Marca/Modelo/Placa requeridos");
       try{
         const resp = await apiPost("/vehiculos", body);
         // Guardar seguro en localStorage (por ID). Si backend no devuelve id, hacemos fallback por placa.
         const savedId = resp?.id ?? resp?.vehiculo_id ?? null;
-        if(savedId) (savedId, seguroVence);
+        if(savedId) (savedId, seguro_vencimiento);
         document.getElementById("formVehiculo").reset();
         await refreshUI();
-        if(!savedId && seguroVence){
+        if(!savedId && seguro_vencimiento){
           const vMatch = vehiculos.find(v=> (v.placa||"").toString().trim().toLowerCase()===body.placa.toLowerCase());
-          if(vMatch) (vMatch.id, seguroVence);
+          if(vMatch) (vMatch.id, seguro_vencimiento);
           await refreshUI();
         }
         alert("✅ Vehículo guardado");
@@ -1468,11 +1468,11 @@
         precio_dia: Number(document.getElementById("mVPrecio").value||0),
         imagen: document.getElementById("mVImg").value.trim()
       };
-      const seguroVence = (document.getElementById("mVSeguro")?.value || "").trim();
+      const seguro_vencimiento = (document.getElementById("mVSeguro")?.value || "").trim();
       if(!body.marca || !body.modelo || !body.placa) return alert("Marca/Modelo/Placa requeridos");
       try{
         await apiPut(`/vehiculos/${vehModalId}`, body);
-        (vehModalId, seguroVence);
+        (vehModalId, seguro_vencimiento);
         await refreshUI();
         alert("✅ Vehículo actualizado");
         closeVeh();
