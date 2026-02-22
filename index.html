@@ -105,6 +105,97 @@
 .tag.rentado{background:#ffd6d6;color:#7a0000}
 .tag.reserva{background:#ffe8cc;color:#8a4b00}
 
+
+    /* ===== Disponibilidad moderna (PRO) ===== */
+    .veh-modern-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:16px;
+    }
+    .veh-modern-card{
+      background:linear-gradient(145deg,#111,#1b1b1b);
+      border:1px solid #2c2c2c;
+      border-radius:20px;
+      overflow:hidden;
+      box-shadow:0 15px 35px rgba(0,0,0,.6);
+      transition:transform .25s ease, box-shadow .25s ease;
+    }
+    .veh-modern-card:hover{
+      transform:translateY(-6px);
+      box-shadow:0 25px 50px rgba(0,0,0,.8);
+    }
+    .veh-modern-img{
+      height:170px;
+      background:#000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .veh-modern-img img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+    .veh-modern-img .ph{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg,#2b2b2b,#111);
+      color:#fff;
+      font-weight:900;
+      font-size:2.2rem;
+      letter-spacing:1px;
+    }
+    .veh-modern-body{padding:16px 16px 18px}
+    .veh-modern-title{margin:0;font-size:1.05rem;font-weight:900}
+    .veh-modern-sub{margin-top:3px;font-size:.83rem;color:#cfcfcf;opacity:.9}
+    .row-flex{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+    .badge-big{
+      display:inline-block;
+      padding:6px 14px;
+      border-radius:999px;
+      font-size:.78rem;
+      font-weight:900;
+      letter-spacing:.3px;
+    }
+    .badge-big.disponible{background:#0d3b1e;color:#00ff88}
+    .badge-big.rentado{background:#3b0000;color:#ff4d4d}
+    .badge-big.pendiente{background:#3a2a00;color:#ffcc00}
+    .badge-big.mant{background:#3b3b3b;color:#f2f2f2}
+
+    .badge-mini{
+      display:inline-block;
+      padding:3px 10px;
+      border-radius:999px;
+      font-size:.72rem;
+      font-weight:800;
+    }
+    .badge-mini.ok{background:#0d3b1e;color:#00ff88}
+    .badge-mini.warn{background:#3a2a00;color:#ffcc00}
+    .badge-mini.bad{background:#3b0000;color:#ff4d4d}
+    .badge-mini.na{background:#2b2b2b;color:#ddd}
+
+    .btn-calendar{
+      margin-top:12px;
+      width:100%;
+      background:var(--rojo);
+      border:none;
+      padding:9px 10px;
+      border-radius:12px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .btn-calendar.secondary{background:#2b2b2b}
+    .alert-box{
+      border:1px solid #2b2b2b;
+      background:linear-gradient(135deg,#1f1f1f,#101010);
+      border-radius:14px;
+      padding:10px 12px;
+      margin-bottom:10px;
+    }
+
 </style>
 </head>
 <body>
@@ -146,6 +237,7 @@
           <div class="title">Resumen</div>
           <div class="pill">Vista rápida</div>
         </div>
+        <div id="seguroAlerts" style="display:none"></div>
         <div class="grid-2">
           <div class="kpi">
             <div class="lbl">Total facturado (US$)</div>
@@ -167,8 +259,14 @@
             <div class="val" id="kpiAtencion">0</div>
             <div class="sub">Rentado, mantenimiento o reserva pendiente</div>
           </div>
+
+          <div class="kpi">
+            <div class="lbl">Seguros por vencer</div>
+            <div class="val" id="kpiSeguros">0</div>
+            <div class="sub">Vencidos o vencen en 30 días</div>
+          </div>
         </div>
-      </div>
+      </div
 
       <div class="card">
         <div class="card-header">
@@ -200,11 +298,18 @@
         </div>
 
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:10px">
+          <div style="min-width:160px">
+            <label>Año</label>
+            <select id="repAno"></select>
+          </div>
           <div style="min-width:220px">
             <label>Mes</label>
             <select id="repMes"></select>
           </div>
           <button class="btn" id="btnRepActualizar">Actualizar</button>
+          <button class="btn secondary" id="btnRepPDF">Exportar PDF</button>
+        </div>
+<button class="btn" id="btnRepActualizar">Actualizar</button>
           <button class="btn secondary" id="btnRepPDF">Exportar PDF</button>
         </div>
 
@@ -379,6 +484,7 @@
           </div>
           <div><label>Precio por día</label><input id="vPrecio" type="number" required></div>
           <div><label>URL Imagen</label><input id="vImagen" placeholder="https://..."></div>
+          <div><label>Vence seguro</label><input id="vSeguro" type="date"></div>
         </form>
         <button class="btn" id="btnGuardarVehiculo">Guardar vehículo</button>
       </div>
@@ -392,9 +498,9 @@
     <!-- DISPONIBILIDAD -->
     <section id="disponibilidad" class="section">
       <div class="card">
-        <div class="card-header"><div class="title">Disponibilidad</div><div class="pill">Calendario</div></div>
-        <div class="muted">Rojo: rentado (activo). Amarillo: reserva pendiente (a futuro).</div>
-        <div id="calendarios" class="cal-wrap" style="margin-top:12px"></div>
+        <div class="card-header"><div class="title">Disponibilidad</div><div class="pill">Vista moderna</div></div>
+        <div class="muted">Rojo: rentado (activo). Amarillo: reserva pendiente (a futuro). <span class="muted">Click en "Ver calendario" para ver el mes completo.</span></div>
+        <div id="vehDisponibilidad" class="veh-modern-grid" style="margin-top:12px"></div>
       </div>
     </section>
 
@@ -433,7 +539,46 @@
     </div>
   </div>
 
-    <script>
+    
+  <!-- MODAL CALENDARIO VEHICULO -->
+  <div class="backdrop" id="calBack">
+    <div class="modal" style="width:min(860px,95vw)">
+      <div class="modal-header">
+        <div class="modal-title" id="calTitle">Calendario</div>
+        <button class="close" id="calClose">×</button>
+      </div>
+
+      <div class="cal-head" style="margin-bottom:10px">
+        <div class="cal-title" id="calVehName" style="font-size:1rem"></div>
+        <div class="cal-nav">
+          <button id="calPrev">◀</button>
+          <div id="calMonthLabel" style="min-width:120px;text-align:center;font-weight:800"></div>
+          <button id="calNext">▶</button>
+        </div>
+      </div>
+
+      <div class="cal-wrap" style="gap:16px">
+        <div class="cal-card" style="max-width:none;flex:1 1 520px">
+          <table class="mini" style="font-size:.85rem">
+            <thead><tr><th>L</th><th>M</th><th>X</th><th>J</th><th>V</th><th>S</th><th>D</th></tr></thead>
+            <tbody id="calBody"></tbody>
+          </table>
+        </div>
+        <div class="cal-card" style="flex:1 1 260px">
+          <div class="title" style="margin-bottom:6px">Rentas del mes</div>
+          <div id="calList" class="rlist" style="max-height:360px"></div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn secondary" id="calClose2">Cerrar</button>
+      </div>
+    </div>
+  </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+
+<script>
     // --- helpers ---
     function parseISODateLocal(s){
       if(!s) return null;
@@ -523,6 +668,43 @@
     // STATE
     // =========================
     let clientes=[], vehiculos=[], facturas=[], rentas=[];
+    // =========================
+    // SEGURO (recordatorio local por vehículo)
+    // =========================
+    const INSURANCE_KEY = "arcy_insurance_expiry_v1";
+    function loadInsuranceMap(){
+      try{ return JSON.parse(localStorage.getItem(INSURANCE_KEY) || "{}") || {}; }catch{ return {}; }
+    }
+    function saveInsuranceMap(map){
+      localStorage.setItem(INSURANCE_KEY, JSON.stringify(map||{}));
+    }
+    let insuranceMap = loadInsuranceMap();
+
+    function getSeguroVence(vehId){
+      return insuranceMap[String(vehId)] || "";
+    }
+    function setSeguroVence(vehId, isoDate){
+      const id = String(vehId);
+      if(!isoDate){ delete insuranceMap[id]; saveInsuranceMap(insuranceMap); return; }
+      insuranceMap[id] = isoDate;
+      saveInsuranceMap(insuranceMap);
+    }
+    function diffDays(fromISO, toISO){
+      const a=parseISODateLocal(fromISO), b=parseISODateLocal(toISO);
+      if(!a || !b) return null;
+      const ms = b.getTime() - a.getTime();
+      return Math.floor(ms/(1000*60*60*24));
+    }
+    function seguroBadge(iso){
+      if(!iso) return {cls:"na", text:"Seguro: N/A"};
+      const today = todayISO();
+      const d = diffDays(today, iso);
+      if(d==null) return {cls:"na", text:"Seguro: N/A"};
+      if(d < 0) return {cls:"bad", text:`Seguro VENCIDO (${fmt(iso)})`};
+      if(d <= 30) return {cls:"warn", text:`Seguro vence en ${d} días (${fmt(iso)})`};
+      return {cls:"ok", text:`Seguro ok (${fmt(iso)})`};
+    }
+
     let cliModalId=null, vehModalId=null;
     let adminSession = false; // se setea en login si coincide con admin/pass guardados
 
@@ -536,7 +718,8 @@
         renta_fin: v.renta_fin ? toISODate(v.renta_fin) : null,
         renta_cliente: v.renta_cliente ?? "",
         renta_factura_id: v.renta_factura_id ?? "",
-        renta_tipo: v.renta_tipo ?? null
+        renta_tipo: v.renta_tipo ?? null,
+        seguro_vence: getSeguroVence(v.id) || v.seguro_vence || null
       };
     }
     
@@ -613,7 +796,7 @@
         s.classList.toggle("active", s.id===name);
       });
       if(name==="reportes") renderReportes();
-      if(name==="disponibilidad") renderCalendarios();
+      if(name==="disponibilidad") renderDisponibilidad();
     }
 
     // =========================
@@ -946,13 +1129,38 @@
       </body></html>`;
     }
 
-    function abrirPDF(id){
+    
+    function descargarFacturaPDF(id){
       const f = facturas.find(x=> String(x.id)===String(id));
       if(!f) return;
-      const w = window.open("", "_blank");
-      w.document.open();
-      w.document.write(facturaHTML(f));
-      w.document.close();
+
+      const c = clientes.find(x=> idEq(x.id, f.cliente_id));
+      const nombreCliente = (c?.nombre || f.cliente_nombre || "Cliente").toString().trim()
+        .replace(/[^a-zA-Z0-9\u00C0-\u017F_-]+/g,"_")
+        .replace(/_+/g,"_")
+        .slice(0,40);
+      const filename = `${String(f.id).replace(/[^a-zA-Z0-9_-]+/g,"")}_${nombreCliente}.pdf`;
+
+      if(typeof html2pdf === "undefined"){
+        return alert("La librería PDF no cargó. Revisa tu internet o si bloquea CDN.");
+      }
+
+      // Construir contenido para PDF (sin abrir pestaña)
+      const tmp = document.createElement("div");
+      tmp.innerHTML = facturaHTML(f).replace(/<script>window\.onload[\s\S]*?<\/script>/i,"");
+      const paper = tmp.querySelector(".paper") || tmp;
+      paper.style.background = "#ffffff";
+      paper.style.color = "#000000";
+
+      const opt = {
+        margin: 8,
+        filename,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+      };
+
+      html2pdf().set(opt).from(paper).save();
     }
 
     async function eliminarFactura(id){
@@ -988,7 +1196,7 @@
             <button class="btn small secondary" data-act="pdf">PDF</button>
             <button class="btn small secondary" data-act="del" ${adminSession?"" :"disabled"}>Eliminar</button>
           </td>`;
-        tr.querySelector('[data-act="pdf"]').addEventListener("click",()=>abrirPDF(f.id));
+        tr.querySelector('[data-act="pdf"]').addEventListener("click",()=>descargarFacturaPDF(f.id));
         tr.querySelector('[data-act="del"]').addEventListener("click",()=>eliminarFactura(f.id));
         tb.appendChild(tr);
       });
@@ -1130,6 +1338,7 @@
     // =========================
     // VEHICULOS UI + MODAL
     // =========================
+    
     async function guardarVehiculo(){
       const body = {
         marca: document.getElementById("vMarca").value.trim(),
@@ -1140,15 +1349,25 @@
         precio_dia: Number(document.getElementById("vPrecio").value||0),
         imagen: document.getElementById("vImagen").value.trim()
       };
+      const seguroVence = (document.getElementById("vSeguro")?.value || "").trim();
+
       if(!body.marca || !body.modelo || !body.placa) return alert("Marca/Modelo/Placa requeridos");
       try{
-        await apiPost("/vehiculos", body);
+        const resp = await apiPost("/vehiculos", body);
+        // Guardar seguro en localStorage (por ID). Si backend no devuelve id, hacemos fallback por placa.
+        const savedId = resp?.id ?? resp?.vehiculo_id ?? null;
+        if(savedId) setSeguroVence(savedId, seguroVence);
         document.getElementById("formVehiculo").reset();
         await refreshUI();
+        if(!savedId && seguroVence){
+          const vMatch = vehiculos.find(v=> (v.placa||"").toString().trim().toLowerCase()===body.placa.toLowerCase());
+          if(vMatch) setSeguroVence(vMatch.id, seguroVence);
+          await refreshUI();
+        }
         alert("✅ Vehículo guardado");
       }catch(e){
         console.error(e);
-        alert("❌ No se pudo guardar. " + (e.message||""));
+        alert("❌ No se pudo guardar vehículo. " + (e.message||""));
       }
     }
 
@@ -1164,6 +1383,7 @@
         let cls = "ok";
         let tagText = stReal;
         let extra = "";
+        const seg = seguroBadge(v.seguro_vence);
 
         if(stReal === "Rentado"){
           cls = "warn";
@@ -1192,6 +1412,9 @@
             <div class="veh-sub">${v.placa?`Placa: ${v.placa}`:""}</div>
             ${extra}
             <span class="tag ${cls}">${tagText}</span>
+            <div class="row-flex" style="margin-top:10px">
+              <span class="badge-mini ${seg.cls}">${seg.text}</span>
+            </div>
             <div style="margin-top:10px">
               <button class="btn small" data-id="${v.id}">Ver detalles</button>
             </div>
@@ -1240,6 +1463,8 @@
 
         <div class="modal-row"><label>Precio/día</label><input id="mVPrecio" class="modal-input" value="${Number(v.precioDia||0)}" disabled></div>
         <div class="modal-row"><label>URL Imagen</label><input id="mVImg" class="modal-input" value="${v.imagen||""}" disabled></div>
+        <div class="modal-row"><label>Vence seguro</label><input id="mVSeguro" type="date" class="modal-input" value="${(v.seguro_vence||"")}" disabled></div>
+        <div class="muted" style="margin-top:6px"><span class="badge-mini ${seguroBadge(v.seguro_vence).cls}">${seguroBadge(v.seguro_vence).text}</span></div>
         <div class="muted" style="margin-top:6px">ID: ${v.id}</div>
       `;
 
@@ -1264,9 +1489,11 @@
         precio_dia: Number(document.getElementById("mVPrecio").value||0),
         imagen: document.getElementById("mVImg").value.trim()
       };
+      const seguroVence = (document.getElementById("mVSeguro")?.value || "").trim();
       if(!body.marca || !body.modelo || !body.placa) return alert("Marca/Modelo/Placa requeridos");
       try{
         await apiPut(`/vehiculos/${vehModalId}`, body);
+        setSeguroVence(vehModalId, seguroVence);
         await refreshUI();
         alert("✅ Vehículo actualizado");
         closeVeh();
@@ -1437,35 +1664,272 @@
       });
     }
 
+
     // =========================
-    // REPORTES
+    // DISPONIBILIDAD (cards modernas + modal calendario)
     // =========================
-    function initMeses(){
-      const sel=document.getElementById("repMes");
-      sel.innerHTML="";
+    let calVehId = null;
+    let calMonth = null;
+    let calYear = null;
+
+    function renderDisponibilidad(){
+      const cont = document.getElementById("vehDisponibilidad");
+      if(!cont) return;
+      cont.innerHTML="";
+
+      const today = todayISO();
+
+      vehiculos.forEach(v=>{
+        const initials = `${(v.marca||"V")[0]||"V"}${(v.modelo||"")[0]||""}`.toUpperCase();
+        const imgHtml = v.imagen ? `<img src="${v.imagen}" alt="">` : `<div class="ph">${initials}</div>`;
+
+        const stReal = (v.estado_calculado || v.estado || "Disponible").toString();
+        let stCls = "disponible";
+        let stTxt = "DISPONIBLE 🟢";
+        if(stReal==="Rentado"){ stCls="rentado"; stTxt="RENTADO 🔴"; }
+        else if(stReal==="Pendiente"){ stCls="pendiente"; stTxt="RESERVA 🟡"; }
+        else if(stReal==="Mantenimiento"){ stCls="mant"; stTxt="MANTENIMIENTO ⚙️"; }
+
+        // renta activa o próxima (si backend lo manda)
+        let rango = "";
+        let cliente = "";
+        if(v.renta_inicio && v.renta_fin){
+          rango = `${fmt(v.renta_inicio)} - ${fmt(v.renta_fin)}`;
+          cliente = v.renta_cliente ? `Cliente: ${v.renta_cliente}` : "";
+        }else{
+          // fallback: buscar la más cercana desde rentas
+          const rv = rentasVehiculo(v.id)
+            .filter(r=>r.fecha_inicio && r.fecha_fin)
+            .sort((a,b)=> String(a.fecha_inicio).localeCompare(String(b.fecha_inicio)));
+          const next = rv.find(r=> r.fecha_fin >= today) || null;
+          if(next){
+            const f = facturas.find(x=> String(x.id)===String(next.factura_id));
+            rango = `${fmt(next.fecha_inicio)} - ${fmt(next.fecha_fin)}`;
+            cliente = f?.cliente_nombre ? `Cliente: ${f.cliente_nombre}` : "";
+          }
+        }
+
+        const seg = seguroBadge(v.seguro_vence);
+
+        const card=document.createElement("div");
+        card.className="veh-modern-card";
+        card.innerHTML = `
+          <div class="veh-modern-img">${imgHtml}</div>
+          <div class="veh-modern-body">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+              <div>
+                <div class="veh-modern-title">${v.marca} ${v.modelo}${v.ano?` ${v.ano}`:""}</div>
+                <div class="veh-modern-sub">${v.placa?`Placa: <b>${v.placa}</b>`:""}</div>
+              </div>
+              <span class="badge-big ${stCls}">${stTxt}</span>
+            </div>
+
+            <div class="row-flex" style="margin-top:10px">
+              ${rango?`<span class="badge-mini na">${rango}</span>`:"<span class='badge-mini na'>Sin renta activa</span>"}
+              ${cliente?`<span class="badge-mini na">${cliente}</span>`:""}
+            </div>
+
+            <div class="row-flex">
+              <span class="badge-mini ${seg.cls}">${seg.text}</span>
+            </div>
+
+            <button class="btn-calendar" data-veh="${v.id}">Ver calendario completo</button>
+          </div>
+        `;
+        card.querySelector("button").addEventListener("click", ()=> openCalModal(v.id));
+        cont.appendChild(card);
+      });
+    }
+
+    function openCalModal(vehId){
+      const back = document.getElementById("calBack");
+      if(!back) return;
+      const v = vehiculos.find(x=> idEq(x.id, vehId));
+      if(!v) return;
+
+      calVehId = String(vehId);
       const now=new Date();
-      // 24 meses (12 atrás, 12 adelante)
-      for(let i=-12;i<=12;i++){
-        const d=new Date(now.getFullYear(), now.getMonth()+i, 1);
-        const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-        const lab=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"][d.getMonth()] + " " + d.getFullYear();
-        const opt=document.createElement("option");
-        opt.value=val; opt.textContent=lab;
-        if(i===0) opt.selected=true;
-        sel.appendChild(opt);
+      calMonth = now.getMonth();
+      calYear = now.getFullYear();
+
+      document.getElementById("calVehName").textContent = `${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""} — ${v.placa||""}`.trim();
+      back.classList.add("show");
+      renderCalModal();
+    }
+
+    function closeCal(){
+      const back = document.getElementById("calBack");
+      if(back) back.classList.remove("show");
+      calVehId=null;
+    }
+
+    function renderCalModal(){
+      if(calVehId==null) return;
+      const v = vehiculos.find(x=> idEq(x.id, calVehId));
+      if(!v) return;
+
+      const months=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+      document.getElementById("calMonthLabel").textContent = `${months[calMonth]} ${calYear}`;
+
+      const tb = document.getElementById("calBody");
+      const list = document.getElementById("calList");
+      tb.innerHTML="";
+      list.innerHTML="";
+
+      const rv = rentasVehiculo(v.id);
+      const startM = dayISO(calYear, calMonth, 1);
+      const endM = dayISO(calYear, calMonth, new Date(calYear, calMonth+1, 0).getDate());
+      const tISO = todayISO();
+
+      function stateForDate(iso){
+        for(const r of rv){
+          if(!r.fecha_inicio || !r.fecha_fin) continue;
+          if(iso>=r.fecha_inicio && iso<=r.fecha_fin){
+            const pending = r.fecha_inicio > tISO;
+            return pending ? "pend" : "booked";
+          }
+        }
+        return "free";
+      }
+
+      function rentaForDate(iso){
+        for(const r of rv){
+          if(!r.fecha_inicio || !r.fecha_fin) continue;
+          if(iso>=r.fecha_inicio && iso<=r.fecha_fin) return r;
+        }
+        return null;
+      }
+
+      const {arr} = buildMonth(calMonth, calYear);
+      for(let i=0;i<arr.length;i+=7){
+        const tr=document.createElement("tr");
+        for(let j=0;j<7;j++){
+          const d = arr[i+j];
+          const td=document.createElement("td");
+          if(!d){ td.className="d-empty"; td.textContent=""; }
+          else{
+            const iso=dayISO(calYear, calMonth, d);
+            const st=stateForDate(iso);
+            td.className = st==="booked" ? "d-booked" : (st==="pend" ? "d-pend" : "d-free");
+            td.textContent = d;
+            const r = rentaForDate(iso);
+            if(r){
+              const f = facturas.find(x=> String(x.id)===String(r.factura_id));
+              const cli = f?.cliente_nombre || "";
+              td.title = `${fmt(r.fecha_inicio)} a ${fmt(r.fecha_fin)}${cli?` — Cliente: ${cli}`:""}`;
+            }
+          }
+          tr.appendChild(td);
+        }
+        tb.appendChild(tr);
+      }
+
+      const show = rv.filter(r=> r.fecha_inicio<=endM && r.fecha_fin>=startM)
+        .sort((a,b)=> String(a.fecha_inicio).localeCompare(String(b.fecha_inicio)));
+
+      if(show.length===0){
+        list.innerHTML = `<div class="ritem">Este vehículo no tiene rentas este mes.</div>`;
+      }else{
+        show.forEach(r=>{
+          const f = facturas.find(x=> String(x.id)===String(r.factura_id));
+          const cli = f?.cliente_nombre || "";
+          const cls = r.fecha_inicio > tISO ? "pend" : "booked";
+          const tag = cls==="pend" ? "<span class='dot pend'></span> Pendiente" : "<span class='dot booked'></span> Activo";
+          const div=document.createElement("div");
+          div.className="ritem";
+          div.innerHTML = `${tag}<br><b>${fmt(r.fecha_inicio)} - ${fmt(r.fecha_fin)}</b>${cli?`<div class='muted'>Cliente: ${cli}</div>`:""}`;
+          list.appendChild(div);
+        });
       }
     }
 
+
+    // =========================
+    // REPORTES
+    // =========================
+    
+    // =========================
+    // REPORTES (Año + Mes, solo meses con datos)
+    // =========================
+    function initMeses(){
+      // compat: ahora inicializa Año + Mes basados en facturas
+      initReportesSelectors();
+    }
+
+    function initReportesSelectors(){
+      const selAno = document.getElementById("repAno");
+      const selMes = document.getElementById("repMes");
+      if(!selAno || !selMes) return;
+
+      const baseDates = facturas
+        .map(f=> (f.fecha_inicio || f.fecha || ""))
+        .filter(Boolean);
+
+      const years = Array.from(new Set(baseDates.map(s=> Number(String(s).slice(0,4))).filter(n=>!isNaN(n))))
+        .sort((a,b)=>b-a);
+
+      const now = new Date();
+      const yNow = now.getFullYear();
+      const mNow = String(now.getMonth()+1).padStart(2,"0");
+
+      selAno.innerHTML="";
+      const yearsToShow = years.length ? years : [yNow];
+      yearsToShow.forEach(y=>{
+        const opt=document.createElement("option");
+        opt.value=String(y);
+        opt.textContent=String(y);
+        selAno.appendChild(opt);
+      });
+      if(yearsToShow.includes(yNow)) selAno.value=String(yNow);
+
+      function monthsWithData(year){
+        const ms = new Set();
+        baseDates.forEach(s=>{
+          if(String(s).slice(0,4)===String(year)){
+            ms.add(String(s).slice(5,7));
+          }
+        });
+        return Array.from(ms).sort();
+      }
+
+      function fillMonths(){
+        const y = selAno.value || String(yNow);
+        const ms = monthsWithData(y);
+        const monthsNames=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+        selMes.innerHTML="";
+        const msToShow = ms.length ? ms : [mNow];
+        msToShow.forEach(mm=>{
+          const idx = Number(mm)-1;
+          const opt=document.createElement("option");
+          opt.value=mm;
+          opt.textContent = `${monthsNames[idx] || mm}`;
+          selMes.appendChild(opt);
+        });
+        if(msToShow.includes(mNow)) selMes.value=mNow;
+      }
+
+      fillMonths();
+      selAno.addEventListener("change", ()=>{
+        fillMonths();
+        renderReportes();
+      }, { once:false });
+    }
+
+
     function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
 
+    
     function renderReportes(){
-      const val=document.getElementById("repMes").value;
-      const [yy,mm]=val.split("-").map(Number);
-      const m=mm-1, y=yy;
-      const start=`${y}-${String(mm).padStart(2,"0")}-01`;
-      const end=`${y}-${String(mm).padStart(2,"0")}-${String(daysInMonth(y,m)).padStart(2,"0")}`;
+      const y = Number(document.getElementById("repAno")?.value || 0);
+      const mmStr = (document.getElementById("repMes")?.value || "").toString().padStart(2,"0");
+      if(!y || !mmStr) return;
 
-      // facturas del mes (por fecha)
+      const mm = Number(mmStr);
+      const m = mm-1;
+      const start=`${y}-${mmStr}-01`;
+      const end=`${y}-${mmStr}-${String(daysInMonth(y,m)).padStart(2,"0")}`;
+
+      // facturas del mes (por fecha_inicio; fallback fecha)
       const facMes = facturas.filter(f=> {
         const base = f.fecha_inicio || f.fecha;
         return base && base>=start && base<=end;
@@ -1483,108 +1947,88 @@
       document.getElementById("repTicket").textContent = `US$ ${ticket.toFixed(2)}`;
       document.getElementById("repPromDia").textContent = `US$ ${promDia.toFixed(2)}`;
 
-      // ingresos por vehiculo_id
-      const mapVeh = {};
+      // por vehículo
+      const byVeh={};
       facMes.forEach(f=>{
-        const vid=String(f.vehiculo_id||"");
+        const vid = String(f.vehiculo_id||"");
         if(!vid) return;
-        mapVeh[vid] = mapVeh[vid] || {vid, total:0, dias:0, rentas:0};
-        mapVeh[vid].total += Number(f.total||0);
-        mapVeh[vid].dias += Number(f.dias||0);
-        mapVeh[vid].rentas += 1;
+        byVeh[vid] = byVeh[vid] || {rentas:0,dias:0,total:0};
+        byVeh[vid].rentas += 1;
+        byVeh[vid].dias += Number(f.dias||0);
+        byVeh[vid].total += Number(f.total||0);
       });
 
-      const rowsVeh = Object.values(mapVeh)
-        .map(r=>{
-          const v = vehiculos.find(x=> idEq(x.id,r.vid));
-          return {
-            ...r,
-            placa: v?.placa || "",
-            desc: v ? `${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}` : `ID ${r.vid}`
-          };
-        })
-        .sort((a,b)=> b.total-a.total);
+      const vehRows = Object.keys(byVeh).map(id=>{
+        const v = vehiculos.find(x=> idEq(x.id,id));
+        return {id, v, ...byVeh[id]};
+      }).sort((a,b)=> b.total-a.total);
 
-      document.getElementById("repTopVeh").textContent = rowsVeh[0] ? `${rowsVeh[0].desc} — US$ ${rowsVeh[0].total.toFixed(2)}` : "N/A";
-
-      const tbVeh=document.getElementById("repTblVeh");
-      tbVeh.innerHTML="";
-      rowsVeh.slice(0,8).forEach(r=>{
+      const repTblVeh=document.getElementById("repTblVeh");
+      repTblVeh.innerHTML="";
+      vehRows.slice(0,10).forEach(r=>{
         const tr=document.createElement("tr");
-        tr.innerHTML = `<td>${r.desc}</td><td>${r.placa}</td><td>${r.rentas}</td><td>${r.dias}</td><td>US$ ${r.total.toFixed(2)}</td>`;
-        tbVeh.appendChild(tr);
+        tr.innerHTML = `<td>${r.v?`${r.v.marca} ${r.v.modelo}${r.v.ano?` (${r.v.ano})`:""}`:`ID ${r.id}`}</td>
+                        <td>${r.v?.placa||""}</td>
+                        <td>${r.rentas}</td>
+                        <td>${r.dias}</td>
+                        <td>${r.total.toFixed(2)}</td>`;
+        repTblVeh.appendChild(tr);
       });
-      if(rowsVeh.length===0) tbVeh.innerHTML = `<tr><td colspan="5" class="muted">Sin datos en este mes.</td></tr>`;
 
-      // ingresos por cliente_id
-      const mapCli = {};
+      // Top vehículo
+      const topVeh = vehRows[0];
+      document.getElementById("repTopVeh").textContent = topVeh?.v ? `${topVeh.v.marca} ${topVeh.v.modelo}` : "N/A";
+
+      // por cliente
+      const byCli={};
       facMes.forEach(f=>{
-        const cid=String(f.cliente_id||"");
+        const cid = String(f.cliente_id||"");
         if(!cid) return;
-        mapCli[cid] = mapCli[cid] || {cid,total:0,rentas:0,telefono:""};
-        mapCli[cid].total += Number(f.total||0);
-        mapCli[cid].rentas += 1;
+        byCli[cid] = byCli[cid] || {rentas:0,total:0};
+        byCli[cid].rentas += 1;
+        byCli[cid].total += Number(f.total||0);
       });
-      const rowsCli = Object.values(mapCli).map(r=>{
-        const c = clientes.find(x=> idEq(x.id,r.cid));
-        return { ...r, nombre: c?.nombre || (facMes.find(x=> String(x.cliente_id)===String(r.cid))?.cliente_nombre||`ID ${r.cid}`), telefono: c?.telefono || "" };
-      }).sort((a,b)=>b.total-a.total);
 
-      const tbCli=document.getElementById("repTblCli");
-      tbCli.innerHTML="";
-      rowsCli.slice(0,8).forEach(r=>{
+      const cliRows = Object.keys(byCli).map(id=>{
+        const c = clientes.find(x=> idEq(x.id,id));
+        return {id,c,...byCli[id]};
+      }).sort((a,b)=> b.total-a.total);
+
+      const repTblCli=document.getElementById("repTblCli");
+      repTblCli.innerHTML="";
+      cliRows.slice(0,10).forEach(r=>{
         const tr=document.createElement("tr");
-        tr.innerHTML = `<td>${r.nombre}</td><td>${r.telefono}</td><td>${r.rentas}</td><td>US$ ${r.total.toFixed(2)}</td>`;
-        tbCli.appendChild(tr);
+        tr.innerHTML = `<td>${r.c?.nombre||`ID ${r.id}`}</td>
+                        <td>${r.c?.telefono||""}</td>
+                        <td>${r.rentas}</td>
+                        <td>${r.total.toFixed(2)}</td>`;
+        repTblCli.appendChild(tr);
       });
-      if(rowsCli.length===0) tbCli.innerHTML = `<tr><td colspan="4" class="muted">Sin datos en este mes.</td></tr>`;
 
-      // Ocupación (rentas) del mes: días ocupados / días del mes (sin desfase por zona horaria)
-      const dim = daysInMonth(y,m);
-      const startD = new Date(y, m, 1);
-      const endD = new Date(y, m, dim);
-      const occMap = {}; // veh_id -> dias
-
-      rentas.forEach(r=>{
-        if(!r.vehiculo_id || !r.fecha_inicio || !r.fecha_fin) return;
-
-        const ini = parseISODateLocal(r.fecha_inicio);
-        const fin = parseISODateLocal(r.fecha_fin);
-        if(!ini || !fin || isNaN(ini) || isNaN(fin)) return;
-
-        // normaliza por si acaso vinieran invertidas
-        const iniN = (ini <= fin) ? ini : fin;
-        const finN = (ini <= fin) ? fin : ini;
-
-        // Intersección con el mes seleccionado
-        const s = (iniN < startD) ? startD : iniN;
-        const e = (finN > endD) ? endD : finN;
-        if(s > e) return;
-
-        // contar días incluyentes
-        const days = Math.floor((e - s) / (1000*60*60*24)) + 1;
-        const vid = String(r.vehiculo_id);
-        occMap[vid] = (occMap[vid]||0) + Math.max(0, days);
-      });
-const occRows = vehiculos.map(v=>{
-        const d = occMap[String(v.id)] || 0;
-        const pct = dim? (d/dim*100) : 0;
-        return { desc:`${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}`, placa:v.placa||"", dias:d, pct };
-      }).sort((a,b)=>b.dias-a.dias);
-
-      const tbOcc=document.getElementById("repTblOcc");
-      tbOcc.innerHTML="";
-      occRows.forEach(r=>{
+      // ocupación
+      const repTblOcc=document.getElementById("repTblOcc");
+      repTblOcc.innerHTML="";
+      const daysMonth = daysInMonth(y,m);
+      vehiculos.forEach(v=>{
+        const vid = String(v.id);
+        const r = byVeh[vid];
+        const occDays = r ? r.dias : 0;
+        const pct = daysMonth ? (occDays/daysMonth)*100 : 0;
         const tr=document.createElement("tr");
-        tr.innerHTML = `<td>${r.desc}</td><td>${r.placa}</td><td>${r.dias}</td><td>${r.pct.toFixed(1)}%</td>`;
-        tbOcc.appendChild(tr);
+        tr.innerHTML = `<td>${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}</td>
+                        <td>${v.placa||""}</td>
+                        <td>${occDays}</td>
+                        <td>${pct.toFixed(0)}%</td>`;
+        repTblOcc.appendChild(tr);
       });
     }
 
+
     function exportReportPDF(){
-      const val=document.getElementById("repMes").value;
-      const [yy,mm]=val.split("-").map(Number);
-      const m=mm-1, y=yy;
+      const y = Number(document.getElementById("repAno")?.value || 0);
+      const mm = Number(document.getElementById("repMes")?.value || 0);
+      const m = mm-1;
+      if(!y || !mm) return alert("Selecciona año y mes");
       const months=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
       const mesLabel = `${months[m]} ${y}`;
 
@@ -1671,8 +2115,9 @@ const occRows = vehiculos.map(v=>{
     }
 
     async function init(){
-      initMeses();
       await refreshUI();
+      initMeses();
+      renderReportes();
     }
 
     // =========================
@@ -1720,7 +2165,14 @@ const occRows = vehiculos.map(v=>{
       document.getElementById("cliClose").addEventListener("click", closeCli);
       document.getElementById("vehClose").addEventListener("click", closeVeh);
       document.getElementById("cliBack").addEventListener("click", (e)=>{ if(e.target.id==="cliBack") closeCli(); });
-      document.getElementById("vehBack").addEventListener("click", (e)=>{ if(e.target.id==="vehBack") closeVeh(); });
+      document.getElementById("vehBack").addEventListener("click", (e)=>{ if(e.target.id==="vehBack") closeVeh(); })
+      // Calendario modal
+      document.getElementById("calClose").addEventListener("click", closeCal);
+      document.getElementById("calClose2").addEventListener("click", closeCal);
+      document.getElementById("calBack").addEventListener("click", (e)=>{ if(e.target.id==="calBack") closeCal(); });
+      document.getElementById("calPrev").addEventListener("click", ()=>{ if(calMonth===0){calMonth=11; calYear-=1;} else calMonth-=1; renderCalModal(); });
+      document.getElementById("calNext").addEventListener("click", ()=>{ if(calMonth===11){calMonth=0; calYear+=1;} else calMonth+=1; renderCalModal(); });
+;
 
       // Modal actions
       document.getElementById("cliEdit").addEventListener("click", ()=>{
@@ -1741,6 +2193,7 @@ const occRows = vehiculos.map(v=>{
       document.getElementById("btnRepActualizar").addEventListener("click", renderReportes);
       document.getElementById("btnRepPDF").addEventListener("click", exportReportPDF);
       document.getElementById("repMes").addEventListener("change", renderReportes);
+      document.getElementById("repAno").addEventListener("change", renderReportes);
     });
   
 // ===== Dashboard PRO v3.4 (Fleet cards per renta) =====
@@ -1810,15 +2263,60 @@ function renderFleetAttentionV34(){
   });
 }
 
+
+function renderInsuranceAttention(){
+  const kpi = document.getElementById("kpiSeguros");
+  const cont = document.getElementById("seguroAlerts");
+  if(!kpi || !cont) return;
+
+  const items = vehiculos
+    .map(v=>({v, badge: seguroBadge(v.seguro_vence)}))
+    .filter(x=> x.badge.cls==="warn" || x.badge.cls==="bad")
+    .sort((a,b)=>{
+      // vencidos primero, luego por fecha más próxima
+      const aBad = a.badge.cls==="bad" ? 0 : 1;
+      const bBad = b.badge.cls==="bad" ? 0 : 1;
+      if(aBad!==bBad) return aBad-bBad;
+      const da = (a.v.seguro_vence||"9999-12-31");
+      const db = (b.v.seguro_vence||"9999-12-31");
+      return da.localeCompare(db);
+    });
+
+  kpi.textContent = String(items.length);
+
+  if(items.length===0){
+    cont.style.display="none";
+    cont.innerHTML="";
+    return;
+  }
+
+  cont.style.display="block";
+  const top = items.slice(0,6).map(x=>{
+    const name = `${x.v.marca||""} ${x.v.modelo||""}${x.v.ano?` ${x.v.ano}`:""}`.trim();
+    const placa = x.v.placa ? ` — ${x.v.placa}` : "";
+    return `<div class="ritem"><b>${name}${placa}</b><br><span class="badge-mini ${x.badge.cls}">${x.badge.text}</span></div>`;
+  }).join("");
+
+  cont.innerHTML = `
+    <div class="alert-box">
+      <div class="title" style="margin-bottom:6px">⚠️ Recordatorios de seguro</div>
+      <div class="muted" style="margin-bottom:8px">Vencidos o vencen en los próximos 30 días.</div>
+      ${top}
+      ${items.length>6?`<div class="muted" style="margin-top:8px">y ${items.length-6} más…</div>`:""}
+    </div>
+  `;
+}
+
+
 // Hook into existing renderDashboard to replace only the fleet section
 const __renderDashboardOrig = renderDashboard;
 renderDashboard = function(){
   __renderDashboardOrig();
   renderFleetAttentionV34();
+  renderInsuranceAttention();
 };
 // ===== End Dashboard PRO v3.4 =====
 
 </script>
 </body>
 </html>
-
