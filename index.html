@@ -239,6 +239,7 @@
           <div class="pill">Vista rápida</div>
         </div>
         <div id="seguroAlerts" style="display:none"></div>
+        <div id="seguroPagosAlerts" style="margin-top:10px"></div>
         <div class="grid-2">
           <div class="kpi">
             <div class="lbl">Total facturado (US$)</div>
@@ -1914,7 +1915,7 @@ async function loadSegurosPagos() {
       <td>${Number(sp.total_monto).toFixed(2)}</td>
       <td>${Number(sp.monto_pagado).toFixed(2)}</td>
       <td>${Number(sp.monto_restante).toFixed(2)}</td>
-      <td>${sp.fecha_limite}</td>
+      <td>${fmt(sp.fecha_limite)}</td>
       <td>${badge}</td>
       <td>
         <input type="number" min="0" id="abono-${sp.id}" style="width:80px">
@@ -2220,10 +2221,49 @@ async function abonarSeguro(id){
       renderClientes();
       renderVehiculos();
       renderFacturas();
+      renderSegurosPagosDashboard();
       // reportes/disponibilidad se renderizan cuando entras, pero si estás ahí, se refrescan:
       if(document.getElementById("reportes").classList.contains("active")) renderReportes();
       if(document.getElementById("disponibilidad").classList.contains("active")) renderCalendarios();
     }
+
+    async function renderSegurosPagosDashboard(){
+  const data = await apiGet("/seguros-pagos").catch(()=>[]);
+  const cont = document.getElementById("seguroPagosAlerts");
+  if(!cont) return;
+
+  cont.innerHTML = "";
+
+  const relevantes = data.filter(sp =>
+    sp.estado === "vencido" || sp.estado === "pendiente"
+  );
+
+  if(relevantes.length === 0) return;
+
+  relevantes.forEach(sp=>{
+    const div = document.createElement("div");
+    div.className = "alert-box";
+
+    let color = "#ffcc00";
+    let texto = "Pago pendiente";
+
+    if(sp.estado === "vencido"){
+      color = "#ff4d4d";
+      texto = "Pago VENCIDO";
+    }
+
+    div.innerHTML = `
+      <div style="font-weight:800">
+        ${sp.marca} ${sp.modelo} (${sp.placa})
+      </div>
+      <div style="color:${color}; font-weight:700;">
+        ${texto} — Restante: ${Number(sp.monto_restante).toFixed(2)} — Límite: ${fmt(sp.fecha_limite)}
+      </div>
+    `;
+
+    cont.appendChild(div);
+  });
+}
 
     async function init(){
       await refreshUI();
