@@ -759,7 +759,7 @@
       return {
         ...v,
         precioDia: Number(v.precio_dia ?? v.precioDia ?? 0),
-        ano: v.ano ?? v.anio ?? v.año ?? null,
+        ano: v.ano ?? v.ano ?? v.año ?? null,
         estado_calculado: v.estado_calculado ?? null,
         renta_inicio: v.renta_inicio ? toISODate(v.renta_inicio) : null,
         renta_fin: v.renta_fin ? toISODate(v.renta_fin) : null,
@@ -1921,7 +1921,7 @@ async function loadSegurosPagos() {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${sp.marca} ${sp.modelo} ${sp.anio} (${sp.placa})</td>
+      <td>${sp.marca} ${sp.modelo} ${sp.ano} (${sp.placa})</td>
       <td>${Number(sp.total_monto).toFixed(2)}</td>
       <td>${Number(sp.monto_pagado).toFixed(2)}</td>
       <td>${Number(sp.monto_restante).toFixed(2)}</td>
