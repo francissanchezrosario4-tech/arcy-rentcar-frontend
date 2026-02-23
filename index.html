@@ -226,6 +226,7 @@
       <button class="tab-btn" data-tab="clientes">Clientes</button>
       <button class="tab-btn" data-tab="vehiculos">Vehículos</button>
       <button class="tab-btn" data-tab="disponibilidad">Disponibilidad</button>
+      <button class="tab-btn" data-tab="segurosPagos">Pagos Seguro</button>
 
       <button class="btn secondary right" id="btnLogout">Cerrar sesión</button>
     </div>
@@ -502,7 +503,63 @@
         <div class="muted">Rojo: rentado (activo). Amarillo: reserva pendiente (a futuro). <span class="muted">Click en "Ver calendario" para ver el mes completo.</span></div>
         <div id="vehDisponibilidad" class="veh-modern-grid" style="margin-top:12px"></div>
       </div>
+
     </section>
+    <section id="segurosPagos" class="section">
+  <div class="card">
+    <div class="card-header">
+      <div class="title">Pagos de Seguro (Parciales)</div>
+      <div class="pill">Control de cuotas</div>
+    </div>
+
+    <form id="formSeguroPago">
+      <div>
+        <label>Vehículo</label>
+        <select id="spVehiculo"></select>
+      </div>
+
+      <div>
+        <label>Total Seguro</label>
+        <input type="number" id="spTotal" required>
+      </div>
+
+      <div>
+        <label>Monto Pagado Inicial</label>
+        <input type="number" id="spPagado" value="0">
+      </div>
+
+      <div>
+        <label>Fecha límite de pago</label>
+        <input type="date" id="spFecha" required>
+      </div>
+    </form>
+
+    <button class="btn" id="btnGuardarSeguroPago">
+      Guardar Pago
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="title">Listado de pagos</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Vehículo</th>
+          <th>Total</th>
+          <th>Pagado</th>
+          <th>Restante</th>
+          <th>Fecha límite</th>
+          <th>Estado</th>
+          <th>Abonar</th>
+        </tr>
+      </thead>
+      <tbody id="tblSegurosPagos"></tbody>
+    </table>
+  </div>
+</section>
 
   </main>
 
@@ -776,6 +833,7 @@
       });
       if(name==="reportes") renderReportes();
       if(name==="disponibilidad") renderDisponibilidad();
+      if(name==="segurosPagos") loadSegurosPagos();
     }
 
     // =========================
@@ -913,6 +971,17 @@
         o.textContent=`${v.id} - ${v.marca} ${v.modelo}${v.ano?` (${v.ano})`:""}`;
         sv.appendChild(o);
       });
+
+      const sp = document.getElementById("spVehiculo");
+if(sp){
+  sp.innerHTML = `<option value="">Selecciona vehículo</option>`;
+  vehiculos.forEach(v=>{
+    const o=document.createElement("option");
+    o.value=v.id;
+    o.textContent=`${v.marca} ${v.modelo} (${v.placa})`;
+    sp.appendChild(o);
+  });
+}
     }
 
     
@@ -1823,7 +1892,68 @@
         });
       }
     }
+/* =========================
+   SEGUROS PAGOS FRONTEND
+========================= */
 
+async function loadSegurosPagos() {
+  const data = await apiGet("/seguros-pagos").catch(()=>[]);
+  const tbody = document.getElementById("tblSegurosPagos");
+  if(!tbody) return;
+
+  tbody.innerHTML = "";
+
+  data.forEach(sp=>{
+    let badge = "🟢 Pendiente";
+    if(sp.estado === "completado") badge = "🟢 Completado";
+    if(sp.estado === "vencido") badge = "🔴 Vencido";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${sp.marca} ${sp.modelo} (${sp.placa})</td>
+      <td>${Number(sp.total_monto).toFixed(2)}</td>
+      <td>${Number(sp.monto_pagado).toFixed(2)}</td>
+      <td>${Number(sp.monto_restante).toFixed(2)}</td>
+      <td>${sp.fecha_limite}</td>
+      <td>${badge}</td>
+      <td>
+        <input type="number" min="0" id="abono-${sp.id}" style="width:80px">
+        <button class="btn small" onclick="abonarSeguro(${sp.id})">
+          +
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function guardarSeguroPago(){
+  const vehiculo_id = document.getElementById("spVehiculo").value;
+  const total_monto = document.getElementById("spTotal").value;
+  const monto_pagado = document.getElementById("spPagado").value;
+  const fecha_limite = document.getElementById("spFecha").value;
+
+  if(!vehiculo_id || !total_monto || !fecha_limite)
+    return alert("Completa los campos.");
+
+  await apiPost("/seguros-pagos", {
+    vehiculo_id,
+    total_monto,
+    monto_pagado,
+    fecha_limite
+  });
+
+  await loadSegurosPagos();
+  alert("✅ Pago registrado");
+}
+
+async function abonarSeguro(id){
+  const monto = document.getElementById(`abono-${id}`).value;
+  if(!monto) return;
+
+  await apiPost(`/seguros-pagos/${id}/abono`, { monto });
+  await loadSegurosPagos();
+}
 
     // =========================
     // REPORTES
@@ -2099,6 +2229,8 @@
       await refreshUI();
       initMeses();
       renderReportes();
+
+      await loadSegurosPagos();
     }
 
     // =========================
@@ -2175,6 +2307,9 @@
       document.getElementById("btnRepPDF").addEventListener("click", exportReportPDF);
       document.getElementById("repMes").addEventListener("change", renderReportes);
       document.getElementById("repAno").addEventListener("change", renderReportes);
+
+      document.getElementById("btnGuardarSeguroPago")
+  ?.addEventListener("click", guardarSeguroPago);
     });
   
 // ===== Dashboard PRO v3.4 (Fleet cards per renta) =====
