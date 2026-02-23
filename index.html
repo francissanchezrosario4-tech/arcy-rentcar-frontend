@@ -37,6 +37,7 @@
     .btn:disabled{opacity:.5;cursor:not-allowed}
     .card{background:rgba(16,16,16,.95);border:1px solid #2b2b2b;border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.55);padding:18px 18px 22px;margin-bottom:16px}
     .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .card-inner {background: rgba(255,255,255,0.02); padding: 16px;border-radius: 12px;}
     .title{font-weight:700}
     .pill{padding:2px 10px;border-radius:999px;background:#2b2b2b;font-size:.75rem;color:#ddd}
     .section{display:none}
@@ -239,12 +240,16 @@
           <div class="pill">Vista rápida</div>
         </div>
        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-  
-  <!-- COLUMNA IZQUIERDA -->
-  <div id="seguroAlerts"></div>
 
-  <!-- COLUMNA DERECHA -->
-  <div id="seguroPagosSide"></div>
+  <!-- IZQUIERDA -->
+  <div class="card-inner">
+    <div id="seguroAlerts"></div>
+  </div>
+
+  <!-- DERECHA -->
+  <div class="card-inner">
+    <div id="seguroPagosSide"></div>
+  </div>
 
 </div>
         <div class="grid-2">
@@ -1918,7 +1923,7 @@ async function loadSegurosPagos() {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${sp.marca} ${sp.modelo} (${sp.placa})</td>
+      <td>${sp.marca} ${sp.modelo} ${sp.anio} (${sp.placa})</td>
       <td>${Number(sp.total_monto).toFixed(2)}</td>
       <td>${Number(sp.monto_pagado).toFixed(2)}</td>
       <td>${Number(sp.monto_restante).toFixed(2)}</td>
