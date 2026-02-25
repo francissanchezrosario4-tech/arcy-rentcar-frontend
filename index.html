@@ -731,153 +731,84 @@ async function verDetalleVenta(id) {
   `;
 }
   // =====================
-// VENTAS MODULE
+// VENTAS MODULE PRO FIXED
 // =====================
 
 async function guardarVenta() {
-  const marca = document.getElementById("ventaMarca").value;
-  const modelo = document.getElementById("ventaModelo").value;
-  const ano = document.getElementById("ventaAno").value;
-  const color = document.getElementById("ventaColor").value;
-  const chasis = document.getElementById("ventaChasis").value;
-  const imagen = document.getElementById("ventaImagen").value;
-  const precio_venta = Number(document.getElementById("ventaPrecio").value);
-  const fecha_venta = document.getElementById("ventaFecha").value;
+  const marca = ventaMarca.value;
+  const modelo = ventaModelo.value;
+  const ano = ventaAno.value;
+  const color = ventaColor.value;
+  const chasis = ventaChasis.value;
+  const imagen = ventaImagen.value;
+  const precio_venta = Number(ventaPrecio.value);
+  const fecha_venta = ventaFecha.value;
 
   if (!marca || !modelo || !precio_venta) {
     alert("Completa los campos obligatorios");
     return;
   }
 
-  try {
-    await apiPost("/api/ventas", {
-      marca,
-      modelo,
-      ano,
-      color,
-      chasis,
-      imagen,
-      precio_venta,
-      fecha_venta
-    });
+  await apiPost("/api/ventas", {
+    marca, modelo, ano, color, chasis,
+    imagen, precio_venta, fecha_venta
+  });
 
-    alert("Vehículo registrado ✅");
-    document.getElementById("formVenta").reset();
-    cargarResumenVentas();
-
-  } catch (e) {
-    alert("Error guardando venta");
-    console.error(e);
-  }
+  formVenta.reset();
+  cargarResumenVentas();
+  alert("Vehículo registrado ✅");
 }
+
 async function cargarResumenVentas() {
-  try {
-    const data = await apiGet("/api/ventas-resumen");
+  const data = await apiGet("/api/ventas-resumen");
+  const tbody = document.getElementById("tblVentasResumen");
+  tbody.innerHTML = "";
 
-    const tbody = document.getElementById("tblVentasResumen");
-    tbody.innerHTML = "";
+  data.vehiculos.forEach(v => {
+    const tr = document.createElement("tr");
+    tr.style.transition = "all .3s ease";
+    tr.onmouseover = () => tr.style.background = "#1a1a1a";
+    tr.onmouseout = () => tr.style.background = "transparent";
 
-    data.vehiculos.forEach(v => {
-      const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${v.id}</td>
+      <td>${v.marca} ${v.modelo} (${v.ano || ""})</td>
+      <td>RD$ ${Number(v.precio_venta).toFixed(2)}</td>
+      <td>RD$ ${Number(v.total_gastos).toFixed(2)}</td>
+      <td>RD$ ${Number(v.total_pagos).toFixed(2)}</td>
+      <td style="color:#e10600;font-weight:bold;">
+        RD$ ${Number(v.ganancia_limpia).toFixed(2)}
+      </td>
+      <td>
+        <button class="btn small" onclick="verDetalleVenta(${v.id})">Ver</button>
+        <button class="btn small" onclick="generarReporteVenta(${v.id})">PDF</button>
+        <button class="btn small secondary" onclick="eliminarVenta(${v.id})">Eliminar</button>
+      </td>
+    `;
 
-      tr.innerHTML = `
-        <td>${v.id}</td>
-        <td>${v.marca} ${v.modelo} (${v.ano || ""})</td>
-        <td>${Number(v.precio_venta).toFixed(2)}</td>
-        <td>${Number(v.total_gastos).toFixed(2)}</td>
-        <td>${Number(v.total_pagos).toFixed(2)}</td>
-        <td style="color:#e10600;font-weight:bold;">
-          ${Number(v.ganancia_limpia).toFixed(2)}
-        </td>
-        <td>
-          <button class="btn small" onclick="generarReporteVenta(${v.id})">
-            PDF
-          </button>
-          <button class="btn small secondary" onclick="eliminarVenta(${v.id})">
-            Eliminar
-          </button>
-        </td>
-      `;
+    tbody.appendChild(tr);
+  });
 
-      tbody.appendChild(tr);
-    });
-
-    document.getElementById("totalVendido").textContent =
-      Number(data.total_vendido).toFixed(2);
-
-    document.getElementById("totalGastos").textContent =
-      Number(data.total_gastos).toFixed(2);
-
-    document.getElementById("totalPagos").textContent =
-      Number(data.total_pagos).toFixed(2);
-
-    document.getElementById("totalLimpio").textContent =
-      Number(data.total_limpio).toFixed(2);
-
-  } catch (e) {
-    console.error(e);
-  }
+  totalVendido.textContent = "RD$ " + Number(data.total_vendido).toFixed(2);
+  totalGastos.textContent = "RD$ " + Number(data.total_gastos).toFixed(2);
+  totalPagos.textContent = "RD$ " + Number(data.total_pagos).toFixed(2);
+  totalLimpio.textContent = "RD$ " + Number(data.total_limpio).toFixed(2);
 }
-  try {
-    const data = await apiGet("/api/ventas-resumen");
 
-    const tbody = document.getElementById("tblVentasResumen");
-    tbody.innerHTML = "";
-
-    data.vehiculos.forEach(v => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-  <td>${v.id}</td>
-  <td>${v.marca} ${v.modelo} (${v.ano || ""})</td>
-  <td>${Number(v.precio_venta).toFixed(2)}</td>
-  <td>${Number(v.total_gastos).toFixed(2)}</td>
-  <td>${Number(v.total_pagos).toFixed(2)}</td>
-  <td style="color:#e10600;font-weight:bold;">
-    ${Number(v.ganancia_limpia).toFixed(2)}
-  </td>
-  <td>
-    <button class="btn small" onclick="verDetalleVenta(${v.id})">
-      Ver Reporte
-    </button>
-  </td>
-`;
-    });
-
-    document.getElementById("totalVendido").textContent =
-      Number(data.total_vendido).toFixed(2);
-
-    document.getElementById("totalGastos").textContent =
-      Number(data.total_gastos).toFixed(2);
-
-    document.getElementById("totalPagos").textContent =
-      Number(data.total_pagos).toFixed(2);
-
-    document.getElementById("totalLimpio").textContent =
-      Number(data.total_limpio).toFixed(2);
-
-  } catch (e) {
-    console.error(e);
-  }
-  async function eliminarVenta(id) {
+async function eliminarVenta(id) {
   if (!confirm("¿Seguro que deseas eliminar esta venta?")) return;
-
-  try {
-    await apiDelete("/api/ventas/" + id);
-    cargarResumenVentas();
-    alert("Venta eliminada ✅");
-  } catch (e) {
-    alert("Error eliminando venta");
-    console.error(e);
-  }
+  await apiDelete("/api/ventas/" + id);
+  cargarResumenVentas();
 }
-async function generarReporteVenta(id) {
+
+async function verDetalleVenta(id) {
   const data = await apiGet("/api/ventas/" + id);
   const { vehiculo, gastos } = data;
 
-  let totalGastos = 0;
+  let total = 0;
 
-  let filas = gastos.map((g, i) => {
-    totalGastos += Number(g.monto);
+  let filas = gastos.map((g,i)=>{
+    total += Number(g.monto);
     return `
       <tr>
         <td>${i+1}</td>
@@ -888,46 +819,91 @@ async function generarReporteVenta(id) {
     `;
   }).join("");
 
-  const totalLimpio = vehiculo.precio_venta - totalGastos;
-
-  const html = `
-    <div style="background:#111;color:white;padding:40px;font-family:Arial;">
-      <h1 style="color:#e10600;">ARCY RENT CAR</h1>
-      <h2>VENTA DE VEHÍCULO</h2>
-
+  detalleVenta.innerHTML = `
+    <div class="card">
       <h2>${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.ano})</h2>
-
-      <img src="${vehiculo.imagen || ''}"
-           style="width:400px;border:3px solid #e10600;margin:20px 0;">
-
+      <img src="${vehiculo.imagen || ''}" 
+           style="width:100%;max-width:400px;border:3px solid #e10600;margin:15px 0;">
       <h3 style="color:#e10600;">
-        PRECIO VENDIDO: RD$ ${Number(vehiculo.precio_venta).toFixed(2)}
+        Precio Vendido: RD$ ${Number(vehiculo.precio_venta).toFixed(2)}
       </h3>
 
-      <h2 style="margin-top:30px;">GASTOS</h2>
-
-      <table border="1" width="100%" cellpadding="10"
-             style="border-collapse:collapse;">
+      <table border="1" width="100%" cellpadding="8" style="border-collapse:collapse;">
         <tr style="background:#e10600;color:white;">
           <th>#</th>
           <th>Descripción</th>
           <th>Fecha</th>
-          <th>Precio</th>
+          <th>Monto</th>
         </tr>
         ${filas}
-        <tr style="background:#222;">
-          <td colspan="3"><b>TOTAL GASTOS</b></td>
-          <td><b>RD$ ${totalGastos.toFixed(2)}</b></td>
-        </tr>
       </table>
 
-      <h2 style="margin-top:30px;">
+      <h2 style="margin-top:20px;">
         GANANCIA LIMPIA:
         <span style="color:#e10600;">
-          RD$ ${totalLimpio.toFixed(2)}
+          RD$ ${(vehiculo.precio_venta - total).toFixed(2)}
         </span>
       </h2>
     </div>
+  `;
+}
+
+async function generarReporteVenta(id) {
+  const data = await apiGet("/api/ventas/" + id);
+  const { vehiculo, gastos } = data;
+
+  let total = 0;
+
+  let filas = gastos.map((g,i)=>{
+    total += Number(g.monto);
+    return `
+      <tr>
+        <td>${i+1}</td>
+        <td>${g.descripcion}</td>
+        <td>${g.fecha}</td>
+        <td>RD$ ${Number(g.monto).toFixed(2)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const limpio = vehiculo.precio_venta - total;
+
+  const html = `
+  <div style="background:#000;color:white;padding:40px;font-family:Arial;">
+    <h1 style="color:#e10600;">ARCY RENT CAR</h1>
+    <h2>VENTA DE VEHÍCULO</h2>
+
+    <h2>${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.ano})</h2>
+
+    <img src="${vehiculo.imagen || ''}"
+         style="width:400px;border:4px solid #e10600;margin:20px 0;">
+
+    <h2 style="color:#e10600;">
+      PRECIO VENDIDO: RD$ ${Number(vehiculo.precio_venta).toFixed(2)}
+    </h2>
+
+    <table border="1" width="100%" cellpadding="10"
+           style="border-collapse:collapse;margin-top:20px;">
+      <tr style="background:#e10600;color:white;">
+        <th>#</th>
+        <th>Descripción</th>
+        <th>Fecha</th>
+        <th>Monto</th>
+      </tr>
+      ${filas}
+      <tr style="background:#111;">
+        <td colspan="3"><b>TOTAL GASTOS</b></td>
+        <td><b>RD$ ${total.toFixed(2)}</b></td>
+      </tr>
+    </table>
+
+    <h1 style="margin-top:30px;">
+      GANANCIA LIMPIA:
+      <span style="color:#e10600;">
+        RD$ ${limpio.toFixed(2)}
+      </span>
+    </h1>
+  </div>
   `;
 
   const container = document.createElement("div");
@@ -936,12 +912,10 @@ async function generarReporteVenta(id) {
 
   html2pdf().from(container).save(
     `VENTA_${vehiculo.marca}_${vehiculo.modelo}.pdf`
-  ).then(() => {
-    document.body.removeChild(container);
-  });
+  ).then(()=> document.body.removeChild(container));
 }
-document.getElementById("btnGuardarVenta")
-  ?.addEventListener("click", guardarVenta);
+
+btnGuardarVenta?.addEventListener("click", guardarVenta);
     // --- helpers ---
     function parseISODateLocal(s){
       if(!s) return null;
