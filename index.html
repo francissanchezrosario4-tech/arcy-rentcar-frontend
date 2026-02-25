@@ -627,8 +627,100 @@
 
   </div>
   
-   <!-- DETALLE DEL VEHICULO -->
-  <div id="detalleVenta" style="margin-top:20px;"></div>
+   <!-- DETALLE DEL VEHICULO / REPORTE PRO -->
+  <div class="card" id="ventaDetalleCard" style="margin-top:20px; display:none;">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div class="title" id="ventaDetalleTitulo">Detalle de Venta</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+        <button class="btn small" id="btnVentaPDF">PDF</button>
+        <button class="btn small secondary" id="btnVentaCerrar">Cerrar</button>
+      </div>
+    </div>
+
+    <!-- PREVIEW (igual que PDF) -->
+    <div id="ventaPreview" style="overflow:auto;"></div>
+
+    <div style="height:14px;"></div>
+
+    <!-- CONTROLES -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <!-- GASTOS -->
+      <div class="card" style="margin:0;">
+        <div class="card-header">
+          <div class="title">Agregar Gasto</div>
+          <div class="pill">Se resta al vendido</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 140px;gap:10px;">
+          <div>
+            <label>Descripción</label>
+            <input id="gastoDesc" placeholder="Ej: Sacarlo de aduana">
+          </div>
+          <div>
+            <label>Fecha</label>
+            <input id="gastoFecha" type="date">
+          </div>
+          <div>
+            <label>Monto (RD$)</label>
+            <input id="gastoMonto" type="number" placeholder="0">
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button class="btn" id="btnAgregarGasto" style="width:100%;">Agregar</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px; overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Descripción</th><th>Fecha</th><th>Monto</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tblGastosVenta"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PAGOS EXTRA -->
+      <div class="card" style="margin:0;">
+        <div class="card-header">
+          <div class="title">Agregar Pago Extra</div>
+          <div class="pill">Se resta al restante</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 140px;gap:10px;">
+          <div>
+            <label>Descripción</label>
+            <input id="pagoDesc" placeholder="Ej: Pago a Tony / Abono">
+          </div>
+          <div>
+            <label>Fecha</label>
+            <input id="pagoFecha" type="date">
+          </div>
+          <div>
+            <label>Monto (RD$)</label>
+            <input id="pagoMonto" type="number" placeholder="0">
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button class="btn" id="btnAgregarPago" style="width:100%;">Agregar</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px; overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Descripción</th><th>Fecha</th><th>Monto</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tblPagosVenta"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px; font-size:12px; opacity:.7;">
+      Nota: Para eliminar gastos/pagos de forma permanente, debes tener endpoints DELETE en el backend (te los indico debajo).
+    </div>
+  </div>
 
 </section>
 
@@ -731,55 +823,68 @@ async function verDetalleVenta(id) {
   `;
 }
   // =====================
-// VENTAS MODULE PRO FIXED
+// =====================
+// VENTAS MODULE (DEALER PRO)
 // =====================
 
+let ventaActualId = null;
+let ventaActualData = null;
+
+function _onlyDate(d) {
+  if (!d) return "";
+  return String(d).split("T")[0];
+}
+function fmtRD(n) {
+  const num = Number(n || 0);
+  return "RD$ " + num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 async function guardarVenta() {
-  const marca = ventaMarca.value;
-  const modelo = ventaModelo.value;
-  const ano = ventaAno.value;
-  const color = ventaColor.value;
-  const chasis = ventaChasis.value;
-  const imagen = ventaImagen.value;
-  const precio_venta = Number(ventaPrecio.value);
+  const marca = ventaMarca.value.trim();
+  const modelo = ventaModelo.value.trim();
+  const ano = ventaAno.value ? Number(ventaAno.value) : null;
+  const color = ventaColor.value.trim();
+  const chasis = ventaChasis.value.trim();
+  const imagen = ventaImagen.value.trim();
+  const precio_venta = Number(ventaPrecio.value || 0);
   const fecha_venta = ventaFecha.value;
 
   if (!marca || !modelo || !precio_venta) {
-    alert("Completa los campos obligatorios");
+    alert("Completa los campos obligatorios (Marca, Modelo, Precio).");
     return;
   }
 
   await apiPost("/api/ventas", {
-    marca, modelo, ano, color, chasis,
-    imagen, precio_venta, fecha_venta
+    marca, modelo, ano, color, chasis, imagen, precio_venta, fecha_venta
   });
 
   formVenta.reset();
-  cargarResumenVentas();
+  await cargarResumenVentas();
   alert("Vehículo registrado ✅");
 }
 
 async function cargarResumenVentas() {
   const data = await apiGet("/api/ventas-resumen");
+
   const tbody = document.getElementById("tblVentasResumen");
   tbody.innerHTML = "";
 
   data.vehiculos.forEach(v => {
     const tr = document.createElement("tr");
-    tr.style.transition = "all .3s ease";
-    tr.onmouseover = () => tr.style.background = "#1a1a1a";
-    tr.onmouseout = () => tr.style.background = "transparent";
+    tr.style.transition = "all .25s ease";
+    tr.onmouseenter = () => tr.style.background = "rgba(255,255,255,.03)";
+    tr.onmouseleave = () => tr.style.background = "transparent";
 
     tr.innerHTML = `
       <td>${v.id}</td>
-      <td>${v.marca} ${v.modelo} (${v.ano || ""})</td>
-      <td>RD$ ${Number(v.precio_venta).toFixed(2)}</td>
-      <td>RD$ ${Number(v.total_gastos).toFixed(2)}</td>
-      <td>RD$ ${Number(v.total_pagos).toFixed(2)}</td>
-      <td style="color:#e10600;font-weight:bold;">
-        RD$ ${Number(v.ganancia_limpia).toFixed(2)}
+      <td>${(v.marca || "").toUpperCase()} ${(v.modelo || "").toUpperCase()} (${v.ano || ""})</td>
+      <td>${fmtRD(v.precio_venta)}</td>
+      <td>${fmtRD(v.total_gastos)}</td>
+      <td>${fmtRD(v.total_pagos)}</td>
+      <td style="color:#e10600;font-weight:800;">
+        ${fmtRD(v.ganancia_limpia)}
       </td>
-      <td>
+      <td style="white-space:nowrap;">
         <button class="btn small" onclick="verDetalleVenta(${v.id})">Ver</button>
         <button class="btn small" onclick="generarReporteVenta(${v.id})">PDF</button>
         <button class="btn small secondary" onclick="eliminarVenta(${v.id})">Eliminar</button>
@@ -789,134 +894,366 @@ async function cargarResumenVentas() {
     tbody.appendChild(tr);
   });
 
-  totalVendido.textContent = "RD$ " + Number(data.total_vendido).toFixed(2);
-  totalGastos.textContent = "RD$ " + Number(data.total_gastos).toFixed(2);
-  totalPagos.textContent = "RD$ " + Number(data.total_pagos).toFixed(2);
-  totalLimpio.textContent = "RD$ " + Number(data.total_limpio).toFixed(2);
+  totalVendido.textContent = fmtRD(data.total_vendido);
+  totalGastos.textContent  = fmtRD(data.total_gastos);
+  totalPagos.textContent   = fmtRD(data.total_pagos);
+  totalLimpio.textContent  = fmtRD(data.total_limpio);
 }
 
 async function eliminarVenta(id) {
   if (!confirm("¿Seguro que deseas eliminar esta venta?")) return;
   await apiDelete("/api/ventas/" + id);
-  cargarResumenVentas();
+  // si estabas viendo esa venta, cierra el detalle
+  if (ventaActualId === id) cerrarDetalleVenta();
+  await cargarResumenVentas();
+}
+
+function cerrarDetalleVenta() {
+  ventaActualId = null;
+  ventaActualData = null;
+  const card = document.getElementById("ventaDetalleCard");
+  if (card) card.style.display = "none";
+  const preview = document.getElementById("ventaPreview");
+  if (preview) preview.innerHTML = "";
+  const tg = document.getElementById("tblGastosVenta");
+  const tp = document.getElementById("tblPagosVenta");
+  if (tg) tg.innerHTML = "";
+  if (tp) tp.innerHTML = "";
+}
+
+function buildDealerTemplate({ vehiculo, gastos, pagos }) {
+  const totalGastos = (gastos || []).reduce((a, g) => a + Number(g.monto || 0), 0);
+  const totalPagos  = (pagos  || []).reduce((a, p) => a + Number(p.monto || 0), 0);
+
+  const vendido = Number(vehiculo.precio_venta || 0);
+  const gananciaLimpia = vendido - totalGastos - totalPagos;
+
+  const filasGastos = (gastos || []).map((g, i) => `
+    <tr>
+      <td style="text-align:center;">${i + 1}</td>
+      <td>${g.descripcion || ""}</td>
+      <td style="text-align:center;">${_onlyDate(g.fecha)}</td>
+      <td style="text-align:right;">${fmtRD(g.monto)}</td>
+    </tr>
+  `).join("");
+
+  const bg = `
+    background:
+      radial-gradient(1200px 800px at 80% 0%, rgba(225,6,0,.18), transparent 60%),
+      radial-gradient(900px 700px at 0% 80%, rgba(225,6,0,.10), transparent 60%),
+      linear-gradient(135deg, #0b0b0b, #121212 55%, #0b0b0b);
+  `;
+
+  return `
+  <div class="venta-pro" style="
+    width:1000px;
+    ${bg}
+    color:#fff;
+    font-family: Inter, Arial, sans-serif;
+    padding:42px 44px 36px;
+    border-radius:18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.55);
+    position:relative;
+    overflow:hidden;
+  ">
+
+    <!-- decorative triangles -->
+    <div style="position:absolute; inset:0; opacity:.16; pointer-events:none;
+      background:
+        linear-gradient(135deg, rgba(225,6,0,.28) 0 12px, transparent 12px 100%),
+        linear-gradient(315deg, rgba(225,6,0,.18) 0 14px, transparent 14px 100%);
+      background-size:64px 64px;
+      mix-blend-mode:screen;
+    "></div>
+
+    <div style="position:relative; z-index:2;">
+      <!-- HEADER -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+        <div>
+          <div style="font-family: 'Brush Script MT', 'Segoe Script', cursive; font-size:56px; line-height:1; color:#e10600; letter-spacing:.5px;">
+            Arcy Auto
+          </div>
+          <div style="height:4px; width:340px; background:#e10600; margin-top:10px; border-radius:999px;"></div>
+        </div>
+        <div style="font-size:18px; opacity:.8; padding-top:8px;">
+          ${_onlyDate(vehiculo.fecha_venta)}
+        </div>
+      </div>
+
+      <div style="margin-top:34px; font-size:34px; font-weight:900; letter-spacing:2px; opacity:.95;">
+        VENTA DE VEHÍCULO
+      </div>
+
+      <!-- MAIN -->
+      <div style="display:flex; gap:34px; margin-top:24px; align-items:flex-start;">
+        <!-- LEFT -->
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:44px; font-weight:900; line-height:1.05; text-transform:uppercase;">
+            ${(vehiculo.marca || "")} ${(vehiculo.modelo || "")}
+          </div>
+          <div style="font-size:34px; font-weight:900; opacity:.9; margin-top:6px;">
+            (${vehiculo.ano || ""}) ${vehiculo.color ? String(vehiculo.color) : ""}
+          </div>
+
+          <div style="margin-top:14px; color:#e10600; font-weight:800; font-size:20px;">
+            Vehículo Vendido
+          </div>
+
+          <div style="margin-top:22px;">
+            <div style="font-size:18px; letter-spacing:3px; opacity:.75;">
+              PRECIO TOTAL VENDIDO
+            </div>
+            <div style="font-size:54px; font-weight:1000; color:#e10600; margin-top:4px;">
+              ${fmtRD(vendido)}
+            </div>
+          </div>
+        </div>
+
+        <!-- IMAGE -->
+        <div style="flex:1; text-align:right; min-width:0;">
+          <div style="display:inline-block; position:relative;">
+            <div style="position:absolute; inset:-10px; border:3px solid rgba(225,6,0,.35); border-radius:14px;"></div>
+            <img src="${vehiculo.imagen || ""}" style="
+              width:460px; max-width:100%;
+              border:4px solid #e10600;
+              border-radius:12px;
+              background:#111;
+              object-fit:cover;
+            ">
+            <div style="position:absolute; left:16px; bottom:14px; font-size:16px; letter-spacing:1px; opacity:.92; text-shadow:0 2px 10px rgba(0,0,0,.75);">
+              CHASIS: ${(vehiculo.chasis || "").toUpperCase()}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GASTOS -->
+      <div style="margin-top:38px;">
+        <div style="font-size:34px; font-weight:1000; letter-spacing:1px; opacity:.95;">
+          GASTOS
+        </div>
+        <div style="height:3px; width:100%; background:rgba(225,6,0,.75); margin-top:8px; border-radius:999px;"></div>
+
+        <div style="margin-top:18px; border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.35);">
+          <table style="width:100%; border-collapse:collapse; font-size:18px;">
+            <thead>
+              <tr style="background: linear-gradient(90deg, #7a0702, #e10600); color:#fff;">
+                <th style="padding:12px 14px; width:70px; text-align:center;">NUM</th>
+                <th style="padding:12px 14px; text-align:left;">DESCRIPCIÓN</th>
+                <th style="padding:12px 14px; width:170px; text-align:center;">FECHA</th>
+                <th style="padding:12px 14px; width:220px; text-align:right;">PRECIO</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filasGastos || `
+                <tr>
+                  <td colspan="4" style="padding:16px; opacity:.75;">
+                    No hay gastos agregados todavía.
+                  </td>
+                </tr>
+              `}
+              <tr style="background:rgba(255,255,255,.04);">
+                <td colspan="3" style="padding:12px 14px; font-weight:900; letter-spacing:2px;">TOTAL</td>
+                <td style="padding:12px 14px; font-weight:1000; color:#e10600; text-align:right;">
+                  ${fmtRD(totalGastos)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- BOTTOM TOTALS -->
+        <div style="display:flex; justify-content:flex-end; margin-top:18px;">
+          <div style="display:grid; grid-template-columns:auto auto; gap:10px 18px; align-items:center; font-size:22px;">
+            <div style="opacity:.85; text-align:right;">TOTAL GASTOS</div>
+            <div style="background:rgba(255,255,255,.06); padding:10px 14px; border-radius:10px; min-width:260px; text-align:right;">
+              ${fmtRD(totalGastos)}
+            </div>
+
+            <div style="opacity:.85; text-align:right;">TOTAL GANANCIA LIMPIA</div>
+            <div style="background:#e10600; padding:10px 14px; border-radius:10px; min-width:260px; text-align:right; font-weight:1000;">
+              ${fmtRD(gananciaLimpia)}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  `;
+}
+
+function renderDetalleVenta(data) {
+  ventaActualData = data;
+  const { vehiculo, gastos, pagos } = data;
+
+  // show card
+  const card = document.getElementById("ventaDetalleCard");
+  card.style.display = "block";
+  document.getElementById("ventaDetalleTitulo").textContent =
+    `${(vehiculo.marca || "").toUpperCase()} ${(vehiculo.modelo || "").toUpperCase()} (${vehiculo.ano || ""})`;
+
+  // preview
+  document.getElementById("ventaPreview").innerHTML = buildDealerTemplate(data);
+
+  // gastos table (editable list)
+  const tg = document.getElementById("tblGastosVenta");
+  tg.innerHTML = "";
+  (gastos || []).forEach((g, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${g.descripcion || ""}</td>
+      <td>${_onlyDate(g.fecha)}</td>
+      <td>${fmtRD(g.monto)}</td>
+      <td style="text-align:right;">
+        <button class="btn small secondary" onclick="eliminarGasto(${g.id})">X</button>
+      </td>
+    `;
+    tg.appendChild(tr);
+  });
+  if ((gastos || []).length === 0) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="5" style="opacity:.7;">No hay gastos aún.</td>`;
+    tg.appendChild(tr);
+  }
+
+  // pagos table
+  const tp = document.getElementById("tblPagosVenta");
+  tp.innerHTML = "";
+  (pagos || []).forEach((p, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.descripcion || ""}</td>
+      <td>${_onlyDate(p.fecha)}</td>
+      <td>${fmtRD(p.monto)}</td>
+      <td style="text-align:right;">
+        <button class="btn small secondary" onclick="eliminarPago(${p.id})">X</button>
+      </td>
+    `;
+    tp.appendChild(tr);
+  });
+  if ((pagos || []).length === 0) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="5" style="opacity:.7;">No hay pagos aún.</td>`;
+    tp.appendChild(tr);
+  }
+
+  // scroll into view
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function verDetalleVenta(id) {
+  ventaActualId = id;
   const data = await apiGet("/api/ventas/" + id);
-  const { vehiculo, gastos } = data;
+  renderDetalleVenta(data);
+}
 
-  let total = 0;
+async function agregarGasto() {
+  if (!ventaActualId) return alert("Primero dale a VER en un vehículo.");
+  const descripcion = (document.getElementById("gastoDesc").value || "").trim();
+  const fecha = document.getElementById("gastoFecha").value;
+  const monto = Number(document.getElementById("gastoMonto").value || 0);
+  if (!descripcion || !monto) return alert("Completa descripción y monto.");
 
-  let filas = gastos.map((g,i)=>{
-    total += Number(g.monto);
-    return `
-      <tr>
-        <td>${i+1}</td>
-        <td>${g.descripcion}</td>
-        <td>${g.fecha}</td>
-        <td>RD$ ${Number(g.monto).toFixed(2)}</td>
-      </tr>
-    `;
-  }).join("");
+  await apiPost(`/api/ventas/${ventaActualId}/gastos`, { descripcion, fecha, monto });
 
-  detalleVenta.innerHTML = `
-    <div class="card">
-      <h2>${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.ano})</h2>
-      <img src="${vehiculo.imagen || ''}" 
-           style="width:100%;max-width:400px;border:3px solid #e10600;margin:15px 0;">
-      <h3 style="color:#e10600;">
-        Precio Vendido: RD$ ${Number(vehiculo.precio_venta).toFixed(2)}
-      </h3>
+  // limpiar
+  document.getElementById("gastoDesc").value = "";
+  document.getElementById("gastoMonto").value = "";
 
-      <table border="1" width="100%" cellpadding="8" style="border-collapse:collapse;">
-        <tr style="background:#e10600;color:white;">
-          <th>#</th>
-          <th>Descripción</th>
-          <th>Fecha</th>
-          <th>Monto</th>
-        </tr>
-        ${filas}
-      </table>
+  // recargar detalle + resumen
+  const data = await apiGet("/api/ventas/" + ventaActualId);
+  renderDetalleVenta(data);
+  await cargarResumenVentas();
+}
 
-      <h2 style="margin-top:20px;">
-        GANANCIA LIMPIA:
-        <span style="color:#e10600;">
-          RD$ ${(vehiculo.precio_venta - total).toFixed(2)}
-        </span>
-      </h2>
-    </div>
-  `;
+async function agregarPago() {
+  if (!ventaActualId) return alert("Primero dale a VER en un vehículo.");
+  const descripcion = (document.getElementById("pagoDesc").value || "").trim();
+  const fecha = document.getElementById("pagoFecha").value;
+  const monto = Number(document.getElementById("pagoMonto").value || 0);
+  if (!descripcion || !monto) return alert("Completa descripción y monto.");
+
+  await apiPost(`/api/ventas/${ventaActualId}/pagos`, { descripcion, fecha, monto });
+
+  // limpiar
+  document.getElementById("pagoDesc").value = "";
+  document.getElementById("pagoMonto").value = "";
+
+  // recargar detalle + resumen
+  const data = await apiGet("/api/ventas/" + ventaActualId);
+  renderDetalleVenta(data);
+  await cargarResumenVentas();
+}
+
+// Estos deletes requieren endpoints en backend. Si no existen, mostrará alerta.
+async function eliminarGasto(id) {
+  if (!confirm("¿Eliminar este gasto?")) return;
+  try {
+    await apiDelete("/api/ventas-gastos/" + id);
+    const data = await apiGet("/api/ventas/" + ventaActualId);
+    renderDetalleVenta(data);
+    await cargarResumenVentas();
+  } catch (e) {
+    alert("Tu backend aún no tiene DELETE de gastos. Te digo qué agregar abajo.");
+    console.error(e);
+  }
+}
+
+async function eliminarPago(id) {
+  if (!confirm("¿Eliminar este pago?")) return;
+  try {
+    await apiDelete("/api/ventas-pagos/" + id);
+    const data = await apiGet("/api/ventas/" + ventaActualId);
+    renderDetalleVenta(data);
+    await cargarResumenVentas();
+  } catch (e) {
+    alert("Tu backend aún no tiene DELETE de pagos. Te digo qué agregar abajo.");
+    console.error(e);
+  }
 }
 
 async function generarReporteVenta(id) {
-  const data = await apiGet("/api/ventas/" + id);
-  const { vehiculo, gastos } = data;
+  // usa el mismo template que el preview
+  const data = (ventaActualId === id && ventaActualData) ? ventaActualData : await apiGet("/api/ventas/" + id);
 
-  let total = 0;
+  const wrapper = document.createElement("div");
+  wrapper.style.padding = "0";
+  wrapper.style.margin = "0";
+  wrapper.innerHTML = buildDealerTemplate(data);
+  document.body.appendChild(wrapper);
 
-  let filas = gastos.map((g,i)=>{
-    total += Number(g.monto);
-    return `
-      <tr>
-        <td>${i+1}</td>
-        <td>${g.descripcion}</td>
-        <td>${g.fecha}</td>
-        <td>RD$ ${Number(g.monto).toFixed(2)}</td>
-      </tr>
-    `;
-  }).join("");
+  const v = data.vehiculo || {};
+  const filename = `VENTA_${(v.marca||"").toUpperCase()}_${(v.modelo||"").toUpperCase()}_${v.ano||""}.pdf`;
 
-  const limpio = vehiculo.precio_venta - total;
+  await html2pdf()
+    .set({
+      margin: 0,
+      filename,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "px", format: [1100, 1550], orientation: "portrait" }
+    })
+    .from(wrapper.firstElementChild)
+    .save();
 
-  const html = `
-  <div style="background:#000;color:white;padding:40px;font-family:Arial;">
-    <h1 style="color:#e10600;">ARCY RENT CAR</h1>
-    <h2>VENTA DE VEHÍCULO</h2>
-
-    <h2>${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.ano})</h2>
-
-    <img src="${vehiculo.imagen || ''}"
-         style="width:400px;border:4px solid #e10600;margin:20px 0;">
-
-    <h2 style="color:#e10600;">
-      PRECIO VENDIDO: RD$ ${Number(vehiculo.precio_venta).toFixed(2)}
-    </h2>
-
-    <table border="1" width="100%" cellpadding="10"
-           style="border-collapse:collapse;margin-top:20px;">
-      <tr style="background:#e10600;color:white;">
-        <th>#</th>
-        <th>Descripción</th>
-        <th>Fecha</th>
-        <th>Monto</th>
-      </tr>
-      ${filas}
-      <tr style="background:#111;">
-        <td colspan="3"><b>TOTAL GASTOS</b></td>
-        <td><b>RD$ ${total.toFixed(2)}</b></td>
-      </tr>
-    </table>
-
-    <h1 style="margin-top:30px;">
-      GANANCIA LIMPIA:
-      <span style="color:#e10600;">
-        RD$ ${limpio.toFixed(2)}
-      </span>
-    </h1>
-  </div>
-  `;
-
-  const container = document.createElement("div");
-  container.innerHTML = html;
-  document.body.appendChild(container);
-
-  html2pdf().from(container).save(
-    `VENTA_${vehiculo.marca}_${vehiculo.modelo}.pdf`
-  ).then(()=> document.body.removeChild(container));
+  document.body.removeChild(wrapper);
 }
 
+// Events
 btnGuardarVenta?.addEventListener("click", guardarVenta);
-    // --- helpers ---
+
+document.getElementById("btnAgregarGasto")?.addEventListener("click", agregarGasto);
+document.getElementById("btnAgregarPago")?.addEventListener("click", agregarPago);
+
+document.getElementById("btnVentaCerrar")?.addEventListener("click", cerrarDetalleVenta);
+document.getElementById("btnVentaPDF")?.addEventListener("click", () => {
+  if (!ventaActualId) return;
+  generarReporteVenta(ventaActualId);
+});
+// --- helpers ---
     function parseISODateLocal(s){
       if(!s) return null;
       const str = String(s);
