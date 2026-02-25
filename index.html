@@ -228,6 +228,7 @@
       <button class="tab-btn" data-tab="vehiculos">Vehículos</button>
       <button class="tab-btn" data-tab="disponibilidad">Disponibilidad</button>
       <button class="tab-btn" data-tab="segurosPagos">Pagos Seguro</button>
+      <button class="tab-btn" data-tab="ventas">Venta de Vehículos</button>
 
       <button class="btn secondary right" id="btnLogout">Cerrar sesión</button>
     </div>
@@ -571,6 +572,61 @@
     </table>
   </div>
 </section>
+<section id="ventas" class="section">
+
+  <!-- REGISTRAR VEHICULO -->
+  <div class="card">
+    <div class="card-header">
+      <div class="title">Registrar Vehículo Vendido</div>
+      <div class="pill">Dealer Mode</div>
+    </div>
+
+    <form id="formVenta">
+      <div><label>Marca</label><input id="ventaMarca" required></div>
+      <div><label>Modelo</label><input id="ventaModelo" required></div>
+      <div><label>Año</label><input id="ventaAno" type="number"></div>
+      <div><label>Color</label><input id="ventaColor"></div>
+      <div><label>Chasis</label><input id="ventaChasis"></div>
+      <div><label>Precio Venta</label><input id="ventaPrecio" type="number" required></div>
+      <div><label>Fecha Venta</label><input id="ventaFecha" type="date" required></div>
+    </form>
+
+    <button class="btn" id="btnGuardarVenta">Guardar Vehículo</button>
+  </div>
+
+  <!-- RESUMEN -->
+  <div class="card">
+    <div class="card-header">
+      <div class="title">Resumen General</div>
+      <div class="pill">Cálculo Automático</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Vehículo</th>
+          <th>Precio</th>
+          <th>Gastos</th>
+          <th>Pagos</th>
+          <th>Ganancia Limpia</th>
+        </tr>
+      </thead>
+      <tbody id="tblVentasResumen"></tbody>
+    </table>
+
+    <div style="margin-top:15px; font-weight:bold;">
+      <div>Total Vendido: <span id="totalVendido"></span></div>
+      <div>Total Gastos: <span id="totalGastos"></span></div>
+      <div>Total Pagos: <span id="totalPagos"></span></div>
+      <div style="color:#e10600; font-size:1.2rem;">
+        TOTAL LIMPIO: <span id="totalLimpio"></span>
+      </div>
+    </div>
+
+  </div>
+
+</section>
 
   </main>
 
@@ -643,10 +699,90 @@
       </div>
     </div>
   </div>
+  
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 
 <script>
+
+  // =====================
+// VENTAS MODULE
+// =====================
+
+async function guardarVenta() {
+  const marca = document.getElementById("ventaMarca").value;
+  const modelo = document.getElementById("ventaModelo").value;
+  const ano = document.getElementById("ventaAno").value;
+  const color = document.getElementById("ventaColor").value;
+  const chasis = document.getElementById("ventaChasis").value;
+  const precio_venta = Number(document.getElementById("ventaPrecio").value);
+  const fecha_venta = document.getElementById("ventaFecha").value;
+
+  if (!marca || !modelo || !precio_venta) {
+    alert("Completa los campos obligatorios");
+    return;
+  }
+
+  try {
+    await apiPost("/api/ventas", {
+      marca,
+      modelo,
+      ano,
+      color,
+      chasis,
+      precio_venta,
+      fecha_venta
+    });
+
+    alert("Vehículo registrado ✅");
+    cargarResumenVentas();
+  } catch (e) {
+    alert("Error guardando venta");
+    console.error(e);
+  }
+}
+
+async function cargarResumenVentas() {
+  try {
+    const data = await apiGet("/api/ventas-resumen");
+
+    const tbody = document.getElementById("tblVentasResumen");
+    tbody.innerHTML = "";
+
+    data.vehiculos.forEach(v => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${v.id}</td>
+        <td>${v.marca} ${v.modelo} (${v.ano || ""})</td>
+        <td>${Number(v.precio_venta).toFixed(2)}</td>
+        <td>${Number(v.total_gastos).toFixed(2)}</td>
+        <td>${Number(v.total_pagos).toFixed(2)}</td>
+        <td style="color:#e10600;font-weight:bold;">
+          ${Number(v.ganancia_limpia).toFixed(2)}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("totalVendido").textContent =
+      Number(data.total_vendido).toFixed(2);
+
+    document.getElementById("totalGastos").textContent =
+      Number(data.total_gastos).toFixed(2);
+
+    document.getElementById("totalPagos").textContent =
+      Number(data.total_pagos).toFixed(2);
+
+    document.getElementById("totalLimpio").textContent =
+      Number(data.total_limpio).toFixed(2);
+
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+document.getElementById("btnGuardarVenta")
+  ?.addEventListener("click", guardarVenta);
     // --- helpers ---
     function parseISODateLocal(s){
       if(!s) return null;
@@ -845,6 +981,7 @@
       if(name==="reportes") renderReportes();
       if(name==="disponibilidad") renderDisponibilidad();
       if(name==="segurosPagos") loadSegurosPagos();
+      if(name==="ventas") cargarResumenVentas();
     }
 
     // =========================
