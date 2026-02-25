@@ -587,6 +587,7 @@
       <div><label>Año</label><input id="ventaAno" type="number"></div>
       <div><label>Color</label><input id="ventaColor"></div>
       <div><label>Chasis</label><input id="ventaChasis"></div>
+      <div><label>URL Imagen</label><input id="ventaImagen" placeholder="https://..."></div>
       <div><label>Precio Venta</label><input id="ventaPrecio" type="number" required></div>
       <div><label>Fecha Venta</label><input id="ventaFecha" type="date" required></div>
     </form>
@@ -739,6 +740,7 @@ async function guardarVenta() {
   const ano = document.getElementById("ventaAno").value;
   const color = document.getElementById("ventaColor").value;
   const chasis = document.getElementById("ventaChasis").value;
+  const imagen = document.getElementById("ventaImagen").value;
   const precio_venta = Number(document.getElementById("ventaPrecio").value);
   const fecha_venta = document.getElementById("ventaFecha").value;
 
@@ -754,19 +756,68 @@ async function guardarVenta() {
       ano,
       color,
       chasis,
+      imagen,
       precio_venta,
       fecha_venta
     });
 
     alert("Vehículo registrado ✅");
+    document.getElementById("formVenta").reset();
     cargarResumenVentas();
+
   } catch (e) {
     alert("Error guardando venta");
     console.error(e);
   }
 }
-
 async function cargarResumenVentas() {
+  try {
+    const data = await apiGet("/api/ventas-resumen");
+
+    const tbody = document.getElementById("tblVentasResumen");
+    tbody.innerHTML = "";
+
+    data.vehiculos.forEach(v => {
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${v.id}</td>
+        <td>${v.marca} ${v.modelo} (${v.ano || ""})</td>
+        <td>${Number(v.precio_venta).toFixed(2)}</td>
+        <td>${Number(v.total_gastos).toFixed(2)}</td>
+        <td>${Number(v.total_pagos).toFixed(2)}</td>
+        <td style="color:#e10600;font-weight:bold;">
+          ${Number(v.ganancia_limpia).toFixed(2)}
+        </td>
+        <td>
+          <button class="btn small" onclick="generarReporteVenta(${v.id})">
+            PDF
+          </button>
+          <button class="btn small secondary" onclick="eliminarVenta(${v.id})">
+            Eliminar
+          </button>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById("totalVendido").textContent =
+      Number(data.total_vendido).toFixed(2);
+
+    document.getElementById("totalGastos").textContent =
+      Number(data.total_gastos).toFixed(2);
+
+    document.getElementById("totalPagos").textContent =
+      Number(data.total_pagos).toFixed(2);
+
+    document.getElementById("totalLimpio").textContent =
+      Number(data.total_limpio).toFixed(2);
+
+  } catch (e) {
+    console.error(e);
+  }
+}
   try {
     const data = await apiGet("/api/ventas-resumen");
 
@@ -807,8 +858,88 @@ async function cargarResumenVentas() {
   } catch (e) {
     console.error(e);
   }
-}
+  async function eliminarVenta(id) {
+  if (!confirm("¿Seguro que deseas eliminar esta venta?")) return;
 
+  try {
+    await apiDelete("/api/ventas/" + id);
+    cargarResumenVentas();
+    alert("Venta eliminada ✅");
+  } catch (e) {
+    alert("Error eliminando venta");
+    console.error(e);
+  }
+}
+async function generarReporteVenta(id) {
+  const data = await apiGet("/api/ventas/" + id);
+  const { vehiculo, gastos } = data;
+
+  let totalGastos = 0;
+
+  let filas = gastos.map((g, i) => {
+    totalGastos += Number(g.monto);
+    return `
+      <tr>
+        <td>${i+1}</td>
+        <td>${g.descripcion}</td>
+        <td>${g.fecha}</td>
+        <td>RD$ ${Number(g.monto).toFixed(2)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const totalLimpio = vehiculo.precio_venta - totalGastos;
+
+  const html = `
+    <div style="background:#111;color:white;padding:40px;font-family:Arial;">
+      <h1 style="color:#e10600;">ARCY RENT CAR</h1>
+      <h2>VENTA DE VEHÍCULO</h2>
+
+      <h2>${vehiculo.marca} ${vehiculo.modelo} (${vehiculo.ano})</h2>
+
+      <img src="${vehiculo.imagen || ''}"
+           style="width:400px;border:3px solid #e10600;margin:20px 0;">
+
+      <h3 style="color:#e10600;">
+        PRECIO VENDIDO: RD$ ${Number(vehiculo.precio_venta).toFixed(2)}
+      </h3>
+
+      <h2 style="margin-top:30px;">GASTOS</h2>
+
+      <table border="1" width="100%" cellpadding="10"
+             style="border-collapse:collapse;">
+        <tr style="background:#e10600;color:white;">
+          <th>#</th>
+          <th>Descripción</th>
+          <th>Fecha</th>
+          <th>Precio</th>
+        </tr>
+        ${filas}
+        <tr style="background:#222;">
+          <td colspan="3"><b>TOTAL GASTOS</b></td>
+          <td><b>RD$ ${totalGastos.toFixed(2)}</b></td>
+        </tr>
+      </table>
+
+      <h2 style="margin-top:30px;">
+        GANANCIA LIMPIA:
+        <span style="color:#e10600;">
+          RD$ ${totalLimpio.toFixed(2)}
+        </span>
+      </h2>
+    </div>
+  `;
+
+  const container = document.createElement("div");
+  container.innerHTML = html;
+  document.body.appendChild(container);
+
+  html2pdf().from(container).save(
+    `VENTA_${vehiculo.marca}_${vehiculo.modelo}.pdf`
+  ).then(() => {
+    document.body.removeChild(container);
+  });
+}
 document.getElementById("btnGuardarVenta")
   ?.addEventListener("click", guardarVenta);
     // --- helpers ---
