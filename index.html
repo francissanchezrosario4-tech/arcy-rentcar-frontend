@@ -625,6 +625,9 @@
     </div>
 
   </div>
+  
+   <!-- DETALLE DEL VEHICULO -->
+  <div id="detalleVenta" style="margin-top:20px;"></div>
 
 </section>
 
@@ -704,7 +707,28 @@
 
 
 <script>
+async function verDetalleVenta(id) {
+  const data = await apiGet("/api/ventas-resumen");
+  const veh = data.vehiculos.find(v => v.id == id);
+  if (!veh) return;
 
+  document.getElementById("detalleVenta").innerHTML = `
+    <div class="card">
+      <h2>${veh.marca} ${veh.modelo} (${veh.ano || ""})</h2>
+      <h3 style="color:#e10600">
+        Precio Vendido: ${Number(veh.precio_venta).toFixed(2)}
+      </h3>
+      <h3>GASTOS</h3>
+      <div>Total Gastos: ${Number(veh.total_gastos).toFixed(2)}</div>
+      <div style="margin-top:10px; font-weight:bold;">
+        TOTAL RESTANTE:
+        <span style="color:#e10600;">
+          ${Number(veh.ganancia_limpia).toFixed(2)}
+        </span>
+      </div>
+    </div>
+  `;
+}
   // =====================
 // VENTAS MODULE
 // =====================
@@ -752,16 +776,20 @@ async function cargarResumenVentas() {
     data.vehiculos.forEach(v => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${v.id}</td>
-        <td>${v.marca} ${v.modelo} (${v.ano || ""})</td>
-        <td>${Number(v.precio_venta).toFixed(2)}</td>
-        <td>${Number(v.total_gastos).toFixed(2)}</td>
-        <td>${Number(v.total_pagos).toFixed(2)}</td>
-        <td style="color:#e10600;font-weight:bold;">
-          ${Number(v.ganancia_limpia).toFixed(2)}
-        </td>
-      `;
-      tbody.appendChild(tr);
+  <td>${v.id}</td>
+  <td>${v.marca} ${v.modelo} (${v.ano || ""})</td>
+  <td>${Number(v.precio_venta).toFixed(2)}</td>
+  <td>${Number(v.total_gastos).toFixed(2)}</td>
+  <td>${Number(v.total_pagos).toFixed(2)}</td>
+  <td style="color:#e10600;font-weight:bold;">
+    ${Number(v.ganancia_limpia).toFixed(2)}
+  </td>
+  <td>
+    <button class="btn small" onclick="verDetalleVenta(${v.id})">
+      Ver Reporte
+    </button>
+  </td>
+`;
     });
 
     document.getElementById("totalVendido").textContent =
