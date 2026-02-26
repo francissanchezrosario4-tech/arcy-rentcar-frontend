@@ -849,10 +849,15 @@ async function guardarVenta() {
   const precio_venta = Number(ventaPrecio.value || 0);
   const fecha_venta = ventaFecha.value;
 
-  if (!marca || !modelo || !precio_venta) {
-    alert("Completa los campos obligatorios (Marca, Modelo, Precio).");
-    return;
-  }
+  if (!marca || !modelo || !fecha_venta) {
+  alert("Completa Marca, Modelo y Fecha de venta");
+  return;
+}
+
+if (isNaN(precio_venta) || precio_venta < 0) {
+  alert("Precio inválido (usa 0 si no aplica)");
+  return;
+}
 
   await apiPost("/api/ventas", {
     marca, modelo, ano, color, chasis, imagen, precio_venta, fecha_venta
@@ -1155,8 +1160,14 @@ async function agregarGasto() {
   const descripcion = (document.getElementById("gastoDesc").value || "").trim();
   const fecha = document.getElementById("gastoFecha").value;
   const monto = Number(document.getElementById("gastoMonto").value || 0);
-  if (!descripcion || !monto) return alert("Completa descripción y monto.");
-
+  if (!descripcion || !fecha) {
+  alert("Completa descripción y fecha del gasto");
+  return;
+}
+if (isNaN(monto) || monto < 0) {
+  alert("Monto inválido (usa 0 si solo es nota)");
+  return;
+}
   await apiPost(`/api/ventas/${ventaActualId}/gastos`, { descripcion, fecha, monto });
 
   // limpiar
@@ -1174,8 +1185,14 @@ async function agregarPago() {
   const descripcion = (document.getElementById("pagoDesc").value || "").trim();
   const fecha = document.getElementById("pagoFecha").value;
   const monto = Number(document.getElementById("pagoMonto").value || 0);
-  if (!descripcion || !monto) return alert("Completa descripción y monto.");
-
+  if (!descripcion || !fecha) {
+  alert("Completa descripción y fecha del pago");
+  return;
+}
+if (isNaN(monto) || monto < 0) {
+  alert("Monto inválido (usa 0 si solo es nota)");
+  return;
+}
   await apiPost(`/api/ventas/${ventaActualId}/pagos`, { descripcion, fecha, monto });
 
   // limpiar
