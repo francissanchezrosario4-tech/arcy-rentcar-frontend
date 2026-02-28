@@ -871,14 +871,17 @@ async function descargarReporteCompleto() {
 
  const pageWidth = doc.internal.pageSize.getWidth();
 
-// ancho del logo en el PDF
-const logoWidth = 120; 
-const logoHeight = 35;
+// margen lateral pequeño
+const margin = 10;
 
-// calcular posición centrada
-const x = (pageWidth - logoWidth) / 2;
+// ancho máximo disponible
+const logoWidth = pageWidth - (margin * 2);
 
-doc.addImage(logo, "PNG", x, 10, logoWidth, logoHeight);
+// mantener proporción real
+const aspectRatio = 439 / 2048; 
+const logoHeight = logoWidth * aspectRatio;
+
+doc.addImage(logo, "PNG", margin, 10, logoWidth, logoHeight);
 doc.setDrawColor(200, 0, 0);
 doc.setLineWidth(0.8);
 doc.line(20, 50, pageWidth - 20, 50);
@@ -906,7 +909,7 @@ doc.line(20, 50, pageWidth - 20, 50);
   ]);
 
   doc.autoTable({
-    startY: 40,
+    startY: 10 + logoHeight + 10,
     head: [["Nº", "Vehículo", "Venta", "Gastos", "Pagos", "Ganancia"]],
     body: body,
     theme: "grid",
