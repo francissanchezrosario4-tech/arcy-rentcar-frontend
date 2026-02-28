@@ -603,19 +603,25 @@
       <div class="pill">Cálculo Automático</div>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Vehículo</th>
-          <th>Precio</th>
-          <th>Gastos</th>
-          <th>Pagos</th>
-          <th>Ganancia Limpia</th>
-        </tr>
-      </thead>
-      <tbody id="tblVentasResumen"></tbody>
-    </table>
+    <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
+  <button onclick="descargarReporteCompleto()" class="btn">
+    📄 Descargar Reporte Completo
+  </button>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Vehículo</th>
+      <th>Precio</th>
+      <th>Gastos</th>
+      <th>Pagos</th>
+      <th>Ganancia Limpia</th>
+    </tr>
+  </thead>
+  <tbody id="tblVentasResumen"></tbody>
+</table>
 
     <div style="margin-top:15px; font-weight:bold;">
       <div>Total Vendido: <span id="totalVendido"></span></div>
@@ -844,6 +850,48 @@ function _onlyDate(d) {
 function fmtRD(n) {
   const num = Number(n || 0);
   return "RD$ " + num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+async function descargarReporteCompleto() {
+
+  const res = await fetch("https://arcy-rentcar-backend.onrender.com/api/ventas-reporte-completo");
+  const ventas = await res.json();
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  let y = 20;
+
+  doc.setFontSize(16);
+  doc.text("REPORTE GENERAL DE VENTAS", 20, 10);
+
+  doc.setFontSize(10);
+
+  ventas.forEach(v => {
+
+    doc.text(
+      `VENTA-${String(v.numero_venta).padStart(3,"0")} | ${v.marca} ${v.modelo} (${v.ano})`,
+      10,
+      y
+    );
+    y += 6;
+
+    doc.text(
+      `Venta: RD$ ${v.precio_venta} | Gastos: RD$ ${v.total_gastos} | Pagos: RD$ ${v.total_pagos} | Ganancia: RD$ ${v.ganancia_limpia}`,
+      10,
+      y
+    );
+
+    y += 10;
+
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+
+  });
+
+  doc.save("REPORTE_GENERAL_VENTAS.pdf");
 }
 
 async function guardarVenta() {
