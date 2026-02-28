@@ -869,7 +869,16 @@ async function descargarReporteCompleto() {
     logo.onload = resolve;
   });
 
-  doc.addImage(logo, "PNG", 10, 8, 80, 25);
+ const pageWidth = doc.internal.pageSize.getWidth();
+
+// ancho del logo en el PDF
+const logoWidth = 120; 
+const logoHeight = 35;
+
+// calcular posición centrada
+const x = (pageWidth - logoWidth) / 2;
+
+doc.addImage(logo, "PNG", x, 10, logoWidth, logoHeight);
 
   // 🔹 TÍTULO
   doc.setFontSize(16);
