@@ -880,8 +880,8 @@ async function descargarReporteCompleto() {
   background:#111;
   color:white;
   font-family:Arial;
-  width:100%;
-  height:100%;
+  padding:30px;
+  border-radius:8px;
 ">
 
     <!-- BANNER -->
@@ -1403,7 +1403,7 @@ async function generarReporteVenta(id) {
 
 await html2pdf()
   .set({
-    margin: 0,
+    margin: 10,
     filename,
     image: { type: "jpeg", quality: 0.98 },
     html2canvas: {
@@ -1417,35 +1417,6 @@ await html2pdf()
     }
   })
   .from(wrapper.firstElementChild)
-  .toPdf()
-  .get('pdf')
-  .then(function (pdf) {
-
-    const totalPages = pdf.internal.getNumberOfPages();
-
-    for (let i = 1; i <= totalPages; i++) {
-      pdf.setPage(i);
-
-      // 🔥 pintar fondo negro completo
-      pdf.setFillColor(17, 17, 17);
-      pdf.rect(
-        0,
-        0,
-        pdf.internal.pageSize.getWidth(),
-        pdf.internal.pageSize.getHeight(),
-        "F"
-      );
-
-      // 🔢 número de página
-      pdf.setTextColor(180);
-      pdf.setFontSize(10);
-      pdf.text(
-        `Página ${i} de ${totalPages}`,
-        pdf.internal.pageSize.getWidth() - 40,
-        pdf.internal.pageSize.getHeight() - 8
-      );
-    }
-  })
   .save();
 
 document.body.removeChild(wrapper);
