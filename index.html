@@ -582,6 +582,7 @@
     </div>
 
     <form id="formVenta">
+       <div><label>Número de Venta</label><input id="ventaNumero" type="number" placeholder="Opcional"></div>
       <div><label>Marca</label><input id="ventaMarca" required></div>
       <div><label>Modelo</label><input id="ventaModelo" required></div>
       <div><label>Año</label><input id="ventaAno" type="number"></div>
@@ -800,14 +801,20 @@
 
 
 <script>
+
+  function formatearNumero(n) {
+  if (!n) return "";
+  return "VENTA-" + String(n).padStart(3, "0");
+}
 async function verDetalleVenta(id) {
   const data = await apiGet("/api/ventas-resumen");
   const veh = data.vehiculos.find(v => v.id == id);
   if (!veh) return;
 
   document.getElementById("detalleVenta").innerHTML = `
-    <div class="card">
-      <h2>${veh.marca} ${veh.modelo} (${veh.ano || ""})</h2>
+    <h2 style="color:#e10600;">
+  ${formatearNumero(veh.numero_venta)}</h2>
+<h2>${veh.marca} ${veh.modelo} (${veh.ano || ""})</h2>
       <h3 style="color:#e10600">
         Precio Vendido: ${Number(veh.precio_venta).toFixed(2)}
       </h3>
@@ -840,6 +847,7 @@ function fmtRD(n) {
 }
 
 async function guardarVenta() {
+  const numero_venta = document.getElementById("ventaNumero").value;
   const marca = ventaMarca.value.trim();
   const modelo = ventaModelo.value.trim();
   const ano = ventaAno.value ? Number(ventaAno.value) : null;
@@ -860,7 +868,7 @@ if (isNaN(precio_venta) || precio_venta < 0) {
 }
 
   await apiPost("/api/ventas", {
-    marca, modelo, ano, color, chasis, imagen, precio_venta, fecha_venta
+    numero_venta, marca, modelo, ano, color, chasis, imagen, precio_venta, fecha_venta
   });
 
   formVenta.reset();
@@ -881,7 +889,9 @@ async function cargarResumenVentas() {
     tr.onmouseleave = () => tr.style.background = "transparent";
 
     tr.innerHTML = `
-      <td>${v.id}</td>
+      <td style="color:#e10600; font-weight:bold;">
+     ${formatearNumero(v.numero_venta)}
+     </td>
       <td>${(v.marca || "").toUpperCase()} ${(v.modelo || "").toUpperCase()} (${v.ano || ""})</td>
       <td>${fmtRD(v.precio_venta)}</td>
       <td>${fmtRD(v.total_gastos)}</td>
@@ -961,6 +971,17 @@ function buildDealerTemplate({ vehiculo, gastos, pagos }) {
     position:relative;
     overflow:hidden;
   ">
+  <div style="
+  display:inline-block;
+  background:#e10600;
+  padding:8px 18px;
+  border-radius:20px;
+  font-weight:bold;
+  font-size:18px;
+  margin-bottom:20px;
+">
+  ${formatearNumero(vehiculo.numero_venta)}
+</div>
 
     <!-- decorative triangles -->
     <div style="position:absolute; inset:0; opacity:.16; pointer-events:none;
