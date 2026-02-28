@@ -932,36 +932,65 @@ async function descargarReporteCompleto() {
   // =========================
   // 🔹 TOTALES
   // =========================
-  const finalY = doc.lastAutoTable.finalY + 15;
+  const finalY = doc.lastAutoTable.finalY + 20;
 
 const boxWidth = pageWidth - 40;
-const boxHeight = 40;
+const boxHeight = 55;
 const boxX = 20;
 const boxY = finalY;
 
-// 🔹 Fondo gris claro elegante
-doc.setFillColor(245, 245, 245);
-doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, "F");
+// 🔴 Fondo negro agresivo
+doc.setFillColor(15, 15, 15);
+doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 4, 4, "F");
+
+// Línea roja superior gruesa
+doc.setDrawColor(220, 0, 0);
+doc.setLineWidth(2);
+doc.line(boxX, boxY, boxX + boxWidth, boxY);
 
 // Título
-doc.setFontSize(12);
-doc.setTextColor(0);
-doc.text("RESUMEN FINANCIERO GENERAL", boxX + 10, boxY + 10);
+doc.setFontSize(13);
+doc.setTextColor(255);
+doc.text("RESUMEN FINANCIERO GENERAL", boxX + 10, boxY + 12);
 
-// Valores
+// 🔹 Venta Total
 doc.setFontSize(10);
+doc.setTextColor(180);
+doc.text("VENTA TOTAL", boxX + 10, boxY + 25);
 
-doc.text(`Venta Total: ${fmtRD(data.total_vendido)}`, boxX + 10, boxY + 20);
-doc.text(`Gastos Totales: ${fmtRD(data.total_gastos)}`, boxX + 80, boxY + 20);
-doc.text(`Pagos Totales: ${fmtRD(data.total_pagos)}`, boxX + 150, boxY + 20);
-
-// 🔴 Ganancia destacada en rojo fuerte
-doc.setTextColor(200, 0, 0);
 doc.setFontSize(12);
+doc.setTextColor(255);
+doc.text(fmtRD(data.total_vendido), boxX + 10, boxY + 33);
+
+// 🔹 Gastos
+doc.setFontSize(10);
+doc.setTextColor(180);
+doc.text("GASTOS TOTALES", boxX + 90, boxY + 25);
+
+doc.setFontSize(12);
+doc.setTextColor(255);
+doc.text(fmtRD(data.total_gastos), boxX + 90, boxY + 33);
+
+// 🔹 Pagos
+doc.setFontSize(10);
+doc.setTextColor(180);
+doc.text("PAGOS TOTALES", boxX + 170, boxY + 25);
+
+doc.setFontSize(12);
+doc.setTextColor(255);
+doc.text(fmtRD(data.total_pagos), boxX + 170, boxY + 33);
+
+// 🔥 GANANCIA NETA SUPER DESTACADA
+doc.setFontSize(11);
+doc.setTextColor(255, 60, 60);
+doc.text("GANANCIA NETA", boxX + 10, boxY + 48);
+
+doc.setFontSize(16);
+doc.setTextColor(255, 0, 0);
 doc.text(
-  `GANANCIA NETA: ${fmtRD(data.total_limpio)}`,
-  boxX + 10,
-  boxY + 33
+  fmtRD(data.total_limpio),
+  boxX + 70,
+  boxY + 48
 );
 
   doc.save("REPORTE_GENERAL_VENTAS.pdf");
