@@ -932,34 +932,37 @@ async function descargarReporteCompleto() {
   // =========================
   // 🔹 TOTALES
   // =========================
-  const finalY = doc.lastAutoTable.finalY + 10;
+  const finalY = doc.lastAutoTable.finalY + 15;
 
-  doc.setFontSize(11);
-  doc.text("TOTALES GENERALES:", 20, finalY);
+const boxWidth = pageWidth - 40;
+const boxHeight = 40;
+const boxX = 20;
+const boxY = finalY;
 
-  doc.setFontSize(10);
-  doc.text(`Venta Total: ${fmtRD(data.total_vendido)}`, 20, finalY + 8);
-  doc.text(`Gastos Totales: ${fmtRD(data.total_gastos)}`, 20, finalY + 15);
-  doc.text(`Pagos Totales: ${fmtRD(data.total_pagos)}`, 20, finalY + 22);
+// 🔹 Fondo gris claro elegante
+doc.setFillColor(245, 245, 245);
+doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, "F");
 
-  doc.setTextColor(200, 0, 0);
-  doc.text(`GANANCIA NETA: ${fmtRD(data.total_limpio)}`, 20, finalY + 30);
+// Título
+doc.setFontSize(12);
+doc.setTextColor(0);
+doc.text("RESUMEN FINANCIERO GENERAL", boxX + 10, boxY + 10);
 
-  // =========================
-  // 🔹 NUMERACIÓN
-  // =========================
-  const pageCount = doc.getNumberOfPages();
+// Valores
+doc.setFontSize(10);
 
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(9);
-    doc.setTextColor(150);
-    doc.text(
-      `Página ${i} de ${pageCount}`,
-      pageWidth - 40,
-      doc.internal.pageSize.getHeight() - 10
-    );
-  }
+doc.text(`Venta Total: ${fmtRD(data.total_vendido)}`, boxX + 10, boxY + 20);
+doc.text(`Gastos Totales: ${fmtRD(data.total_gastos)}`, boxX + 80, boxY + 20);
+doc.text(`Pagos Totales: ${fmtRD(data.total_pagos)}`, boxX + 150, boxY + 20);
+
+// 🔴 Ganancia destacada en rojo fuerte
+doc.setTextColor(200, 0, 0);
+doc.setFontSize(12);
+doc.text(
+  `GANANCIA NETA: ${fmtRD(data.total_limpio)}`,
+  boxX + 10,
+  boxY + 33
+);
 
   doc.save("REPORTE_GENERAL_VENTAS.pdf");
 }
