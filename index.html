@@ -870,6 +870,7 @@ async function descargarReporteCompleto() {
     logo.onload = resolve;
   });
 
+  const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 10;
 
   const logoWidth = pageWidth - (margin * 2);
@@ -933,8 +934,6 @@ async function descargarReporteCompleto() {
   // =========================
  // Siempre mandar resumen a nueva página
 doc.addPage();
-
-const pageWidth = doc.internal.pageSize.getWidth();
 const pageHeight = doc.internal.pageSize.getHeight();
 const centerX = pageWidth / 2;
 
