@@ -870,7 +870,6 @@ async function descargarReporteCompleto() {
     logo.onload = resolve;
   });
 
-  const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 10;
 
   const logoWidth = pageWidth - (margin * 2);
@@ -935,42 +934,80 @@ async function descargarReporteCompleto() {
  // Siempre mandar resumen a nueva página
 doc.addPage();
 
-// Centro horizontal
+const pageWidth = doc.internal.pageSize.getWidth();
+const pageHeight = doc.internal.pageSize.getHeight();
 const centerX = pageWidth / 2;
 
-// 🔹 Título
-doc.setFontSize(18);
-doc.setTextColor(0);
-doc.text("RESUMEN FINANCIERO GENERAL", centerX, 60, { align: "center" });
+// =========================
+// 🔴 TÍTULO PRINCIPAL
+// =========================
+doc.setFontSize(20);
+doc.setTextColor(30);
+doc.text("RESUMEN FINANCIERO GENERAL", centerX, 50, { align: "center" });
 
-// Línea roja debajo del título
 doc.setDrawColor(220, 0, 0);
-doc.setLineWidth(1.5);
-doc.line(60, 70, pageWidth - 60, 70);
+doc.setLineWidth(2);
+doc.line(70, 60, pageWidth - 70, 60);
 
-// 🔹 Métricas principales
-doc.setFontSize(11);
-doc.setTextColor(100);
+// =========================
+// 📊 TARJETAS SUPERIORES
+// =========================
+const cardWidth = 70;
+const cardHeight = 35;
+const startY = 90;
 
-doc.text("VENTA TOTAL", pageWidth / 4, 100, { align: "center" });
-doc.text("GASTOS TOTALES", centerX, 100, { align: "center" });
-doc.text("PAGOS TOTALES", pageWidth * 0.75, 100, { align: "center" });
+const positions = [
+  pageWidth / 4 - cardWidth / 2,
+  centerX - cardWidth / 2,
+  pageWidth * 0.75 - cardWidth / 2
+];
 
-doc.setFontSize(14);
-doc.setTextColor(0);
+// Función para dibujar tarjeta
+function drawCard(x, title, value) {
+  doc.setFillColor(245, 245, 245);
+  doc.roundedRect(x, startY, cardWidth, cardHeight, 4, 4, "F");
 
-doc.text(fmtRD(data.total_vendido), pageWidth / 4, 115, { align: "center" });
-doc.text(fmtRD(data.total_gastos), centerX, 115, { align: "center" });
-doc.text(fmtRD(data.total_pagos), pageWidth * 0.75, 115, { align: "center" });
+  doc.setFontSize(10);
+  doc.setTextColor(120);
+  doc.text(title, x + cardWidth / 2, startY + 12, { align: "center" });
 
-// 🔥 GANANCIA NETA GRANDE Y PODEROSA
-doc.setFontSize(13);
-doc.setTextColor(120);
-doc.text("GANANCIA NETA", centerX, 160, { align: "center" });
+  doc.setFontSize(14);
+  doc.setTextColor(0);
+  doc.text(value, x + cardWidth / 2, startY + 25, { align: "center" });
+}
 
-doc.setFontSize(26);
-doc.setTextColor(200, 0, 0);
-doc.text(fmtRD(data.total_limpio), centerX, 185, { align: "center" });
+// Dibujar tarjetas
+drawCard(positions[0], "VENTA TOTAL", fmtRD(data.total_vendido));
+drawCard(positions[1], "GASTOS TOTALES", fmtRD(data.total_gastos));
+drawCard(positions[2], "PAGOS TOTALES", fmtRD(data.total_pagos));
+
+// =========================
+// 💰 GANANCIA NETA DESTACADA
+// =========================
+const gananciaBoxWidth = pageWidth - 100;
+const gananciaBoxHeight = 60;
+const gananciaX = 50;
+const gananciaY = 170;
+
+// Fondo rojo fuerte
+doc.setFillColor(200, 0, 0);
+doc.roundedRect(
+  gananciaX,
+  gananciaY,
+  gananciaBoxWidth,
+  gananciaBoxHeight,
+  6,
+  6,
+  "F"
+);
+
+// Texto blanco
+doc.setTextColor(255);
+doc.setFontSize(12);
+doc.text("GANANCIA NETA", centerX, gananciaY + 22, { align: "center" });
+
+doc.setFontSize(28);
+doc.text(fmtRD(data.total_limpio), centerX, gananciaY + 45, { align: "center" });
 
   doc.save("REPORTE_GENERAL_VENTAS.pdf");
 }
