@@ -902,6 +902,7 @@ async function cargarResumenVentas() {
       <td style="white-space:nowrap;">
         <button class="btn small" onclick="verDetalleVenta(${v.id})">Ver</button>
         <button class="btn small" onclick="generarReporteVenta(${v.id})">PDF</button>
+        <button class="btn small" onclick="editarNumero(${v.id}, ${v.numero_venta || 0})">Editar Nº</button>
         <button class="btn small secondary" onclick="eliminarVenta(${v.id})">Eliminar</button>
       </td>
     `;
@@ -1174,6 +1175,19 @@ async function verDetalleVenta(id) {
   ventaActualId = id;
   const data = await apiGet("/api/ventas/" + id);
   renderDetalleVenta(data);
+}
+async function editarNumero(id, actual) {
+  const nuevo = prompt("Nuevo número de venta:", actual || "");
+
+  if (!nuevo) return;
+
+  await fetch(API_URL + "/api/ventas/" + id + "/numero", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ numero_venta: nuevo })
+  });
+
+  cargarResumenVentas();
 }
 
 async function agregarGasto() {
