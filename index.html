@@ -857,7 +857,7 @@ async function descargarReporteCompleto() {
   const data = await apiGet("/api/ventas-reporte-completo");
   const fechaHoy = new Date().toLocaleDateString();
 
-  const logoURL = "https://raw.githubusercontent.com/francissanchezrosario4-tech/arcy-rentcar-frontend/main/logo-sanchez-auto.png";
+  const logoURL = "logo-sanchez-auto.png";
 
   const totalVenta = data.reduce((a,v)=> a + Number(v.precio_venta||0),0);
   const totalGastos = data.reduce((a,v)=> a + Number(v.total_gastos||0),0);
@@ -876,7 +876,13 @@ async function descargarReporteCompleto() {
   `).join("");
 
   const html = `
-  <<div style="background:#111;color:white;font-family:Arial; min-height:100vh;">
+  <div style="
+  background:#111;
+  color:white;
+  font-family:Arial;
+  width:100%;
+  height:100%;
+">
 
     <!-- BANNER -->
     <div style="text-align:center;">
@@ -1396,15 +1402,23 @@ async function generarReporteVenta(id) {
   const filename = `VENTA_${(v.marca||"").toUpperCase()}_${(v.modelo||"").toUpperCase()}_${v.ano||""}.pdf`;
 
   await html2pdf()
-    .set({
-      margin: 0,
-      filename,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "px", format: [1100, 1550], orientation: "portrait" }
-    })
-    .from(wrapper.firstElementChild)
-    .save();
+  .set({
+    margin: 0,
+    filename,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#111"
+    },
+    jsPDF: {
+      unit: "mm",
+      format: "a4",
+      orientation: "landscape"
+    }
+  })
+  .from(wrapper.firstElementChild)
+  .save();
 
   document.body.removeChild(wrapper);
 }
