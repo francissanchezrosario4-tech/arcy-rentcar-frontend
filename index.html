@@ -858,10 +858,11 @@ async function descargarReporteCompleto() {
   const doc = new jsPDF({ orientation: "landscape" });
 
   const data = await apiGet("/api/ventas-resumen");
-
   const fechaHoy = new Date().toLocaleDateString();
 
-  // 🔹 LOGO
+  // =========================
+  // 🔹 CARGAR LOGO
+  // =========================
   const logo = new Image();
   logo.src = "logo-sanchez-auto.png";
 
@@ -869,36 +870,42 @@ async function descargarReporteCompleto() {
     logo.onload = resolve;
   });
 
- const pageWidth = doc.internal.pageSize.getWidth();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 10;
 
-// margen lateral pequeño
-const margin = 10;
+  const logoWidth = pageWidth - (margin * 2);
+  const aspectRatio = 439 / 2048; // proporción real de tu banner
+  const logoHeight = logoWidth * aspectRatio;
 
-// ancho máximo disponible
-const logoWidth = pageWidth - (margin * 2);
+  // 🔹 Agregar imagen arriba
+  doc.addImage(logo, "PNG", margin, 10, logoWidth, logoHeight);
 
-// mantener proporción real
-const aspectRatio = 439 / 2048; 
-const logoHeight = logoWidth * aspectRatio;
+  // =========================
+  // 🔹 CONTENIDO DEBAJO DEL BANNER
+  // =========================
+  const contentStartY = 10 + logoHeight + 10;
 
-doc.addImage(logo, "PNG", margin, 10, logoWidth, logoHeight);
-doc.setDrawColor(200, 0, 0);
-doc.setLineWidth(0.8);
-doc.line(20, 50, pageWidth - 20, 50);
+  // Línea roja debajo del banner
+  doc.setDrawColor(200, 0, 0);
+  doc.setLineWidth(0.8);
+  doc.line(20, contentStartY, pageWidth - 20, contentStartY);
 
-  // 🔹 TÍTULO
-  doc.setFontSize(16);
+  // Título
+  doc.setFontSize(14);
   doc.setTextColor(0);
-  doc.text("REPORTE GENERAL DE VENTAS", 110, 20);
+  doc.text("REPORTE GENERAL DE VENTAS", 20, contentStartY + 10);
 
-  doc.setFontSize(10);
-  doc.text(`Fecha: ${fechaHoy}`, 250, 15);
+  // Fecha a la derecha
+  doc.setFontSize(9);
+  doc.text(
+    `Fecha: ${fechaHoy}`,
+    pageWidth - 50,
+    contentStartY + 10
+  );
 
-  // 🔹 Línea roja corporativa
-  doc.setDrawColor(220, 0, 0);
-  doc.line(10, 35, 280, 35);
-
-  // 🔹 Tabla
+  // =========================
+  // 🔹 TABLA
+  // =========================
   const body = data.vehiculos.map(v => [
     formatearNumero(v.numero_venta),
     `${v.marca} ${v.modelo} (${v.ano || ""})`,
@@ -909,7 +916,7 @@ doc.line(20, 50, pageWidth - 20, 50);
   ]);
 
   doc.autoTable({
-    startY: 10 + logoHeight + 10,
+    startY: contentStartY + 18,
     head: [["Nº", "Vehículo", "Venta", "Gastos", "Pagos", "Ganancia"]],
     body: body,
     theme: "grid",
@@ -922,35 +929,35 @@ doc.line(20, 50, pageWidth - 20, 50);
     }
   });
 
-  // 🔹 Totales
-  const totalVenta = data.total_vendido;
-  const totalGastos = data.total_gastos;
-  const totalPagos = data.total_pagos;
-  const totalLimpio = data.total_limpio;
-
-  let finalY = doc.lastAutoTable.finalY + 10;
+  // =========================
+  // 🔹 TOTALES
+  // =========================
+  const finalY = doc.lastAutoTable.finalY + 10;
 
   doc.setFontSize(11);
-  doc.text("TOTALES GENERALES:", 10, finalY);
+  doc.text("TOTALES GENERALES:", 20, finalY);
 
   doc.setFontSize(10);
-  doc.text(`Venta Total: ${fmtRD(totalVenta)}`, 10, finalY + 8);
-  doc.text(`Gastos Totales: ${fmtRD(totalGastos)}`, 10, finalY + 15);
-  doc.text(`Pagos Totales: ${fmtRD(totalPagos)}`, 10, finalY + 22);
+  doc.text(`Venta Total: ${fmtRD(data.total_vendido)}`, 20, finalY + 8);
+  doc.text(`Gastos Totales: ${fmtRD(data.total_gastos)}`, 20, finalY + 15);
+  doc.text(`Pagos Totales: ${fmtRD(data.total_pagos)}`, 20, finalY + 22);
 
   doc.setTextColor(200, 0, 0);
-  doc.text(`GANANCIA NETA: ${fmtRD(totalLimpio)}`, 10, finalY + 30);
+  doc.text(`GANANCIA NETA: ${fmtRD(data.total_limpio)}`, 20, finalY + 30);
 
-  // 🔹 Numeración real
+  // =========================
+  // 🔹 NUMERACIÓN
+  // =========================
   const pageCount = doc.getNumberOfPages();
+
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(9);
     doc.setTextColor(150);
     doc.text(
       `Página ${i} de ${pageCount}`,
-      250,
-      200
+      pageWidth - 40,
+      doc.internal.pageSize.getHeight() - 10
     );
   }
 
