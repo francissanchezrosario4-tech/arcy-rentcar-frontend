@@ -932,7 +932,16 @@ async function descargarReporteCompleto() {
   // =========================
   // 🔹 TOTALES
   // =========================
-  const finalY = doc.lastAutoTable.finalY + 20;
+ let finalY = doc.lastAutoTable.finalY + 20;
+
+const pageHeight = doc.internal.pageSize.getHeight();
+const resumenHeight = 70; // alto aproximado del bloque
+
+// 🔥 Si no cabe en la página, crear nueva página
+if (finalY + resumenHeight > pageHeight - 20) {
+  doc.addPage();
+  finalY = 20; // margen superior en nueva página
+}
 
 const boxWidth = pageWidth - 40;
 const boxHeight = 55;
