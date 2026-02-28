@@ -857,7 +857,7 @@ async function descargarReporteCompleto() {
   const data = await apiGet("/api/ventas-reporte-completo");
   const fechaHoy = new Date().toLocaleDateString();
 
-  const logoURL = "https://francissanchezrosario4.github.io/arcy-rentcar-frontend/logo-sanchez-auto.png";
+  const logoURL = "https://raw.githubusercontent.com/francissanchezrosario4-tech/arcy-rentcar-frontend/main/logo-sanchez-auto.png";
 
   const totalVenta = data.reduce((a,v)=> a + Number(v.precio_venta||0),0);
   const totalGastos = data.reduce((a,v)=> a + Number(v.total_gastos||0),0);
@@ -876,11 +876,11 @@ async function descargarReporteCompleto() {
   `).join("");
 
   const html = `
-  <div style="background:#111;color:white;font-family:Arial;">
+  <<div style="background:#111;color:white;font-family:Arial; min-height:100vh;">
 
     <!-- BANNER -->
     <div style="text-align:center;">
-      <img src="${logoURL}" style="width:100%;height:200px;object-fit:cover;display:block;">
+      <img src="${logoURL}"  style="width:100%;height:200px;object-fit:cover;display:block;">
     </div>
 
     <!-- CONTENIDO -->
@@ -934,7 +934,7 @@ async function descargarReporteCompleto() {
 
   html2pdf()
     .set({
-      margin: 0,
+       margin: [0,0,0,0],
       filename: "REPORTE_GENERAL_VENTAS.pdf",
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
