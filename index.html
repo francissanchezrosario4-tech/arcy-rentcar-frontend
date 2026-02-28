@@ -804,6 +804,7 @@
   </div>
   
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 
 <script>
@@ -854,117 +855,92 @@ function fmtRD(n) {
 
 async function descargarReporteCompleto() {
 
-  const data = await apiGet("/api/ventas-reporte-completo");
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape" });
+
+  const data = await apiGet("/api/ventas-resumen");
+
   const fechaHoy = new Date().toLocaleDateString();
 
-  const logoURL = "logo-sanchez-auto.png";
+  // 🔹 LOGO
+  const logo = new Image();
+  logo.src = "logo-sanchez-auto.png";
 
-  const totalVenta = data.reduce((a,v)=> a + Number(v.precio_venta||0),0);
-  const totalGastos = data.reduce((a,v)=> a + Number(v.total_gastos||0),0);
-  const totalPagos = data.reduce((a,v)=> a + Number(v.total_pagos||0),0);
-  const totalGanancia = data.reduce((a,v)=> a + Number(v.ganancia_limpia||0),0);
+  await new Promise(resolve => {
+    logo.onload = resolve;
+  });
 
-  let filas = data.map(v => `
-    <tr>
-      <td>${formatearNumero(v.numero_venta)}</td>
-      <td>${v.marca} ${v.modelo} (${v.ano || ""})</td>
-      <td align="right">${fmtRD(v.precio_venta)}</td>
-      <td align="right">${fmtRD(v.total_gastos)}</td>
-      <td align="right">${fmtRD(v.total_pagos)}</td>
-      <td align="right">${fmtRD(v.ganancia_limpia)}</td>
-    </tr>
-  `).join("");
+  doc.addImage(logo, "PNG", 10, 8, 80, 25);
 
-  const html = `
-  <div style="
-  background:#111;
-  color:white;
-  font-family:Arial;
-  padding:30px;
-  border-radius:8px;
-">
+  // 🔹 TÍTULO
+  doc.setFontSize(16);
+  doc.setTextColor(0);
+  doc.text("REPORTE GENERAL DE VENTAS", 110, 20);
 
-    <!-- BANNER -->
-    <div style="text-align:center;">
-      <img src="${logoURL}" style="width:100%;max-height:220px;height:auto;display:block;">
-    </div>
+  doc.setFontSize(10);
+  doc.text(`Fecha: ${fechaHoy}`, 250, 15);
 
-    <!-- CONTENIDO -->
-    <div style="padding:40px;">
+  // 🔹 Línea roja corporativa
+  doc.setDrawColor(220, 0, 0);
+  doc.line(10, 35, 280, 35);
 
-      <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
-        <div>
-          <h2 style="color:#e10600;margin:0;">REPORTE GENERAL DE VENTAS</h2>
-        </div>
-        <div style="text-align:right;font-size:13px;">
-          <div><strong>Fecha:</strong> ${fechaHoy}</div>
-          <div><strong>Total Registros:</strong> ${data.length}</div>
-        </div>
-      </div>
+  // 🔹 Tabla
+  const body = data.vehiculos.map(v => [
+    formatearNumero(v.numero_venta),
+    `${v.marca} ${v.modelo} (${v.ano || ""})`,
+    fmtRD(v.precio_venta),
+    fmtRD(v.total_gastos),
+    fmtRD(v.total_pagos),
+    fmtRD(v.ganancia_limpia)
+  ]);
 
-      <table width="100%" cellpadding="8" style="border-collapse:collapse;font-size:12px;">
-        <thead>
-          <tr style="background:#e10600;color:white;">
-            <th align="left">Nº</th>
-            <th align="left">Vehículo</th>
-            <th align="right">Venta</th>
-            <th align="right">Gastos</th>
-            <th align="right">Pagos</th>
-            <th align="right">Ganancia</th>
-          </tr>
-        </thead>
+  doc.autoTable({
+    startY: 40,
+    head: [["Nº", "Vehículo", "Venta", "Gastos", "Pagos", "Ganancia"]],
+    body: body,
+    theme: "grid",
+    headStyles: {
+      fillColor: [0, 0, 0],
+      textColor: 255
+    },
+    styles: {
+      fontSize: 8
+    }
+  });
 
-        <tbody>
-          ${filas}
-        </tbody>
+  // 🔹 Totales
+  const totalVenta = data.total_vendido;
+  const totalGastos = data.total_gastos;
+  const totalPagos = data.total_pagos;
+  const totalLimpio = data.total_limpio;
 
-        <tfoot>
-          <tr style="background:#1a1a1a;font-weight:bold;border-top:2px solid #e10600;">
-            <td colspan="2">TOTALES GENERALES</td>
-            <td align="right">${fmtRD(totalVenta)}</td>
-            <td align="right">${fmtRD(totalGastos)}</td>
-            <td align="right">${fmtRD(totalPagos)}</td>
-            <td align="right" style="color:#e10600;">${fmtRD(totalGanancia)}</td>
-          </tr>
-        </tfoot>
-      </table>
+  let finalY = doc.lastAutoTable.finalY + 10;
 
-    </div>
+  doc.setFontSize(11);
+  doc.text("TOTALES GENERALES:", 10, finalY);
 
-  </div>
-  `;
+  doc.setFontSize(10);
+  doc.text(`Venta Total: ${fmtRD(totalVenta)}`, 10, finalY + 8);
+  doc.text(`Gastos Totales: ${fmtRD(totalGastos)}`, 10, finalY + 15);
+  doc.text(`Pagos Totales: ${fmtRD(totalPagos)}`, 10, finalY + 22);
 
-  const container = document.createElement("div");
-  container.innerHTML = html;
-  document.body.appendChild(container);
+  doc.setTextColor(200, 0, 0);
+  doc.text(`GANANCIA NETA: ${fmtRD(totalLimpio)}`, 10, finalY + 30);
 
-  html2pdf()
-    .set({
-       margin: [0,0,0,0],
-      filename: "REPORTE_GENERAL_VENTAS.pdf",
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    })
-    .from(container)
-    .toPdf()
-    .get('pdf')
-    .then(function (pdf) {
+  // 🔹 Numeración real
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(9);
+    doc.setTextColor(150);
+    doc.text(
+      `Página ${i} de ${pageCount}`,
+      250,
+      200
+    );
+  }
 
-      const totalPages = pdf.internal.getNumberOfPages();
-
-      for (let i = 1; i <= totalPages; i++) {
-        pdf.setPage(i);
-        pdf.setFontSize(10);
-        pdf.setTextColor(180);
-        pdf.text(
-          `Página ${i} de ${totalPages}`,
-          pdf.internal.pageSize.getWidth() - 40,
-          pdf.internal.pageSize.getHeight() - 8
-        );
-      }
-    })
-    .save()
-    .then(() => document.body.removeChild(container));
+  doc.save("REPORTE_GENERAL_VENTAS.pdf");
 }
 
 async function guardarVenta() {
