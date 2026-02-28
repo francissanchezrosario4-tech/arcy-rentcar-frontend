@@ -932,75 +932,45 @@ async function descargarReporteCompleto() {
   // =========================
   // 🔹 TOTALES
   // =========================
- let finalY = doc.lastAutoTable.finalY + 20;
+ // Siempre mandar resumen a nueva página
+doc.addPage();
 
-const pageHeight = doc.internal.pageSize.getHeight();
-const resumenHeight = 70; // alto aproximado del bloque
+// Centro horizontal
+const centerX = pageWidth / 2;
 
-// 🔥 Si no cabe en la página, crear nueva página
-if (finalY + resumenHeight > pageHeight - 20) {
-  doc.addPage();
-  finalY = 20; // margen superior en nueva página
-}
+// 🔹 Título
+doc.setFontSize(18);
+doc.setTextColor(0);
+doc.text("RESUMEN FINANCIERO GENERAL", centerX, 60, { align: "center" });
 
-const boxWidth = pageWidth - 40;
-const boxHeight = 55;
-const boxX = 20;
-const boxY = finalY;
-
-// 🔴 Fondo negro agresivo
-doc.setFillColor(15, 15, 15);
-doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 4, 4, "F");
-
-// Línea roja superior gruesa
+// Línea roja debajo del título
 doc.setDrawColor(220, 0, 0);
-doc.setLineWidth(2);
-doc.line(boxX, boxY, boxX + boxWidth, boxY);
+doc.setLineWidth(1.5);
+doc.line(60, 70, pageWidth - 60, 70);
 
-// Título
-doc.setFontSize(13);
-doc.setTextColor(255);
-doc.text("RESUMEN FINANCIERO GENERAL", boxX + 10, boxY + 12);
-
-// 🔹 Venta Total
-doc.setFontSize(10);
-doc.setTextColor(180);
-doc.text("VENTA TOTAL", boxX + 10, boxY + 25);
-
-doc.setFontSize(12);
-doc.setTextColor(255);
-doc.text(fmtRD(data.total_vendido), boxX + 10, boxY + 33);
-
-// 🔹 Gastos
-doc.setFontSize(10);
-doc.setTextColor(180);
-doc.text("GASTOS TOTALES", boxX + 90, boxY + 25);
-
-doc.setFontSize(12);
-doc.setTextColor(255);
-doc.text(fmtRD(data.total_gastos), boxX + 90, boxY + 33);
-
-// 🔹 Pagos
-doc.setFontSize(10);
-doc.setTextColor(180);
-doc.text("PAGOS TOTALES", boxX + 170, boxY + 25);
-
-doc.setFontSize(12);
-doc.setTextColor(255);
-doc.text(fmtRD(data.total_pagos), boxX + 170, boxY + 33);
-
-// 🔥 GANANCIA NETA SUPER DESTACADA
+// 🔹 Métricas principales
 doc.setFontSize(11);
-doc.setTextColor(255, 60, 60);
-doc.text("GANANCIA NETA", boxX + 10, boxY + 48);
+doc.setTextColor(100);
 
-doc.setFontSize(16);
-doc.setTextColor(255, 0, 0);
-doc.text(
-  fmtRD(data.total_limpio),
-  boxX + 70,
-  boxY + 48
-);
+doc.text("VENTA TOTAL", pageWidth / 4, 100, { align: "center" });
+doc.text("GASTOS TOTALES", centerX, 100, { align: "center" });
+doc.text("PAGOS TOTALES", pageWidth * 0.75, 100, { align: "center" });
+
+doc.setFontSize(14);
+doc.setTextColor(0);
+
+doc.text(fmtRD(data.total_vendido), pageWidth / 4, 115, { align: "center" });
+doc.text(fmtRD(data.total_gastos), centerX, 115, { align: "center" });
+doc.text(fmtRD(data.total_pagos), pageWidth * 0.75, 115, { align: "center" });
+
+// 🔥 GANANCIA NETA GRANDE Y PODEROSA
+doc.setFontSize(13);
+doc.setTextColor(120);
+doc.text("GANANCIA NETA", centerX, 160, { align: "center" });
+
+doc.setFontSize(26);
+doc.setTextColor(200, 0, 0);
+doc.text(fmtRD(data.total_limpio), centerX, 185, { align: "center" });
 
   doc.save("REPORTE_GENERAL_VENTAS.pdf");
 }
