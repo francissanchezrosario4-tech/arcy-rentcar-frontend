@@ -886,7 +886,7 @@ async function descargarReporteCompleto() {
 
     <!-- BANNER -->
     <div style="text-align:center;">
-      <img src="${logoURL}"  style="width:100%;height:200px;object-fit:cover;display:block;">
+      <img src="${logoURL}" style="width:100%;max-height:220px;height:auto;display:block;">
     </div>
 
     <!-- CONTENIDO -->
@@ -1401,15 +1401,14 @@ async function generarReporteVenta(id) {
   const v = data.vehiculo || {};
   const filename = `VENTA_${(v.marca||"").toUpperCase()}_${(v.modelo||"").toUpperCase()}_${v.ano||""}.pdf`;
 
-  await html2pdf()
+await html2pdf()
   .set({
     margin: 0,
     filename,
     image: { type: "jpeg", quality: 0.98 },
     html2canvas: {
       scale: 2,
-      useCORS: true,
-      backgroundColor: "#111"
+      useCORS: true
     },
     jsPDF: {
       unit: "mm",
@@ -1418,9 +1417,38 @@ async function generarReporteVenta(id) {
     }
   })
   .from(wrapper.firstElementChild)
+  .toPdf()
+  .get('pdf')
+  .then(function (pdf) {
+
+    const totalPages = pdf.internal.getNumberOfPages();
+
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+
+      // 🔥 pintar fondo negro completo
+      pdf.setFillColor(17, 17, 17);
+      pdf.rect(
+        0,
+        0,
+        pdf.internal.pageSize.getWidth(),
+        pdf.internal.pageSize.getHeight(),
+        "F"
+      );
+
+      // 🔢 número de página
+      pdf.setTextColor(180);
+      pdf.setFontSize(10);
+      pdf.text(
+        `Página ${i} de ${totalPages}`,
+        pdf.internal.pageSize.getWidth() - 40,
+        pdf.internal.pageSize.getHeight() - 8
+      );
+    }
+  })
   .save();
 
-  document.body.removeChild(wrapper);
+document.body.removeChild(wrapper);
 }
 
 // Events
