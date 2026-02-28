@@ -855,10 +855,10 @@ function fmtRD(n) {
 async function descargarReporteCompleto() {
 
   const data = await apiGet("/api/ventas-reporte-completo");
-
   const fechaHoy = new Date().toLocaleDateString();
 
-  // Calcular totales generales
+  const logoURL = "https://francissanchezrosario4.github.io/arcy-rentcar-frontend/logo-sanchez-auto.png";
+
   const totalVenta = data.reduce((a,v)=> a + Number(v.precio_venta||0),0);
   const totalGastos = data.reduce((a,v)=> a + Number(v.total_gastos||0),0);
   const totalPagos = data.reduce((a,v)=> a + Number(v.total_pagos||0),0);
@@ -868,55 +868,61 @@ async function descargarReporteCompleto() {
     <tr>
       <td>${formatearNumero(v.numero_venta)}</td>
       <td>${v.marca} ${v.modelo} (${v.ano || ""})</td>
-      <td>${fmtRD(v.precio_venta)}</td>
-      <td>${fmtRD(v.total_gastos)}</td>
-      <td>${fmtRD(v.total_pagos)}</td>
-      <td style="font-weight:bold;">${fmtRD(v.ganancia_limpia)}</td>
+      <td align="right">${fmtRD(v.precio_venta)}</td>
+      <td align="right">${fmtRD(v.total_gastos)}</td>
+      <td align="right">${fmtRD(v.total_pagos)}</td>
+      <td align="right">${fmtRD(v.ganancia_limpia)}</td>
     </tr>
   `).join("");
 
   const html = `
-  <div style="background:#111;color:white;padding:50px;font-family:Arial;">
-    
-    <!-- ENCABEZADO -->
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <div>
-        <h1 style="color:#e10600; margin:0;">ARCY RENT CAR</h1>
-        <div style="font-size:14px; opacity:.8;">Reporte General de Ventas</div>
-      </div>
-      <div style="text-align:right; font-size:14px;">
-        <div><strong>Fecha:</strong> ${fechaHoy}</div>
-        <div><strong>Total Ventas:</strong> ${data.length}</div>
-      </div>
+  <div style="background:#111;color:white;font-family:Arial;">
+
+    <!-- BANNER -->
+    <div style="text-align:center;">
+      <img src="${logoURL}" style="width:100%;height:200px;object-fit:cover;display:block;">
     </div>
 
-    <hr style="margin:25px 0; border:1px solid rgba(255,255,255,.1);">
+    <!-- CONTENIDO -->
+    <div style="padding:40px;">
 
-    <!-- TABLA -->
-    <table width="100%" cellpadding="10" style="border-collapse:collapse;">
-      <tr style="background:#e10600;color:white;">
-        <th>Nº</th>
-        <th>Vehículo</th>
-        <th>Venta</th>
-        <th>Gastos</th>
-        <th>Pagos</th>
-        <th>Ganancia</th>
-      </tr>
+      <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <h2 style="color:#e10600;margin:0;">REPORTE GENERAL DE VENTAS</h2>
+        </div>
+        <div style="text-align:right;font-size:13px;">
+          <div><strong>Fecha:</strong> ${fechaHoy}</div>
+          <div><strong>Total Registros:</strong> ${data.length}</div>
+        </div>
+      </div>
 
-      ${filas}
+      <table width="100%" cellpadding="8" style="border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="background:#e10600;color:white;">
+            <th align="left">Nº</th>
+            <th align="left">Vehículo</th>
+            <th align="right">Venta</th>
+            <th align="right">Gastos</th>
+            <th align="right">Pagos</th>
+            <th align="right">Ganancia</th>
+          </tr>
+        </thead>
 
-      <!-- TOTALES -->
-      <tr style="background:#222; font-weight:bold; font-size:14px;">
-        <td colspan="2">TOTALES GENERALES</td>
-        <td>${fmtRD(totalVenta)}</td>
-        <td>${fmtRD(totalGastos)}</td>
-        <td>${fmtRD(totalPagos)}</td>
-        <td style="color:#e10600;">${fmtRD(totalGanancia)}</td>
-      </tr>
-    </table>
+        <tbody>
+          ${filas}
+        </tbody>
 
-    <div style="margin-top:40px; font-size:12px; opacity:.6;">
-      Documento generado automáticamente por el sistema de gestión ARCY RENT CAR.
+        <tfoot>
+          <tr style="background:#1a1a1a;font-weight:bold;border-top:2px solid #e10600;">
+            <td colspan="2">TOTALES GENERALES</td>
+            <td align="right">${fmtRD(totalVenta)}</td>
+            <td align="right">${fmtRD(totalGastos)}</td>
+            <td align="right">${fmtRD(totalPagos)}</td>
+            <td align="right" style="color:#e10600;">${fmtRD(totalGanancia)}</td>
+          </tr>
+        </tfoot>
+      </table>
+
     </div>
 
   </div>
@@ -928,12 +934,29 @@ async function descargarReporteCompleto() {
 
   html2pdf()
     .set({
-      margin: 10,
+      margin: 0,
       filename: "REPORTE_GENERAL_VENTAS.pdf",
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
     })
     .from(container)
+    .toPdf()
+    .get('pdf')
+    .then(function (pdf) {
+
+      const totalPages = pdf.internal.getNumberOfPages();
+
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(10);
+        pdf.setTextColor(180);
+        pdf.text(
+          `Página ${i} de ${totalPages}`,
+          pdf.internal.pageSize.getWidth() - 40,
+          pdf.internal.pageSize.getHeight() - 8
+        );
+      }
+    })
     .save()
     .then(() => document.body.removeChild(container));
 }
