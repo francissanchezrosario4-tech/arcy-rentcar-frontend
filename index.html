@@ -856,6 +856,14 @@ async function descargarReporteCompleto() {
 
   const data = await apiGet("/api/ventas-reporte-completo");
 
+  const fechaHoy = new Date().toLocaleDateString();
+
+  // Calcular totales generales
+  const totalVenta = data.reduce((a,v)=> a + Number(v.precio_venta||0),0);
+  const totalGastos = data.reduce((a,v)=> a + Number(v.total_gastos||0),0);
+  const totalPagos = data.reduce((a,v)=> a + Number(v.total_pagos||0),0);
+  const totalGanancia = data.reduce((a,v)=> a + Number(v.ganancia_limpia||0),0);
+
   let filas = data.map(v => `
     <tr>
       <td>${formatearNumero(v.numero_venta)}</td>
@@ -863,26 +871,55 @@ async function descargarReporteCompleto() {
       <td>${fmtRD(v.precio_venta)}</td>
       <td>${fmtRD(v.total_gastos)}</td>
       <td>${fmtRD(v.total_pagos)}</td>
-      <td>${fmtRD(v.ganancia_limpia)}</td>
+      <td style="font-weight:bold;">${fmtRD(v.ganancia_limpia)}</td>
     </tr>
   `).join("");
 
   const html = `
-    <div style="background:#000;color:white;padding:40px;font-family:Arial;">
-      <h1 style="color:#e10600;">REPORTE GENERAL DE VENTAS</h1>
-
-      <table width="100%" cellpadding="8" style="border-collapse:collapse;margin-top:20px;">
-        <tr style="background:#e10600;color:white;">
-          <th>Nº</th>
-          <th>Vehículo</th>
-          <th>Venta</th>
-          <th>Gastos</th>
-          <th>Pagos</th>
-          <th>Ganancia</th>
-        </tr>
-        ${filas}
-      </table>
+  <div style="background:#111;color:white;padding:50px;font-family:Arial;">
+    
+    <!-- ENCABEZADO -->
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h1 style="color:#e10600; margin:0;">ARCY RENT CAR</h1>
+        <div style="font-size:14px; opacity:.8;">Reporte General de Ventas</div>
+      </div>
+      <div style="text-align:right; font-size:14px;">
+        <div><strong>Fecha:</strong> ${fechaHoy}</div>
+        <div><strong>Total Ventas:</strong> ${data.length}</div>
+      </div>
     </div>
+
+    <hr style="margin:25px 0; border:1px solid rgba(255,255,255,.1);">
+
+    <!-- TABLA -->
+    <table width="100%" cellpadding="10" style="border-collapse:collapse;">
+      <tr style="background:#e10600;color:white;">
+        <th>Nº</th>
+        <th>Vehículo</th>
+        <th>Venta</th>
+        <th>Gastos</th>
+        <th>Pagos</th>
+        <th>Ganancia</th>
+      </tr>
+
+      ${filas}
+
+      <!-- TOTALES -->
+      <tr style="background:#222; font-weight:bold; font-size:14px;">
+        <td colspan="2">TOTALES GENERALES</td>
+        <td>${fmtRD(totalVenta)}</td>
+        <td>${fmtRD(totalGastos)}</td>
+        <td>${fmtRD(totalPagos)}</td>
+        <td style="color:#e10600;">${fmtRD(totalGanancia)}</td>
+      </tr>
+    </table>
+
+    <div style="margin-top:40px; font-size:12px; opacity:.6;">
+      Documento generado automáticamente por el sistema de gestión ARCY RENT CAR.
+    </div>
+
+  </div>
   `;
 
   const container = document.createElement("div");
@@ -890,8 +927,14 @@ async function descargarReporteCompleto() {
   document.body.appendChild(container);
 
   html2pdf()
+    .set({
+      margin: 10,
+      filename: "REPORTE_GENERAL_VENTAS.pdf",
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    })
     .from(container)
-    .save("REPORTE_GENERAL_VENTAS.pdf")
+    .save()
     .then(() => document.body.removeChild(container));
 }
 
