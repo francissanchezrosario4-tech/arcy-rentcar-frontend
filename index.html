@@ -854,44 +854,45 @@ function fmtRD(n) {
 
 async function descargarReporteCompleto() {
 
-  const res = await fetch("https://arcy-rentcar-backend.onrender.com/api/ventas-reporte-completo");
-  const ventas = await res.json();
+  const data = await apiGet("/api/ventas-reporte-completo");
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  let filas = data.map(v => `
+    <tr>
+      <td>${formatearNumero(v.numero_venta)}</td>
+      <td>${v.marca} ${v.modelo} (${v.ano || ""})</td>
+      <td>${fmtRD(v.precio_venta)}</td>
+      <td>${fmtRD(v.total_gastos)}</td>
+      <td>${fmtRD(v.total_pagos)}</td>
+      <td>${fmtRD(v.ganancia_limpia)}</td>
+    </tr>
+  `).join("");
 
-  let y = 20;
+  const html = `
+    <div style="background:#000;color:white;padding:40px;font-family:Arial;">
+      <h1 style="color:#e10600;">REPORTE GENERAL DE VENTAS</h1>
 
-  doc.setFontSize(16);
-  doc.text("REPORTE GENERAL DE VENTAS", 20, 10);
+      <table width="100%" cellpadding="8" style="border-collapse:collapse;margin-top:20px;">
+        <tr style="background:#e10600;color:white;">
+          <th>Nº</th>
+          <th>Vehículo</th>
+          <th>Venta</th>
+          <th>Gastos</th>
+          <th>Pagos</th>
+          <th>Ganancia</th>
+        </tr>
+        ${filas}
+      </table>
+    </div>
+  `;
 
-  doc.setFontSize(10);
+  const container = document.createElement("div");
+  container.innerHTML = html;
+  document.body.appendChild(container);
 
-  ventas.forEach(v => {
-
-    doc.text(
-      `VENTA-${String(v.numero_venta).padStart(3,"0")} | ${v.marca} ${v.modelo} (${v.ano})`,
-      10,
-      y
-    );
-    y += 6;
-
-    doc.text(
-      `Venta: RD$ ${v.precio_venta} | Gastos: RD$ ${v.total_gastos} | Pagos: RD$ ${v.total_pagos} | Ganancia: RD$ ${v.ganancia_limpia}`,
-      10,
-      y
-    );
-
-    y += 10;
-
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
-    }
-
-  });
-
-  doc.save("REPORTE_GENERAL_VENTAS.pdf");
+  html2pdf()
+    .from(container)
+    .save("REPORTE_GENERAL_VENTAS.pdf")
+    .then(() => document.body.removeChild(container));
 }
 
 async function guardarVenta() {
