@@ -879,6 +879,9 @@ const logoHeight = 35;
 const x = (pageWidth - logoWidth) / 2;
 
 doc.addImage(logo, "PNG", x, 10, logoWidth, logoHeight);
+doc.setDrawColor(200, 0, 0);
+doc.setLineWidth(0.8);
+doc.line(20, 50, pageWidth - 20, 50);
 
   // 🔹 TÍTULO
   doc.setFontSize(16);
