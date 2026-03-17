@@ -2778,7 +2778,55 @@ async function loadSegurosPagos() {
     tbody.appendChild(tr);
   });
 }
+async function loadSegurosPagos() {
+  const data = await apiGet("/seguros-pagos").catch(() => []);
+  const tbody = document.getElementById("tblSegurosPagos");
+  if (!tbody) return;
 
+  tbody.innerHTML = "";
+
+  data.forEach(sp => {
+    let badge = "🟢 Pendiente";
+    if (sp.estado === "completado") badge = "🟢 Completado";
+    if (sp.estado === "vencido") badge = "🔴 Vencido";
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${sp.marca} ${sp.modelo} ${sp.ano} (${sp.placa})</td>
+      <td>${Number(sp.total_monto).toFixed(2)}</td>
+      <td>${Number(sp.monto_pagado).toFixed(2)}</td>
+      <td>${Number(sp.monto_restante).toFixed(2)}</td>
+      <td>${fmt(sp.fecha_limite)}</td>
+      <td>${badge}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" min="0" id="abono-${sp.id}" style="width:80px">
+          <button class="btn small" onclick="abonarSeguro(${sp.id})">+</button>
+        </div>
+      </td>
+      <td>
+        <button class="btn small secondary" id="btnEliminarSeguro-${sp.id}" style="background:#e10600;color:#fff;border:none;">
+          🗑
+        </button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+
+    const btnEliminar = document.getElementById(`btnEliminarSeguro-${sp.id}`);
+    if (btnEliminar) {
+      btnEliminar.addEventListener("click", () => {
+        eliminarSeguroPago(
+          sp.id,
+          `${sp.marca} ${sp.modelo} ${sp.ano} (${sp.placa})`,
+          sp.total_monto,
+          fmt(sp.fecha_limite)
+        );
+      });
+    }
+  });
+}
 async function guardarSeguroPago(){
   const vehiculo_id = document.getElementById("spVehiculo").value;
   const total_monto = document.getElementById("spTotal").value;
@@ -2806,19 +2854,20 @@ async function abonarSeguro(id){
   await apiPost(`/seguros-pagos/${id}/abono`, { monto });
   await loadSegurosPagos();
 }
-
-async function eliminarSeguroPago(id, vehiculo, monto, fecha){
-  const confirmacion = confirm(`⚠️ Eliminar pago de seguro
+async function eliminarSeguroPago(id, vehiculo, monto, fecha) {
+  const ok = confirm(
+`⚠️ Eliminar pago de seguro
 
 Vehículo: ${vehiculo}
 Monto: $${Number(monto).toFixed(2)}
 Fecha límite: ${fecha}
 
-Esto eliminará también TODOS los abonos relacionados.
+Esto eliminará también los abonos relacionados.
 
-¿Deseas continuar?`);
+¿Deseas continuar?`
+  );
 
-  if(!confirmacion) return;
+  if (!ok) return;
 
   const res = await fetch(API_URL + `/seguros-pagos/${id}`, {
     method: "DELETE"
@@ -2826,13 +2875,12 @@ Esto eliminará también TODOS los abonos relacionados.
 
   const data = await res.json();
 
-  if(!res.ok){
-    alert(data.error || "Error eliminando");
+  if (!res.ok) {
+    alert(data.error || "No se pudo eliminar el pago de seguro");
     return;
   }
 
-  alert("✅ Eliminado correctamente");
-
+  alert("✅ Pago de seguro eliminado");
   await loadSegurosPagos();
 }
 
