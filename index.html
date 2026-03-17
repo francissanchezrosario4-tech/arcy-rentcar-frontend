@@ -566,6 +566,7 @@
           <th>Fecha límite</th>
           <th>Estado</th>
           <th>Abonar</th>
+          <th>Eliminar</th>
         </tr>
       </thead>
       <tbody id="tblSegurosPagos"></tbody>
@@ -2759,9 +2760,18 @@ async function loadSegurosPagos() {
       <td>${fmt(sp.fecha_limite)}</td>
       <td>${badge}</td>
       <td>
-        <input type="number" min="0" id="abono-${sp.id}" style="width:80px">
-        <button class="btn small" onclick="abonarSeguro(${sp.id})">
-          +
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" min="0" id="abono-${sp.id}" style="width:80px">
+          <button class="btn small" onclick="abonarSeguro(${sp.id})">+</button>
+        </div>
+      </td>
+      <td>
+        <button
+          class="btn small secondary"
+          style="background:#e10600;color:white;border:none;"
+          onclick="eliminarSeguroPago(${sp.id}, '${'${sp.marca} ${sp.modelo} ${sp.ano} (${sp.placa})'}', ${'${sp.total_monto}'}, '${'${fmt(sp.fecha_limite)}'}')"
+        >
+          🗑
         </button>
       </td>
     `;
@@ -2794,6 +2804,35 @@ async function abonarSeguro(id){
   if(!monto) return;
 
   await apiPost(`/seguros-pagos/${id}/abono`, { monto });
+  await loadSegurosPagos();
+}
+
+async function eliminarSeguroPago(id, vehiculo, monto, fecha){
+  const confirmacion = confirm(`⚠️ Eliminar pago de seguro
+
+Vehículo: ${vehiculo}
+Monto: $${Number(monto).toFixed(2)}
+Fecha límite: ${fecha}
+
+Esto eliminará también TODOS los abonos relacionados.
+
+¿Deseas continuar?`);
+
+  if(!confirmacion) return;
+
+  const res = await fetch(API_URL + `/seguros-pagos/${id}`, {
+    method: "DELETE"
+  });
+
+  const data = await res.json();
+
+  if(!res.ok){
+    alert(data.error || "Error eliminando");
+    return;
+  }
+
+  alert("✅ Eliminado correctamente");
+
   await loadSegurosPagos();
 }
 
