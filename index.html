@@ -197,7 +197,205 @@
       margin-bottom:10px;
     }
 
-</style>
+
+    /* ===== DISPONIBILIDAD PREMIUM ===== */
+    .disp-topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .disp-kpis{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(120px,1fr));
+      gap:10px;
+      flex:1 1 520px;
+    }
+    .disp-kpi{
+      background:linear-gradient(145deg,#161616,#0f0f0f);
+      border:1px solid #2a2a2a;
+      border-radius:16px;
+      padding:12px 14px;
+      box-shadow:0 10px 24px rgba(0,0,0,.28);
+    }
+    .disp-kpi strong{
+      display:block;
+      margin-top:6px;
+      font-size:1.5rem;
+      font-weight:900;
+    }
+    .disp-kpi-label{font-size:.78rem;color:#cfcfcf}
+    .disp-kpi.warn strong{color:#ffcc00}
+    .disp-kpi.bad strong{color:#ff5d5d}
+    .disp-kpi.neutral strong{color:#d9d9d9}
+    .disp-kpi:not(.warn):not(.bad):not(.neutral) strong{color:#22e37c}
+
+    .disp-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      flex:1 1 320px;
+      justify-content:flex-end;
+    }
+    .disp-actions input,
+    .disp-actions select{
+      min-width:220px;
+      background:#0d0d0d;
+      border:1px solid #343434;
+      border-radius:14px;
+      padding:11px 14px;
+      color:#fff;
+    }
+
+    .veh-premium-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(330px,1fr));
+      gap:18px;
+    }
+    .veh-premium-card{
+      position:relative;
+      overflow:hidden;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+      box-shadow:0 24px 45px rgba(0,0,0,.45);
+      backdrop-filter:blur(10px);
+    }
+    .veh-premium-card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at top left, rgba(255,255,255,.08), transparent 38%);
+      pointer-events:none;
+    }
+    .veh-premium-media{
+      position:relative;
+      height:220px;
+      background:linear-gradient(145deg,#141414,#080808);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .veh-premium-media img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+    .veh-premium-media .ph{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-weight:900;
+      font-size:2.4rem;
+      letter-spacing:2px;
+      background:linear-gradient(135deg,#2b2b2b,#101010);
+    }
+    .veh-premium-overlay{
+      position:absolute;
+      top:14px;
+      left:14px;
+      right:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .veh-premium-status{
+      padding:8px 14px;
+      border-radius:999px;
+      font-size:.76rem;
+      font-weight:900;
+      letter-spacing:.4px;
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(8px);
+    }
+    .veh-premium-status.disponible{background:rgba(8,76,35,.88);color:#5cffaa}
+    .veh-premium-status.pendiente{background:rgba(92,64,0,.88);color:#ffd84d}
+    .veh-premium-status.rentado{background:rgba(108,0,0,.88);color:#ff8e8e}
+    .veh-premium-status.mant{background:rgba(58,58,58,.88);color:#f1f1f1}
+
+    .veh-premium-body{padding:18px}
+    .veh-premium-title{font-size:1.18rem;font-weight:900;margin:0}
+    .veh-premium-sub{margin-top:5px;color:#bbbbbb;font-size:.88rem}
+    .veh-premium-meta{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:14px;
+    }
+    .veh-premium-box{
+      background:#101010;
+      border:1px solid #2d2d2d;
+      border-radius:14px;
+      padding:10px 12px;
+    }
+    .veh-premium-box span{
+      display:block;
+      color:#a8a8a8;
+      font-size:.74rem;
+      margin-bottom:4px;
+    }
+    .veh-premium-box strong{
+      font-size:.88rem;
+      color:#fff;
+    }
+    .veh-premium-tags{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .veh-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:.74rem;
+      font-weight:800;
+    }
+    .veh-chip.ok{background:#0d3b1e;color:#00ff88}
+    .veh-chip.warn{background:#3a2a00;color:#ffcc00}
+    .veh-chip.bad{background:#3b0000;color:#ff4d4d}
+    .veh-chip.na{background:#2b2b2b;color:#ddd}
+
+    .veh-premium-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:16px;
+    }
+    .btn-disp-main,
+    .btn-disp-secondary{
+      border:none;
+      border-radius:14px;
+      padding:11px 14px;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .btn-disp-main{
+      background:linear-gradient(135deg,#ff1200,#b80000);
+      color:#fff;
+      box-shadow:0 10px 24px rgba(225,6,0,.35);
+    }
+    .btn-disp-secondary{
+      background:#191919;
+      color:#fff;
+      border:1px solid #343434;
+    }
+
+    @media (max-width: 820px){
+      .disp-kpis{grid-template-columns:repeat(2,minmax(120px,1fr))}
+      .veh-premium-meta{grid-template-columns:1fr}
+      .veh-premium-actions{grid-template-columns:1fr}
+    }
+
+  </style>
 </head>
 <body>
   <!-- LOGIN -->
@@ -511,11 +709,49 @@
     <!-- DISPONIBILIDAD -->
     <section id="disponibilidad" class="section">
       <div class="card">
-        <div class="card-header"><div class="title">Disponibilidad</div><div class="pill">Vista moderna</div></div>
-        <div class="muted">Rojo: rentado (activo). Amarillo: reserva pendiente (a futuro). <span class="muted">Click en "Ver calendario" para ver el mes completo.</span></div>
-        <div id="vehDisponibilidad" class="veh-modern-grid" style="margin-top:12px"></div>
-      </div>
+        <div class="card-header">
+          <div class="title">Centro de Disponibilidad</div>
+          <div class="pill">Fleet Control</div>
+        </div>
 
+        <div class="disp-topbar">
+          <div class="disp-kpis">
+            <div class="disp-kpi">
+              <span class="disp-kpi-label">Disponibles</span>
+              <strong id="dispCountDisponible">0</strong>
+            </div>
+            <div class="disp-kpi warn">
+              <span class="disp-kpi-label">Reservas</span>
+              <strong id="dispCountPendiente">0</strong>
+            </div>
+            <div class="disp-kpi bad">
+              <span class="disp-kpi-label">Rentados</span>
+              <strong id="dispCountRentado">0</strong>
+            </div>
+            <div class="disp-kpi neutral">
+              <span class="disp-kpi-label">Mantenimiento</span>
+              <strong id="dispCountMant">0</strong>
+            </div>
+          </div>
+
+          <div class="disp-actions">
+            <input id="dispBuscar" type="text" placeholder="Buscar por marca, modelo, placa o cliente">
+            <select id="dispFiltroEstado">
+              <option value="todos">Todos</option>
+              <option value="Disponible">Disponibles</option>
+              <option value="Pendiente">Reservas</option>
+              <option value="Rentado">Rentados</option>
+              <option value="Mantenimiento">Mantenimiento</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="muted" style="margin-top:8px">
+          Vista profesional de ocupación actual y próxima. Puedes abrir calendario y ver detalle operativo por vehículo.
+        </div>
+
+        <div id="vehDisponibilidad" class="veh-premium-grid" style="margin-top:16px"></div>
+      </div>
     </section>
     <section id="segurosPagos" class="section">
   <div class="card">
@@ -2568,70 +2804,187 @@ if(sp){
     function renderDisponibilidad(){
       const cont = document.getElementById("vehDisponibilidad");
       if(!cont) return;
-      cont.innerHTML="";
 
+      const q = (document.getElementById("dispBuscar")?.value || "").trim().toLowerCase();
+      const filtro = document.getElementById("dispFiltroEstado")?.value || "todos";
       const today = todayISO();
 
-      vehiculos.forEach(v=>{
-        const initials = `${(v.marca||"V")[0]||"V"}${(v.modelo||"")[0]||""}`.toUpperCase();
-        const imgHtml = v.imagen ? `<img src="${v.imagen}" alt="">` : `<div class="ph">${initials}</div>`;
+      cont.innerHTML = "";
 
+      const counts = {
+        Disponible: 0,
+        Pendiente: 0,
+        Rentado: 0,
+        Mantenimiento: 0
+      };
+
+      vehiculos.forEach(v => {
         const stReal = (v.estado_calculado || v.estado || "Disponible").toString();
-        let stCls = "disponible";
-        let stTxt = "DISPONIBLE 🟢";
-        if(stReal==="Rentado"){ stCls="rentado"; stTxt="RENTADO 🔴"; }
-        else if(stReal==="Pendiente"){ stCls="pendiente"; stTxt="RESERVA 🟡"; }
-        else if(stReal==="Mantenimiento"){ stCls="mant"; stTxt="MANTENIMIENTO ⚙️"; }
+        if (counts[stReal] !== undefined) counts[stReal]++;
+      });
 
-        // renta activa o próxima (si backend lo manda)
+      const elDisp = document.getElementById("dispCountDisponible");
+      const elPend = document.getElementById("dispCountPendiente");
+      const elRent = document.getElementById("dispCountRentado");
+      const elMant = document.getElementById("dispCountMant");
+
+      if (elDisp) elDisp.textContent = counts.Disponible;
+      if (elPend) elPend.textContent = counts.Pendiente;
+      if (elRent) elRent.textContent = counts.Rentado;
+      if (elMant) elMant.textContent = counts.Mantenimiento;
+
+      const filtered = vehiculos.filter(v => {
+        const stReal = (v.estado_calculado || v.estado || "Disponible").toString();
+
         let rango = "";
         let cliente = "";
+
         if(v.renta_inicio && v.renta_fin){
           rango = `${fmt(v.renta_inicio)} - ${fmt(v.renta_fin)}`;
-          cliente = v.renta_cliente ? `Cliente: ${v.renta_cliente}` : "";
-        }else{
-          // fallback: buscar la más cercana desde rentas
+          cliente = v.renta_cliente || "";
+        } else {
           const rv = rentasVehiculo(v.id)
-            .filter(r=>r.fecha_inicio && r.fecha_fin)
+            .filter(r => r.fecha_inicio && r.fecha_fin)
             .sort((a,b)=> String(a.fecha_inicio).localeCompare(String(b.fecha_inicio)));
-          const next = rv.find(r=> r.fecha_fin >= today) || null;
+          const next = rv.find(r => r.fecha_fin >= today) || null;
           if(next){
-            const f = facturas.find(x=> String(x.id)===String(next.factura_id));
+            const f = facturas.find(x => String(x.id) === String(next.factura_id));
             rango = `${fmt(next.fecha_inicio)} - ${fmt(next.fecha_fin)}`;
-            cliente = f?.cliente_nombre ? `Cliente: ${f.cliente_nombre}` : "";
+            cliente = f?.cliente_nombre || "";
+          }
+        }
+
+        const hayTexto = [v.marca, v.modelo, v.ano, v.placa, cliente, rango].join(" ").toLowerCase();
+        const okFiltro = filtro === "todos" ? true : stReal === filtro;
+        const okBuscar = !q || hayTexto.includes(q);
+
+        return okFiltro && okBuscar;
+      });
+
+      if(filtered.length === 0){
+        cont.innerHTML = `
+          <div class="card" style="grid-column:1/-1;margin:0;">
+            <div class="muted">No se encontraron vehículos con ese filtro.</div>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(v => {
+        const initials = `${(v.marca||"V")[0]||"V"}${(v.modelo||"")[0]||""}`.toUpperCase();
+        const imgHtml = v.imagen
+          ? `<img src="${v.imagen}" alt="${v.marca} ${v.modelo}">`
+          : `<div class="ph">${initials}</div>`;
+
+        const stReal = (v.estado_calculado || v.estado || "Disponible").toString();
+
+        let stCls = "disponible";
+        let stTxt = "Disponible";
+        if(stReal === "Rentado"){ stCls = "rentado"; stTxt = "Rentado"; }
+        else if(stReal === "Pendiente"){ stCls = "pendiente"; stTxt = "Reserva"; }
+        else if(stReal === "Mantenimiento"){ stCls = "mant"; stTxt = "Mantenimiento"; }
+
+        let rango = "Sin renta activa";
+        let cliente = "No asignado";
+        let detalleEstado = "Libre para renta inmediata";
+
+        if(v.renta_inicio && v.renta_fin){
+          rango = `${fmt(v.renta_inicio)} - ${fmt(v.renta_fin)}`;
+          cliente = v.renta_cliente || "Cliente no indicado";
+          detalleEstado = stReal === "Pendiente" ? "Próxima reserva programada" : "Vehículo ocupado actualmente";
+        } else {
+          const rv = rentasVehiculo(v.id)
+            .filter(r => r.fecha_inicio && r.fecha_fin)
+            .sort((a,b)=> String(a.fecha_inicio).localeCompare(String(b.fecha_inicio)));
+          const next = rv.find(r => r.fecha_fin >= today) || null;
+          if(next){
+            const f = facturas.find(x => String(x.id) === String(next.factura_id));
+            rango = `${fmt(next.fecha_inicio)} - ${fmt(next.fecha_fin)}`;
+            cliente = f?.cliente_nombre || "Cliente no indicado";
+            detalleEstado = next.fecha_inicio > today ? "Próxima reserva programada" : "Vehículo ocupado actualmente";
           }
         }
 
         const seg = seguroBadge(v.seguro_vencimiento);
 
-        const card=document.createElement("div");
-        card.className="veh-modern-card";
+        const card = document.createElement("div");
+        card.className = "veh-premium-card";
         card.innerHTML = `
-          <div class="veh-modern-img">${imgHtml}</div>
-          <div class="veh-modern-body">
-            <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
-              <div>
-                <div class="veh-modern-title">${v.marca} ${v.modelo}${v.ano?` ${v.ano}`:""}</div>
-                <div class="veh-modern-sub">${v.placa?`Placa: <b>${v.placa}</b>`:""}</div>
+          <div class="veh-premium-media">
+            ${imgHtml}
+            <div class="veh-premium-overlay">
+              <span class="veh-premium-status ${stCls}">${stTxt}</span>
+            </div>
+          </div>
+
+          <div class="veh-premium-body">
+            <h3 class="veh-premium-title">${v.marca} ${v.modelo}${v.ano ? ` ${v.ano}` : ""}</h3>
+            <div class="veh-premium-sub">Placa: <strong>${v.placa || "N/D"}</strong></div>
+
+            <div class="veh-premium-meta">
+              <div class="veh-premium-box">
+                <span>Rango</span>
+                <strong>${rango}</strong>
               </div>
-              <span class="badge-big ${stCls}">${stTxt}</span>
+              <div class="veh-premium-box">
+                <span>Cliente</span>
+                <strong>${cliente}</strong>
+              </div>
+              <div class="veh-premium-box">
+                <span>Estado operativo</span>
+                <strong>${detalleEstado}</strong>
+              </div>
+              <div class="veh-premium-box">
+                <span>Precio diario</span>
+                <strong>US$ ${Number(v.precio_dia || 0).toFixed(2)}</strong>
+              </div>
             </div>
 
-            <div class="row-flex" style="margin-top:10px">
-              ${rango?`<span class="badge-mini na">${rango}</span>`:"<span class='badge-mini na'>Sin renta activa</span>"}
-              ${cliente?`<span class="badge-mini na">${cliente}</span>`:""}
+            <div class="veh-premium-tags">
+              <span class="veh-chip ${seg.cls}">${seg.text}</span>
+              <span class="veh-chip na">ID: ${v.id}</span>
             </div>
 
-            <div class="row-flex">
-              <span class="badge-mini ${seg.cls}">${seg.text}</span>
+            <div class="veh-premium-actions">
+              <button class="btn-disp-main" data-cal="${v.id}">Ver calendario</button>
+              <button class="btn-disp-secondary" data-det="${v.id}">Ver detalle</button>
             </div>
-
-            <button class="btn-calendar" data-veh="${v.id}">Ver calendario completo</button>
           </div>
         `;
-        card.querySelector("button").addEventListener("click", ()=> openCalModal(v.id));
+
+        const btnCal = card.querySelector("[data-cal]");
+        const btnDet = card.querySelector("[data-det]");
+
+        if (btnCal) btnCal.addEventListener("click", () => openCalModal(v.id));
+        if (btnDet) btnDet.addEventListener("click", () => openDisponibilidadDetalle(v.id));
+
         cont.appendChild(card);
       });
+    }
+
+    function openDisponibilidadDetalle(vehId){
+      const v = vehiculos.find(x => idEq(x.id, vehId));
+      if(!v) return;
+
+      let rango = "Sin renta activa";
+      let cliente = "No asignado";
+
+      if(v.renta_inicio && v.renta_fin){
+        rango = `${fmt(v.renta_inicio)} - ${fmt(v.renta_fin)}`;
+        cliente = v.renta_cliente || "Cliente no indicado";
+      }
+
+      const seg = seguroBadge(v.seguro_vencimiento);
+
+      alert(
+`Vehículo: ${v.marca} ${v.modelo}${v.ano ? ` ${v.ano}` : ""}
+Placa: ${v.placa || "N/D"}
+Estado: ${v.estado_calculado || v.estado || "Disponible"}
+Rango: ${rango}
+Cliente: ${cliente}
+Seguro: ${seg.text}
+Precio por día: US$ ${Number(v.precio_dia || 0).toFixed(2)}`
+      );
     }
 
     function openCalModal(vehId){
@@ -2778,55 +3131,7 @@ async function loadSegurosPagos() {
     tbody.appendChild(tr);
   });
 }
-async function loadSegurosPagos() {
-  const data = await apiGet("/seguros-pagos").catch(() => []);
-  const tbody = document.getElementById("tblSegurosPagos");
-  if (!tbody) return;
 
-  tbody.innerHTML = "";
-
-  data.forEach(sp => {
-    let badge = "🟢 Pendiente";
-    if (sp.estado === "completado") badge = "🟢 Completado";
-    if (sp.estado === "vencido") badge = "🔴 Vencido";
-
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${sp.marca} ${sp.modelo} ${sp.ano} (${sp.placa})</td>
-      <td>${Number(sp.total_monto).toFixed(2)}</td>
-      <td>${Number(sp.monto_pagado).toFixed(2)}</td>
-      <td>${Number(sp.monto_restante).toFixed(2)}</td>
-      <td>${fmt(sp.fecha_limite)}</td>
-      <td>${badge}</td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="number" min="0" id="abono-${sp.id}" style="width:80px">
-          <button class="btn small" onclick="abonarSeguro(${sp.id})">+</button>
-        </div>
-      </td>
-      <td>
-        <button class="btn small secondary" id="btnEliminarSeguro-${sp.id}" style="background:#e10600;color:#fff;border:none;">
-          🗑
-        </button>
-      </td>
-    `;
-
-    tbody.appendChild(tr);
-
-    const btnEliminar = document.getElementById(`btnEliminarSeguro-${sp.id}`);
-    if (btnEliminar) {
-      btnEliminar.addEventListener("click", () => {
-        eliminarSeguroPago(
-          sp.id,
-          `${sp.marca} ${sp.modelo} ${sp.ano} (${sp.placa})`,
-          sp.total_monto,
-          fmt(sp.fecha_limite)
-        );
-      });
-    }
-  });
-}
 async function guardarSeguroPago(){
   const vehiculo_id = document.getElementById("spVehiculo").value;
   const total_monto = document.getElementById("spTotal").value;
@@ -2854,20 +3159,19 @@ async function abonarSeguro(id){
   await apiPost(`/seguros-pagos/${id}/abono`, { monto });
   await loadSegurosPagos();
 }
-async function eliminarSeguroPago(id, vehiculo, monto, fecha) {
-  const ok = confirm(
-`⚠️ Eliminar pago de seguro
+
+async function eliminarSeguroPago(id, vehiculo, monto, fecha){
+  const confirmacion = confirm(`⚠️ Eliminar pago de seguro
 
 Vehículo: ${vehiculo}
 Monto: $${Number(monto).toFixed(2)}
 Fecha límite: ${fecha}
 
-Esto eliminará también los abonos relacionados.
+Esto eliminará también TODOS los abonos relacionados.
 
-¿Deseas continuar?`
-  );
+¿Deseas continuar?`);
 
-  if (!ok) return;
+  if(!confirmacion) return;
 
   const res = await fetch(API_URL + `/seguros-pagos/${id}`, {
     method: "DELETE"
@@ -2875,12 +3179,13 @@ Esto eliminará también los abonos relacionados.
 
   const data = await res.json();
 
-  if (!res.ok) {
-    alert(data.error || "No se pudo eliminar el pago de seguro");
+  if(!res.ok){
+    alert(data.error || "Error eliminando");
     return;
   }
 
-  alert("✅ Pago de seguro eliminado");
+  alert("✅ Eliminado correctamente");
+
   await loadSegurosPagos();
 }
 
@@ -3307,6 +3612,8 @@ titulo.innerHTML = `
 
       document.getElementById("btnGuardarSeguroPago")
   ?.addEventListener("click", guardarSeguroPago);
+      document.getElementById("dispBuscar")?.addEventListener("input", renderDisponibilidad);
+      document.getElementById("dispFiltroEstado")?.addEventListener("change", renderDisponibilidad);
     });
   
 // ===== Dashboard PRO v3.4 (Fleet cards per renta) =====
