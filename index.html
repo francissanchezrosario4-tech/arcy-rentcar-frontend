@@ -1042,6 +1042,7 @@
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
 
@@ -1670,10 +1671,16 @@ async function eliminarPago(id) {
 }
 
 async function generarReporteVenta(id) {
+  if (typeof window.html2pdf !== "function") {
+    alert("La librería PDF no cargó. Recarga la página y revisa tu conexión o el bloqueo de CDN.");
+    return;
+  }
+  let wrapper;
+  try {
   // usa el mismo template que el preview
   const data = (ventaActualId === id && ventaActualData) ? ventaActualData : await apiGet("/api/ventas/" + id);
 
-  const wrapper = document.createElement("div");
+  wrapper = document.createElement("div");
   wrapper.style.padding = "0";
   wrapper.style.margin = "0";
   wrapper.innerHTML = buildDealerTemplate(data);
@@ -1700,7 +1707,12 @@ await html2pdf()
   .from(wrapper.firstElementChild)
   .save();
 
-document.body.removeChild(wrapper);
+  } catch (error) {
+    console.error("Error al descargar el PDF de venta:", error);
+    alert("No se pudo descargar el PDF de la venta. Inténtalo de nuevo.");
+  } finally {
+    wrapper?.remove();
+  }
 }
 
 // Events
@@ -2257,7 +2269,7 @@ if(sp){
     }
 
     
-    function descargarFacturaPDF(id){
+    async function descargarFacturaPDF(id){
       const f = facturas.find(x=> String(x.id)===String(id));
       if(!f) return;
 
@@ -2287,7 +2299,12 @@ if(sp){
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
       };
 
-      html2pdf().set(opt).from(paper).save();
+      try {
+        await html2pdf().set(opt).from(paper).save();
+      } catch (error) {
+        console.error("Error al descargar el PDF de factura:", error);
+        alert("No se pudo descargar el PDF de la factura. Inténtalo de nuevo.");
+      }
     }
 
     async function eliminarFactura(id){
