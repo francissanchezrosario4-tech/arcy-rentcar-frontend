@@ -1728,21 +1728,16 @@ async function generarReporteVenta(id) {
     }
   });
   if (!canvas.width || !canvas.height) throw new Error("El reporte no tiene contenido visible.");
-  const doc = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
-  const margin = 10;
+  const doc = new window.jspdf.jsPDF({ unit: "mm", format: "letter", orientation: "portrait" });
+  const margin = 8;
   const printableWidth = doc.internal.pageSize.getWidth() - margin * 2;
   const printableHeight = doc.internal.pageSize.getHeight() - margin * 2;
-  const pixelsPerMM = canvas.width / printableWidth;
-  const pagePixels = Math.floor(printableHeight * pixelsPerMM);
-  // Slice the actual canvas, avoiding html2pdf's cloned container and empty pages.
-  for (let top = 0; top < canvas.height; top += pagePixels) {
-    if (top) doc.addPage();
-    const slice = document.createElement("canvas");
-    slice.width = canvas.width;
-    slice.height = Math.min(pagePixels, canvas.height - top);
-    slice.getContext("2d").drawImage(canvas, 0, top, canvas.width, slice.height, 0, 0, canvas.width, slice.height);
-    doc.addImage(slice.toDataURL("image/jpeg", 0.98), "JPEG", margin, margin, printableWidth, slice.height / pixelsPerMM);
-  }
+  // Fit the complete report on one portrait Letter page without cropping.
+  const mmPerPixel = Math.min(printableWidth / canvas.width, printableHeight / canvas.height);
+  const imageWidth = canvas.width * mmPerPixel;
+  const imageHeight = canvas.height * mmPerPixel;
+  const imageX = (doc.internal.pageSize.getWidth() - imageWidth) / 2;
+  doc.addImage(canvas.toDataURL("image/jpeg", 0.98), "JPEG", imageX, margin, imageWidth, imageHeight);
   doc.save(filename);
 
   } catch (error) {
