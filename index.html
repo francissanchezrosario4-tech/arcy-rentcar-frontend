@@ -1043,6 +1043,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
 
@@ -1106,6 +1107,8 @@ async function descargarReporteCompleto() {
 
   await new Promise(resolve => {
     logo.onload = resolve;
+    logo.onerror = resolve;
+    if (logo.complete) resolve();
   });
 
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -1116,7 +1119,7 @@ async function descargarReporteCompleto() {
   const logoHeight = logoWidth * aspectRatio;
 
   // 🔹 Agregar imagen arriba
-  doc.addImage(logo, "PNG", margin, 10, logoWidth, logoHeight);
+  if (logo.naturalWidth) doc.addImage(logo, "PNG", margin, 10, logoWidth, logoHeight);
 
   // =========================
   // 🔹 CONTENIDO DEBAJO DEL BANNER
@@ -1209,6 +1212,8 @@ function drawCard(x, title, value) {
   doc.text(title, x + cardWidth / 2, startY + 12, { align: "center" });
 
   doc.setFontSize(14);
+  const valueWidth = doc.getTextWidth(value);
+  if (valueWidth > cardWidth - 8) doc.setFontSize(14 * (cardWidth - 8) / valueWidth);
   doc.setTextColor(0);
   doc.text(value, x + cardWidth / 2, startY + 25, { align: "center" });
 }
@@ -1224,7 +1229,7 @@ drawCard(positions[2], "PAGOS TOTALES", fmtRD(data.total_pagos));
 const gananciaBoxWidth = pageWidth - 100;
 const gananciaBoxHeight = 60;
 const gananciaX = 50;
-const gananciaY = 170;
+const gananciaY = pageHeight - gananciaBoxHeight - 15;
 
 // Fondo rojo fuerte
 doc.setFillColor(200, 0, 0);
@@ -1671,7 +1676,7 @@ async function eliminarPago(id) {
 }
 
 async function generarReporteVenta(id) {
-  if (typeof window.html2pdf !== "function") {
+  if (typeof window.html2canvas !== "function" || !window.jspdf?.jsPDF) {
     alert("La librería PDF no cargó. Recarga la página y revisa tu conexión o el bloqueo de CDN.");
     return;
   }
@@ -1681,8 +1686,8 @@ async function generarReporteVenta(id) {
   const data = (ventaActualId === id && ventaActualData) ? ventaActualData : await apiGet("/api/ventas/" + id);
 
   wrapper = document.createElement("div");
-  wrapper.style.padding = "0";
-  wrapper.style.margin = "0";
+  // Render at a known origin; the current page scroll must not offset the capture.
+  wrapper.style.cssText = "position:absolute;left:0;top:0;width:1000px;padding:0;margin:0;z-index:10000;pointer-events:none;";
   wrapper.innerHTML = buildDealerTemplate(data);
   document.body.appendChild(wrapper);
 
@@ -1696,23 +1701,49 @@ async function generarReporteVenta(id) {
     .trim();
   const filename = `${nombrePDF}.pdf`;
 
-await html2pdf()
-  .set({
-    margin: 10,
-    filename,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true
-    },
-    jsPDF: {
-      unit: "mm",
-      format: "a4",
-      orientation: "landscape"
+  const paper = wrapper.firstElementChild;
+  if (document.fonts?.ready) await document.fonts.ready;
+  await Promise.all(Array.from(paper.querySelectorAll("img")).map(img => {
+    if (img.complete) return Promise.resolve();
+    return new Promise(resolve => {
+      img.addEventListener("load", resolve, { once: true });
+      img.addEventListener("error", resolve, { once: true });
+    });
+  }));
+  const canvas = await window.html2canvas(paper, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#0b0b0b",
+    scrollX: 0,
+    scrollY: 0,
+    windowWidth: 1100,
+    windowHeight: Math.max(900, paper.scrollHeight),
+    width: paper.offsetWidth,
+    height: paper.scrollHeight,
+    onclone: clonedDoc => {
+      // Exclude broken images without hiding the report itself.
+      clonedDoc.querySelectorAll(".venta-pro img").forEach(img => {
+        if (!img.getAttribute("src") || (img.complete && !img.naturalWidth)) img.style.visibility = "hidden";
+      });
     }
-  })
-  .from(wrapper.firstElementChild)
-  .save();
+  });
+  if (!canvas.width || !canvas.height) throw new Error("El reporte no tiene contenido visible.");
+  const doc = new window.jspdf.jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
+  const margin = 10;
+  const printableWidth = doc.internal.pageSize.getWidth() - margin * 2;
+  const printableHeight = doc.internal.pageSize.getHeight() - margin * 2;
+  const pixelsPerMM = canvas.width / printableWidth;
+  const pagePixels = Math.floor(printableHeight * pixelsPerMM);
+  // Slice the actual canvas, avoiding html2pdf's cloned container and empty pages.
+  for (let top = 0; top < canvas.height; top += pagePixels) {
+    if (top) doc.addPage();
+    const slice = document.createElement("canvas");
+    slice.width = canvas.width;
+    slice.height = Math.min(pagePixels, canvas.height - top);
+    slice.getContext("2d").drawImage(canvas, 0, top, canvas.width, slice.height, 0, 0, canvas.width, slice.height);
+    doc.addImage(slice.toDataURL("image/jpeg", 0.98), "JPEG", margin, margin, printableWidth, slice.height / pixelsPerMM);
+  }
+  doc.save(filename);
 
   } catch (error) {
     console.error("Error al descargar el PDF de venta:", error);
