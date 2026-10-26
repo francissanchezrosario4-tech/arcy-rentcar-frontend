@@ -876,9 +876,24 @@
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
       <div class="title" id="ventaDetalleTitulo">Detalle de Venta</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+        <button class="btn small secondary" onclick="abrirEditorFotoVenta()">Cambiar foto</button>
         <button class="btn small" id="btnVentaPDF">PDF</button>
         <button class="btn small secondary" id="btnVentaCerrar">Cerrar</button>
       </div>
+    </div>
+
+    <div id="editorFotoVenta" class="card" style="display:none;margin:12px 0;">
+      <strong>Cambiar foto del vehículo</strong>
+      <p class="muted">Sube una foto para guardarla en el sistema, o pega la URL directa de una imagen. Si eliges un archivo, se usará ese archivo.</p>
+      <label for="ventaFotoArchivo">Foto desde tu equipo</label>
+      <input type="file" id="ventaFotoArchivo" accept="image/jpeg,image/png,image/webp">
+      <label for="ventaFotoURL">O URL de la foto</label>
+      <input id="ventaFotoURL" type="url" placeholder="https://.../foto.jpg">
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn small" id="btnGuardarFotoVenta" onclick="guardarFotoVenta()">Guardar foto</button>
+        <button class="btn secondary small" onclick="document.getElementById('editorFotoVenta').style.display='none'">Cancelar</button>
+      </div>
+      <p id="estadoFotoVenta" role="status" class="muted"></p>
     </div>
 
     <!-- PREVIEW (igual que PDF) -->
@@ -1335,6 +1350,7 @@ async function eliminarVenta(id) {
 function cerrarDetalleVenta() {
   ventaActualId = null;
   ventaActualData = null;
+  document.getElementById("editorFotoVenta").style.display = "none";
   const card = document.getElementById("ventaDetalleCard");
   if (card) card.style.display = "none";
   const preview = document.getElementById("ventaPreview");
@@ -1371,7 +1387,7 @@ function buildDealerTemplate(data) {
         <tr><td colspan="3" style="padding:10px 8px;font-weight:700;">TOTAL ${title}</td><td style="padding:10px 8px;text-align:right;font-weight:700;white-space:nowrap;">${fmtRD(total)}</td></tr></tbody>
       </table>
     </section>`;
-  return `<div class="venta-pro" style="box-sizing:border-box;width:1000px;background:#fff;color:#171717;font-family:Arial,sans-serif;padding:32px 38px;position:relative;">
+  return `<div class="venta-pro" style="box-sizing:border-box;width:1000px;background:#fff;border:1px solid #d1d5db;border-top:5px solid #b42318;border-radius:12px;color:#171717;font-family:Arial,sans-serif;padding:32px 38px;position:relative;">
     <header style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #b42318;padding-bottom:15px;gap:20px;">
       <div><div style="font-size:38px;font-weight:800;color:#b42318;">Sanchez Auto</div><div style="font-size:15px;margin-top:6px;letter-spacing:1px;">VENTA DE VEHÍCULO · REPORTE DE MOVIMIENTOS</div></div>
       <div style="text-align:right;font-size:15px;"><strong>${escape(formatearNumero(vehiculo.numero_venta))}</strong><div style="margin-top:8px;">${escape(_onlyDate(vehiculo.fecha_venta))}</div></div>
@@ -1383,7 +1399,13 @@ function buildDealerTemplate(data) {
         <div style="font-size:13px;margin-top:10px;overflow-wrap:anywhere;">CHASIS: ${escape(String(vehiculo.chasis || "").toUpperCase())}</div>
         <div style="font-size:13px;margin-top:18px;">PRECIO TOTAL VENDIDO</div><div style="font-size:29px;font-weight:800;color:#b42318;margin-top:4px;">${fmtRD(vendido)}</div>
       </div>
-      ${vehiculo.imagen ? `<img src="${escape(vehiculo.imagen)}" alt="" style="width:270px;height:160px;object-fit:contain;background:#fff;">` : ""}
+      <div style="width:290px;flex-shrink:0;border:1px solid #d1d5db;border-radius:12px;padding:8px;background:#fff;">
+        <div style="height:170px;position:relative;overflow:hidden;border-radius:7px;background:#f8f9fa;">
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:14px;">Foto no disponible</div>
+          ${vehiculo.imagen ? `<img src="${escape(vehiculo.imagen)}" alt="" onerror="this.style.display='none'" style="position:relative;display:block;width:100%;height:170px;object-fit:contain;background:#fff;">` : ""}
+        </div>
+        <div style="text-align:center;font-size:10px;letter-spacing:1px;color:#6b7280;margin-top:7px;">FOTO DEL VEHÍCULO</div>
+      </div>
     </div>
     ${section("GASTOS", gastos, totalGastos)}
     ${section("PAGOS EXTRAS", pagos, totalPagos)}
@@ -1399,7 +1421,76 @@ function buildDealerTemplate(data) {
   </div>`;
 }
 
+function abrirEditorFotoVenta() {
+  if (!ventaActualId || !ventaActualData) return;
+  const foto = ventaActualData.vehiculo.imagen || '';
+  document.getElementById('ventaFotoURL').value = /^https?:/i.test(foto) ? foto : '';
+  document.getElementById('ventaFotoArchivo').value = '';
+  document.getElementById('estadoFotoVenta').textContent = '';
+  document.getElementById('editorFotoVenta').style.display = 'block';
+}
+
+async function comprimirFotoVenta(file) {
+  if (!['image/jpeg','image/png','image/webp'].includes(file.type)) throw new Error('Selecciona una foto JPG, PNG o WebP.');
+  if (file.size > 20 * 1024 * 1024) throw new Error('La foto no puede superar 20 MB.');
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const canvas = document.createElement('canvas');
+    let lado = 1000;
+    for (let intento = 0; intento < 9; intento++) {
+      const factor = Math.min(1, lado / Math.max(img.naturalWidth, img.naturalHeight));
+      canvas.width = Math.max(1, Math.round(img.naturalWidth * factor));
+      canvas.height = Math.max(1, Math.round(img.naturalHeight * factor));
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      const foto = canvas.toDataURL('image/jpeg', Math.max(.45,.8-intento*.04));
+      if (foto.length <= 90000) return foto;
+      lado = Math.round(lado * .83);
+    }
+    throw new Error('No se pudo reducir la foto. Prueba con otra imagen.');
+  } finally { URL.revokeObjectURL(url); }
+}
+
+async function guardarFotoVenta() {
+  const id = ventaActualId;
+  if (!id) return;
+  const btn = document.getElementById('btnGuardarFotoVenta');
+  const estado = document.getElementById('estadoFotoVenta');
+  btn.disabled = true;
+  try {
+    estado.textContent = 'Preparando foto…';
+    const archivo = document.getElementById('ventaFotoArchivo').files[0];
+    const imagen = archivo ? await comprimirFotoVenta(archivo) : document.getElementById('ventaFotoURL').value.trim();
+    if (!imagen) throw new Error('Selecciona un archivo o pega una URL.');
+    if (!archivo && !/^https?:\/\/[^\s]+$/i.test(imagen)) throw new Error('La URL debe comenzar por http:// o https://.');
+    await new Promise((resolve,reject) => {
+      const img = new Image();
+      const timer = setTimeout(() => { img.src=''; reject(new Error('La foto tarda demasiado en cargar. Prueba subiéndola desde tu equipo.')); },15000);
+      img.onload = () => { clearTimeout(timer); resolve(); };
+      img.onerror = () => { clearTimeout(timer); reject(new Error('No se pudo abrir esa foto. Prueba subiendo el archivo desde tu equipo.')); };
+      img.src = imagen;
+    });
+    estado.textContent = 'Guardando foto…';
+    const res = await fetch('https://arcy-rentcar-backend.onrender.com/api/ventas/' + encodeURIComponent(id) + '/imagen', {
+      method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({imagen})
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || 'No se pudo guardar. Comprueba que la ruta de imágenes esté instalada en el backend.');
+    if (String(ventaActualId) === String(id)) {
+      renderDetalleVenta(await apiGet('/api/ventas/' + id));
+      document.getElementById('editorFotoVenta').style.display = 'none';
+    }
+  } catch (e) { estado.textContent = e.message; }
+  finally { btn.disabled = false; }
+}
+
 function renderDetalleVenta(data) {
+  document.getElementById("editorFotoVenta").style.display = "none";
+  document.getElementById("ventaFotoArchivo").value = "";
   ventaActualData = data;
   const { vehiculo, gastos, pagos } = data;
 
@@ -1604,7 +1695,7 @@ async function generarReporteVenta(id) {
     onclone: clonedDoc => {
       // Exclude broken images without hiding the report itself.
       clonedDoc.querySelectorAll(".venta-pro img").forEach(img => {
-        if (!img.getAttribute("src") || (img.complete && !img.naturalWidth)) img.style.visibility = "hidden";
+        if (!img.getAttribute("src") || (img.complete && !img.naturalWidth)) img.style.display = "none";
       });
     }
   });
