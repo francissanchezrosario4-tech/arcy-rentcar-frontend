@@ -854,7 +854,7 @@
       <th>Precio</th>
       <th>Gastos</th>
       <th>Pagos</th>
-      <th>Ganancia Limpia</th>
+      <th>Total Restante</th>
     </tr>
   </thead>
   <tbody id="tblVentasResumen"></tbody>
@@ -865,7 +865,7 @@
       <div>Total Gastos: <span id="totalGastos"></span></div>
       <div>Total Pagos: <span id="totalPagos"></span></div>
       <div style="color:#e10600; font-size:1.2rem;">
-        TOTAL LIMPIO: <span id="totalLimpio"></span>
+        TOTAL RESTANTE PARA LORENZO: <span id="totalLimpio"></span>
       </div>
     </div>
 
@@ -1158,7 +1158,7 @@ async function descargarReporteCompleto() {
 
   doc.autoTable({
     startY: contentStartY + 18,
-    head: [["Nº", "Vehículo", "Venta", "Gastos", "Pagos", "Ganancia"]],
+    head: [["Nº", "Vehículo", "Venta", "Gastos", "Pagos", "Restante"]],
     body: body,
     theme: "grid",
     headStyles: {
@@ -1246,7 +1246,7 @@ doc.roundedRect(
 // Texto blanco
 doc.setTextColor(255);
 doc.setFontSize(12);
-doc.text("GANANCIA NETA", centerX, gananciaY + 22, { align: "center" });
+doc.text("TOTAL RESTANTE PARA LORENZO", centerX, gananciaY + 22, { align: "center" });
 
 doc.setFontSize(28);
 doc.text(fmtRD(data.total_limpio), centerX, gananciaY + 45, { align: "center" });
@@ -1357,10 +1357,10 @@ function buildDealerTemplate(data) {
       <h3 style="font-size:21px;color:#171717;border-bottom:2px solid #b42318;padding-bottom:7px;margin:0 0 10px;">${title}</h3>
       <table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:14px;color:#171717;background:#fff;">
         <thead><tr style="background:#f3f4f6;color:#171717;">
-          <th style="width:6%;padding:8px;text-align:center;border-bottom:1px solid #bbb;">N.º</th>
-          <th style="width:51%;padding:8px;text-align:left;border-bottom:1px solid #bbb;">DESCRIPCIÓN</th>
-          <th style="width:17%;padding:8px;text-align:center;border-bottom:1px solid #bbb;">FECHA</th>
-          <th style="width:26%;padding:8px;text-align:right;border-bottom:1px solid #bbb;">MONTO</th>
+          <th style="background:#f3f4f6;color:#171717;width:6%;padding:8px;text-align:center;border-bottom:1px solid #bbb;">N.º</th>
+          <th style="background:#f3f4f6;color:#171717;width:51%;padding:8px;text-align:left;border-bottom:1px solid #bbb;">DESCRIPCIÓN</th>
+          <th style="background:#f3f4f6;color:#171717;width:17%;padding:8px;text-align:center;border-bottom:1px solid #bbb;">FECHA</th>
+          <th style="background:#f3f4f6;color:#171717;width:26%;padding:8px;text-align:right;border-bottom:1px solid #bbb;">MONTO</th>
         </tr></thead>
         <tbody>${rows.length ? rows.map((row,i) => `<tr>
           <td style="padding:7px 8px;border-bottom:1px solid #ddd;text-align:center;">${i+1}</td>
@@ -1392,7 +1392,7 @@ function buildDealerTemplate(data) {
         <tr><td style="padding:7px 10px;">TOTAL VENDIDO</td><td style="padding:7px 10px;text-align:right;white-space:nowrap;">${fmtRD(vendido)}</td></tr>
         <tr><td style="padding:7px 10px;">TOTAL GASTOS</td><td style="padding:7px 10px;text-align:right;white-space:nowrap;">${fmtRD(totalGastos)}</td></tr>
         <tr><td style="padding:7px 10px;">TOTAL PAGOS EXTRAS</td><td style="padding:7px 10px;text-align:right;white-space:nowrap;">${fmtRD(totalPagos)}</td></tr>
-        <tr style="font-weight:800;color:#b42318;"><td style="padding:12px 10px;border-top:2px solid #b42318;">GANANCIA LIMPIA</td><td style="padding:12px 10px;border-top:2px solid #b42318;text-align:right;white-space:nowrap;">${fmtRD(gananciaLimpia)}</td></tr>
+        <tr style="font-weight:800;color:#b42318;"><td style="padding:12px 10px;border-top:2px solid #b42318;">TOTAL RESTANTE</td><td style="padding:12px 10px;border-top:2px solid #b42318;text-align:right;white-space:nowrap;">${fmtRD(gananciaLimpia)}</td></tr>
       </table>
     </div>
     <div style="font-size:11px;color:#555;border-top:1px solid #ddd;margin-top:20px;padding-top:9px;">Sanchez Auto · Detalle completo de gastos y pagos · Moneda: pesos dominicanos (RD$)</div>
