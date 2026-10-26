@@ -840,11 +840,13 @@
       <div class="pill">Cálculo Automático</div>
     </div>
 
-    <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
+    <div style="display:flex; justify-content:flex-end; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
   <button onclick="descargarReporteCompleto()" class="btn">
-    📄 Descargar Reporte Completo
+    📄 REPORTE GENERAL DE VENTAS
   </button>
+  <button id="btnDescargarTodoVentas" onclick="descargarTodoVentas()" class="btn secondary">📚 DESCARGAR TODO EN UN PDF</button>
 </div>
+<p id="estadoReporteTodo" class="muted" role="status" aria-live="polite"></p>
 
 <table>
   <thead>
@@ -1645,6 +1647,124 @@ async function eliminarPago(id) {
     alert("Tu backend aún no tiene DELETE de pagos. Te digo qué agregar abajo.");
     console.error(e);
   }
+}
+
+async function descargarTodoVentas() {
+  const btn = document.getElementById('btnDescargarTodoVentas');
+  const status = document.getElementById('estadoReporteTodo');
+  if (btn.disabled) return;
+  if (!window.jspdf?.jsPDF) return alert('La librería PDF no cargó. Recarga la página.');
+  btn.disabled = true;
+  const progreso = texto => { status.textContent = texto; };
+  try {
+    progreso('Consultando todas las ventas…');
+    const resumen = await apiGet('/api/ventas-resumen');
+    const lista = [...(resumen.vehiculos || [])].sort((a,b) => Number(a.numero_venta)-Number(b.numero_venta) || Number(a.id)-Number(b.id));
+    if (!lista.length) { progreso('No hay ventas para descargar.'); return; }
+    const detalles = [];
+    for (let i=0; i<lista.length; i++) {
+      progreso(`Leyendo vehículo ${i+1} de ${lista.length}…`);
+      const data = await apiGet('/api/ventas/' + encodeURIComponent(lista[i].id));
+      if (!data?.vehiculo || !Array.isArray(data.gastos) || !Array.isArray(data.pagos)) throw new Error('Detalle incompleto de ' + formatearNumero(lista[i].numero_venta));
+      detalles.push(data);
+    }
+    const doc = new window.jspdf.jsPDF({unit:'mm',format:'letter',orientation:'portrait',compress:true});
+    if (typeof doc.autoTable !== 'function') throw new Error('No cargó la librería de tablas PDF. Recarga la página.');
+    const width = doc.internal.pageSize.getWidth();
+    const height = doc.internal.pageSize.getHeight();
+    const margin=14;
+    const fecha = new Date().toLocaleString('es-DO');
+    const texto = value => String(value ?? '');
+    const numero = value => Number(value || 0);
+    const totales = detalles.reduce((t,d) => {
+      t.vendido += numero(d.vehiculo.precio_venta);
+      t.gastos += d.gastos.reduce((s,g)=>s+numero(g.monto),0);
+      t.pagos += d.pagos.reduce((s,p)=>s+numero(p.monto),0);
+      return t;
+    },{vendido:0,gastos:0,pagos:0});
+    const encabezado = subtitulo => {
+      doc.setFont('helvetica','bold');doc.setFontSize(22);doc.setTextColor(180,35,24);
+      doc.text('Sanchez Auto',margin,22);
+      doc.setFontSize(11);doc.setTextColor(30);doc.text(subtitulo,margin,31);
+      doc.setDrawColor(180,35,24);doc.setLineWidth(.6);doc.line(margin,36,width-margin,36);
+    };
+    const tabla = options => doc.autoTable({
+      theme:'grid',margin:{left:margin,right:margin,top:16,bottom:18},
+      styles:{font:'helvetica',fontSize:9,cellPadding:2.5,overflow:'linebreak',textColor:[30,30,30],lineColor:[215,215,215]},
+      headStyles:{fillColor:[243,244,246],textColor:[25,25,25],fontStyle:'bold'},
+      alternateRowStyles:{fillColor:[255,255,255]},rowPageBreak:'avoid',...options
+    });
+    encabezado('REPORTE GENERAL COMPLETO · TODOS LOS VEHÍCULOS');
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.text('Generado: '+fecha,margin,46);
+    doc.text('Vehículos incluidos: '+detalles.length,margin,54);
+    doc.text('Moneda: pesos dominicanos (RD$)',margin,62);
+    tabla({startY:73,body:[
+      ['TOTAL VENDIDO',fmtRD(totales.vendido)],['TOTAL GASTOS',fmtRD(totales.gastos)],
+      ['TOTAL PAGOS EXTRAS',fmtRD(totales.pagos)],
+      ['TOTAL RESTANTE PARA LORENZO',fmtRD(totales.vendido-totales.gastos-totales.pagos)]
+    ],columnStyles:{0:{cellWidth:115},1:{halign:'right'}}});
+    doc.setFontSize(9);doc.setTextColor(80);
+    doc.text(doc.splitTextToSize('Incluye todos los registros devueltos por el sistema, también los archivados cuando exista esa función. Cada vehículo incluye sus datos y todos sus gastos y pagos. Los importes archivados se conservan en los totales.',width-margin*2),margin,doc.lastAutoTable.finalY+12);
+    for (let i=0;i<detalles.length;i++) {
+      progreso(`Preparando páginas: vehículo ${i+1} de ${detalles.length}…`);
+      const {vehiculo:v,gastos,pagos}=detalles[i];
+      doc.addPage();
+      const identificacion = texto(formatearNumero(v.numero_venta))+' · '+texto(v.marca)+' '+texto(v.modelo)+' '+texto(v.ano);
+      encabezado('DETALLE DE VENTA');
+      tabla({startY:42,body:[
+        ['NÚMERO DE VENTA',texto(formatearNumero(v.numero_venta))],
+        ['VEHÍCULO',[v.marca,v.modelo,v.ano].filter(Boolean).join(' ')],
+        ['COLOR',texto(v.color)],['CHASIS',texto(v.chasis)],['FECHA DE VENTA',_onlyDate(v.fecha_venta)],
+        ['ID DEL REGISTRO',texto(v.id)],['ESTADO',v.archivado_en?'Archivado desde '+texto(v.archivado_en):'Activo'],
+        ['PRECIO TOTAL VENDIDO',fmtRD(v.precio_venta)]
+      ],columnStyles:{0:{cellWidth:55},1:{cellWidth:width-margin*2-55}}});
+      let y=doc.lastAutoTable.finalY+8;
+      // Carga acotada: una URL rota nunca impide completar el documento.
+      let foto=null;
+      if (v.imagen) foto=await new Promise(resolve=>{
+        const img=new Image();let terminado=false;
+        const fin=value=>{if(terminado)return;terminado=true;clearTimeout(timer);resolve(value);};
+        const timer=setTimeout(()=>fin(null),5000);
+        img.crossOrigin='anonymous';img.onload=()=>fin(img);img.onerror=()=>fin(null);img.src=v.imagen;
+      });
+      if(y+49>height-20){doc.addPage();y=20;}
+      doc.setDrawColor(210);doc.roundedRect(margin,y,74,44,2,2);
+      let fotoAgregada=false;
+      if(foto?.naturalWidth && foto?.naturalHeight){
+        const scale=Math.min(70/foto.naturalWidth,40/foto.naturalHeight);
+        try{doc.addImage(foto,margin+2+(70-foto.naturalWidth*scale)/2,y+2+(40-foto.naturalHeight*scale)/2,foto.naturalWidth*scale,foto.naturalHeight*scale,undefined,'FAST');fotoAgregada=true;}catch(e){console.warn('Foto no exportable',v.id);}
+      }
+      if(!fotoAgregada){doc.setFontSize(9);doc.setTextColor(90);doc.text('Foto no disponible en PDF',margin+4,y+23);}
+      y+=52;
+      const movimientos=(titulo,rows)=>{
+        if(y+25>height-20){doc.addPage();y=20;}
+        doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(180,35,24);doc.text(titulo,margin,y);
+        tabla({startY:y+4,head:[['N.º / ID','DESCRIPCIÓN','FECHA','MONTO']],body:rows.length?rows.map((r,n)=>[
+          `${n+1} / ${texto(r.id)}`,texto(r.descripcion)+(r.archivado_en?' [Archivado]':''),_onlyDate(r.fecha),fmtRD(r.monto)
+        ]):[['','Sin movimientos registrados.','','']],columnStyles:{0:{cellWidth:22},1:{cellWidth:94},2:{cellWidth:27},3:{halign:'right'}}});
+        y=doc.lastAutoTable.finalY+10;
+      };
+      movimientos('GASTOS · '+texto(formatearNumero(v.numero_venta)),gastos);
+      movimientos('PAGOS EXTRAS · '+texto(formatearNumero(v.numero_venta)),pagos);
+      const totalG=gastos.reduce((s,g)=>s+numero(g.monto),0);
+      const totalP=pagos.reduce((s,p)=>s+numero(p.monto),0);
+      if(y+43>height-20){doc.addPage();y=20;}
+      tabla({startY:y,body:[['TOTAL VENDIDO',fmtRD(v.precio_venta)],['TOTAL GASTOS',fmtRD(totalG)],['TOTAL PAGOS EXTRAS',fmtRD(totalP)],['TOTAL RESTANTE',fmtRD(numero(v.precio_venta)-totalG-totalP)]],columnStyles:{0:{cellWidth:115},1:{halign:'right'}}});
+      await new Promise(resolve=>setTimeout(resolve,0));
+    }
+    const paginas=doc.internal.getNumberOfPages();
+    for(let pagina=1;pagina<=paginas;pagina++){
+      doc.setPage(pagina);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(90);
+      doc.text('Sanchez Auto · Reporte general completo',margin,height-8);
+      doc.text(`${pagina} / ${paginas}`,width-margin,height-8,{align:'right'});
+    }
+    doc.save('REPORTE_GENERAL_COMPLETO_TODOS_LOS_VEHICULOS.pdf');
+    progreso(`PDF generado: ${detalles.length} vehículos, ${paginas} páginas.`);
+  } catch(error) {
+    console.error('Reporte completo:',error);
+    progreso('No se descargó el documento. '+error.message);
+    alert('No se pudo completar el reporte. '+error.message+' Intenta nuevamente.');
+  } finally {btn.disabled=false;}
 }
 
 async function generarReporteVenta(id) {
