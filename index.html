@@ -1398,7 +1398,7 @@ function buildDealerTemplate(data) {
       <div style="flex:1;min-width:0;">
         <div style="font-size:28px;font-weight:800;overflow-wrap:anywhere;">${escape(vehiculo.marca)} ${escape(vehiculo.modelo)}</div>
         <div style="font-size:20px;margin-top:6px;">${escape(vehiculo.ano)} ${escape(vehiculo.color)}</div>
-        <div style="font-size:13px;margin-top:10px;overflow-wrap:anywhere;">CHASIS: ${escape(String(vehiculo.chasis || "").toUpperCase())}</div>
+        <div style="font-size:20px;margin-top:10px;overflow-wrap:anywhere;">CHASIS: ${escape(String(vehiculo.chasis || "").toUpperCase())}</div>
         <div style="font-size:13px;margin-top:18px;">PRECIO TOTAL VENDIDO</div><div style="font-size:29px;font-weight:800;color:#b42318;margin-top:4px;">${fmtRD(vendido)}</div>
       </div>
       <div style="width:290px;flex-shrink:0;border:1px solid #d1d5db;border-radius:12px;padding:8px;background:#fff;">
