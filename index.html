@@ -1649,11 +1649,64 @@ async function eliminarPago(id) {
   }
 }
 
+async function capturarFacturaVenta(data) {
+  let wrapper;
+  try {
+  wrapper = document.createElement("div");
+  // Render at a known origin; the current page scroll must not offset the capture.
+  wrapper.style.cssText = "position:absolute;left:0;top:0;width:1000px;padding:0;margin:0;z-index:10000;pointer-events:none;";
+  wrapper.innerHTML = buildDealerTemplate(data);
+  document.body.appendChild(wrapper);
+
+  const paper = wrapper.firstElementChild;
+  if (document.fonts?.ready) await document.fonts.ready;
+  await Promise.all(Array.from(paper.querySelectorAll("img")).map(img => {
+    if (img.complete) return Promise.resolve();
+    return new Promise(resolve => {
+      const finish = () => { clearTimeout(timer); resolve(); };
+      const timer = setTimeout(() => { img.style.display = "none"; finish(); }, 8000);
+      img.addEventListener("load", finish, { once: true });
+      img.addEventListener("error", finish, { once: true });
+    });
+  }));
+  const canvas = await window.html2canvas(paper, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff",
+    scrollX: 0,
+    scrollY: 0,
+    windowWidth: 1100,
+    windowHeight: Math.max(900, paper.scrollHeight),
+    width: paper.offsetWidth,
+    height: paper.scrollHeight,
+    onclone: clonedDoc => {
+      // Exclude broken images without hiding the report itself.
+      clonedDoc.querySelectorAll(".venta-pro img").forEach(img => {
+        if (!img.getAttribute("src") || (img.complete && !img.naturalWidth)) img.style.display = "none";
+      });
+    }
+  });
+  if (!canvas.width || !canvas.height) throw new Error("El reporte no tiene contenido visible.");
+  return canvas;
+  } finally { wrapper?.remove(); }
+}
+
+function agregarFacturaVentaPDF(doc, canvas) {
+  const margin = 8;
+  const printableWidth = doc.internal.pageSize.getWidth() - margin * 2;
+  const printableHeight = doc.internal.pageSize.getHeight() - margin * 2;
+  const mmPerPixel = Math.min(printableWidth / canvas.width, printableHeight / canvas.height);
+  const imageWidth = canvas.width * mmPerPixel;
+  const imageHeight = canvas.height * mmPerPixel;
+  const imageX = (doc.internal.pageSize.getWidth() - imageWidth) / 2;
+  doc.addImage(canvas.toDataURL("image/jpeg", 0.98), "JPEG", imageX, margin, imageWidth, imageHeight);
+}
+
 async function descargarTodoVentas() {
   const btn = document.getElementById('btnDescargarTodoVentas');
   const status = document.getElementById('estadoReporteTodo');
   if (btn.disabled) return;
-  if (!window.jspdf?.jsPDF) return alert('La librería PDF no cargó. Recarga la página.');
+  if (!window.jspdf?.jsPDF || typeof window.html2canvas !== 'function') return alert('Las librerías PDF no cargaron. Recarga la página.');
   btn.disabled = true;
   const progreso = texto => { status.textContent = texto; };
   try {
@@ -1704,52 +1757,15 @@ async function descargarTodoVentas() {
       ['TOTAL RESTANTE PARA LORENZO',fmtRD(totales.vendido-totales.gastos-totales.pagos)]
     ],columnStyles:{0:{cellWidth:115},1:{halign:'right'}}});
     doc.setFontSize(9);doc.setTextColor(80);
-    doc.text(doc.splitTextToSize('Incluye todos los registros devueltos por el sistema, también los archivados cuando exista esa función. Cada vehículo incluye sus datos y todos sus gastos y pagos. Los importes archivados se conservan en los totales.',width-margin*2),margin,doc.lastAutoTable.finalY+12);
+    doc.text(doc.splitTextToSize('Incluye todos los registros devueltos por el sistema, también los archivados cuando exista esa función. Cada vehículo ocupa una página con la misma factura individual, incluidos sus gastos y pagos. Los importes archivados se conservan en los totales.',width-margin*2),margin,doc.lastAutoTable.finalY+12);
     for (let i=0;i<detalles.length;i++) {
       progreso(`Preparando páginas: vehículo ${i+1} de ${detalles.length}…`);
-      const {vehiculo:v,gastos,pagos}=detalles[i];
+      const canvas = await capturarFacturaVenta(detalles[i]);
       doc.addPage();
-      const identificacion = texto(formatearNumero(v.numero_venta))+' · '+texto(v.marca)+' '+texto(v.modelo)+' '+texto(v.ano);
-      encabezado('DETALLE DE VENTA');
-      tabla({startY:42,body:[
-        ['NÚMERO DE VENTA',texto(formatearNumero(v.numero_venta))],
-        ['VEHÍCULO',[v.marca,v.modelo,v.ano].filter(Boolean).join(' ')],
-        ['COLOR',texto(v.color)],['CHASIS',texto(v.chasis)],['FECHA DE VENTA',_onlyDate(v.fecha_venta)],
-        ['ID DEL REGISTRO',texto(v.id)],['ESTADO',v.archivado_en?'Archivado desde '+texto(v.archivado_en):'Activo'],
-        ['PRECIO TOTAL VENDIDO',fmtRD(v.precio_venta)]
-      ],columnStyles:{0:{cellWidth:55},1:{cellWidth:width-margin*2-55}}});
-      let y=doc.lastAutoTable.finalY+8;
-      // Carga acotada: una URL rota nunca impide completar el documento.
-      let foto=null;
-      if (v.imagen) foto=await new Promise(resolve=>{
-        const img=new Image();let terminado=false;
-        const fin=value=>{if(terminado)return;terminado=true;clearTimeout(timer);resolve(value);};
-        const timer=setTimeout(()=>fin(null),5000);
-        img.crossOrigin='anonymous';img.onload=()=>fin(img);img.onerror=()=>fin(null);img.src=v.imagen;
-      });
-      if(y+49>height-20){doc.addPage();y=20;}
-      doc.setDrawColor(210);doc.roundedRect(margin,y,74,44,2,2);
-      let fotoAgregada=false;
-      if(foto?.naturalWidth && foto?.naturalHeight){
-        const scale=Math.min(70/foto.naturalWidth,40/foto.naturalHeight);
-        try{doc.addImage(foto,margin+2+(70-foto.naturalWidth*scale)/2,y+2+(40-foto.naturalHeight*scale)/2,foto.naturalWidth*scale,foto.naturalHeight*scale,undefined,'FAST');fotoAgregada=true;}catch(e){console.warn('Foto no exportable',v.id);}
-      }
-      if(!fotoAgregada){doc.setFontSize(9);doc.setTextColor(90);doc.text('Foto no disponible en PDF',margin+4,y+23);}
-      y+=52;
-      const movimientos=(titulo,rows)=>{
-        if(y+25>height-20){doc.addPage();y=20;}
-        doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(180,35,24);doc.text(titulo,margin,y);
-        tabla({startY:y+4,head:[['N.º / ID','DESCRIPCIÓN','FECHA','MONTO']],body:rows.length?rows.map((r,n)=>[
-          `${n+1} / ${texto(r.id)}`,texto(r.descripcion)+(r.archivado_en?' [Archivado]':''),_onlyDate(r.fecha),fmtRD(r.monto)
-        ]):[['','Sin movimientos registrados.','','']],columnStyles:{0:{cellWidth:22},1:{cellWidth:94},2:{cellWidth:27},3:{halign:'right'}}});
-        y=doc.lastAutoTable.finalY+10;
-      };
-      movimientos('GASTOS · '+texto(formatearNumero(v.numero_venta)),gastos);
-      movimientos('PAGOS EXTRAS · '+texto(formatearNumero(v.numero_venta)),pagos);
-      const totalG=gastos.reduce((s,g)=>s+numero(g.monto),0);
-      const totalP=pagos.reduce((s,p)=>s+numero(p.monto),0);
-      if(y+43>height-20){doc.addPage();y=20;}
-      tabla({startY:y,body:[['TOTAL VENDIDO',fmtRD(v.precio_venta)],['TOTAL GASTOS',fmtRD(totalG)],['TOTAL PAGOS EXTRAS',fmtRD(totalP)],['TOTAL RESTANTE',fmtRD(numero(v.precio_venta)-totalG-totalP)]],columnStyles:{0:{cellWidth:115},1:{halign:'right'}}});
+      agregarFacturaVentaPDF(doc, canvas);
+      // Release the large bitmap before rendering the next vehicle.
+      canvas.width = 1;
+      canvas.height = 1;
       await new Promise(resolve=>setTimeout(resolve,0));
     }
     const paginas=doc.internal.getNumberOfPages();
@@ -1777,12 +1793,6 @@ async function generarReporteVenta(id) {
   // usa el mismo template que el preview
   const data = (ventaActualId === id && ventaActualData) ? ventaActualData : await apiGet("/api/ventas/" + id);
 
-  wrapper = document.createElement("div");
-  // Render at a known origin; the current page scroll must not offset the capture.
-  wrapper.style.cssText = "position:absolute;left:0;top:0;width:1000px;padding:0;margin:0;z-index:10000;pointer-events:none;";
-  wrapper.innerHTML = buildDealerTemplate(data);
-  document.body.appendChild(wrapper);
-
   const v = data.vehiculo || {};
   const nombrePDF = [formatearNumero(v.numero_venta) || "VENTA", v.marca, v.modelo, v.ano]
     .filter(valor => valor !== null && valor !== undefined && String(valor).trim() !== "")
@@ -1793,43 +1803,9 @@ async function generarReporteVenta(id) {
     .trim();
   const filename = `${nombrePDF}.pdf`;
 
-  const paper = wrapper.firstElementChild;
-  if (document.fonts?.ready) await document.fonts.ready;
-  await Promise.all(Array.from(paper.querySelectorAll("img")).map(img => {
-    if (img.complete) return Promise.resolve();
-    return new Promise(resolve => {
-      img.addEventListener("load", resolve, { once: true });
-      img.addEventListener("error", resolve, { once: true });
-    });
-  }));
-  const canvas = await window.html2canvas(paper, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: "#ffffff",
-    scrollX: 0,
-    scrollY: 0,
-    windowWidth: 1100,
-    windowHeight: Math.max(900, paper.scrollHeight),
-    width: paper.offsetWidth,
-    height: paper.scrollHeight,
-    onclone: clonedDoc => {
-      // Exclude broken images without hiding the report itself.
-      clonedDoc.querySelectorAll(".venta-pro img").forEach(img => {
-        if (!img.getAttribute("src") || (img.complete && !img.naturalWidth)) img.style.display = "none";
-      });
-    }
-  });
-  if (!canvas.width || !canvas.height) throw new Error("El reporte no tiene contenido visible.");
+  const canvas = await capturarFacturaVenta(data);
   const doc = new window.jspdf.jsPDF({ unit: "mm", format: "letter", orientation: "portrait" });
-  const margin = 8;
-  const printableWidth = doc.internal.pageSize.getWidth() - margin * 2;
-  const printableHeight = doc.internal.pageSize.getHeight() - margin * 2;
-  // Fit the complete report on one portrait Letter page without cropping.
-  const mmPerPixel = Math.min(printableWidth / canvas.width, printableHeight / canvas.height);
-  const imageWidth = canvas.width * mmPerPixel;
-  const imageHeight = canvas.height * mmPerPixel;
-  const imageX = (doc.internal.pageSize.getWidth() - imageWidth) / 2;
-  doc.addImage(canvas.toDataURL("image/jpeg", 0.98), "JPEG", imageX, margin, imageWidth, imageHeight);
+  agregarFacturaVentaPDF(doc, canvas);
   doc.save(filename);
 
   } catch (error) {
